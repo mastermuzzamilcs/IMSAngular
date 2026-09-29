@@ -1,0 +1,83 @@
+<h2 mat-dialog-title>{{ dialogTitle }}</h2>
+<mat-dialog-content>
+  <form [formGroup]="branchForm">
+    <div class="form-row one-column">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Branch Name</mat-label>
+        <input matInput formControlName="name" placeholder="Enter branch name" />
+        <mat-error *ngIf="branchForm.get('name')?.hasError('required')">
+          Branch name is required
+        </mat-error>
+      </mat-form-field>
+    </div>
+    <div class="form-row one-column">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Location</mat-label>
+        <input matInput formControlName="location" placeholder="City, State" />
+        <mat-error *ngIf="branchForm.get('location')?.hasError('required')">
+          Location is required
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row one-column">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Address</mat-label>
+        <textarea matInput formControlName="address" placeholder="Full address"></textarea>
+        <mat-error *ngIf="branchForm.get('address')?.hasError('required')">
+          Address is required
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row two-columns">
+      <mat-form-field appearance="outline">
+        <mat-label>Branch Manager</mat-label>
+        <mat-select formControlName="manager">
+          <mat-option *ngFor="let manager of _managerUsers" [value]="manager.userid">
+            {{ manager.name }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="branchForm.get('manager')?.hasError('required')">
+          Manager name is required
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Contact Number</mat-label>
+        <input matInput formControlName="contact" placeholder="Contact number" />
+        <mat-error *ngIf="branchForm.get('contact')?.hasError('required')">
+          Contact is required
+        </mat-error>
+        <mat-error *ngIf="branchForm.get('contact')?.hasError('pattern')">
+          Please enter a valid phone number
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row two-columns">
+      <mat-form-field appearance="outline">
+        <mat-label>Email</mat-label>
+        <input matInput formControlName="email" placeholder="Branch email" />
+        <mat-error *ngIf="branchForm.get('email')?.hasError('email')">
+          Please enter a valid email address
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          <mat-option value="active">Active</mat-option>
+          <mat-option value="inactive">Inactive</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="branchForm.invalid">
+    {{ data.mode === 'add' ? 'Add' : 'Update' }}
+  </button>
+</mat-dialog-actions>

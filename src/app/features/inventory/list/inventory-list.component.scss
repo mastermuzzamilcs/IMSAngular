@@ -1,0 +1,33 @@
+full-width {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  display: inline-block;
+}
+
+.badge-empty {
+  background-color: #fee2e2; // red-100
+  color: #b91c1c; // red-700
+}
+
+.badge-low {
+  background-color: #ffedd5; // orange-100
+  color: #c2410c; // orange-700
+}
+
+.badge-healthy {
+  background-color: #dcfce7; // green-100
+  color: #15803d; // green-700
+}

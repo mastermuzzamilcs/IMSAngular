@@ -1,0 +1,26 @@
+@import 'tailwindcss';
+/* You can add global styles to this file, and also import other style files */
+
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+}
+/* Global style for mat-table containers */
+.table-container {
+  overflow-x: auto;
+  border-radius: 4px;
+}
+
+/* Global style for mat-table rows on hover */
+.mat-row:hover {
+  background-color: rgba(0, 100, 100, 100);
+  cursor: pointer;
+}
+.mat-header-cell,
+.mat-cell {
+  padding: 12px 16px;
+}

@@ -1,0 +1,88 @@
+<h2 mat-dialog-title>Request #{{ request?.requestId }}</h2>
+
+<div mat-dialog-content class="content" *ngIf="!loading; else spn">
+  <mat-tab-group>
+    <!-- ========== Overview TAB ========== -->
+    <mat-tab label="Overview">
+      <div class="overview-grid">
+        <mat-chip color="primary" selected>{{ request.status }}</mat-chip>
+        <p><strong>Type:</strong> {{ request.requestType }}</p>
+        <p><strong>Branch:</strong> {{ stockHdr?.branchName }}</p>
+        <p><strong>Vendor:</strong> {{ stockHdr?.vendorName }}</p>
+        <p><strong>Date:</strong> {{ stockHdr?.entrydate | date: 'mediumDate' }}</p>
+        <p><strong>Sub‑total:</strong> {{ stockHdr?.subtotal | currency }}</p>
+        <p><strong>Discount:</strong> {{ stockHdr?.discountvalue | currency }}</p>
+        <p><strong>Net Total:</strong> {{ stockHdr?.NetTotal | currency }}</p>
+      </div>
+
+      <!-- details table -->
+      <table mat-table [dataSource]="stockRows" class="mat-elevation-z1">
+        <ng-container matColumnDef="product">
+          <th mat-header-cell *matHeaderCellDef>Product</th>
+          <td mat-cell *matCellDef="let r">{{ r.productName }}</td>
+        </ng-container>
+        <ng-container matColumnDef="qty">
+          <th mat-header-cell *matHeaderCellDef>Qty</th>
+          <td mat-cell *matCellDef="let r">{{ r.quantity }}</td>
+        </ng-container>
+        <ng-container matColumnDef="price">
+          <th mat-header-cell *matHeaderCellDef>Price</th>
+          <td mat-cell *matCellDef="let r">{{ r.unitprice | currency }}</td>
+        </ng-container>
+        <ng-container matColumnDef="disc">
+          <th mat-header-cell *matHeaderCellDef>Disc.</th>
+          <td mat-cell *matCellDef="let r">{{ r.discount | currency }}</td>
+        </ng-container>
+        <ng-container matColumnDef="total">
+          <th mat-header-cell *matHeaderCellDef>Total</th>
+          <td mat-cell *matCellDef="let r">{{ r.total | currency }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </mat-tab>
+
+    <!-- ========== Approval TAB ========== -->
+    <mat-tab
+      label="Approval"
+      *ngIf="request?.status !== 'Approved' && request?.status !== 'Rejected'"
+    >
+      <div class="approval-form">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Action</mat-label>
+          <mat-select [(ngModel)]="action">
+            <mat-option value="Approved">Approve</mat-option>
+            <mat-option value="Rejected">Reject</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Remarks</mat-label>
+          <textarea matInput rows="3" [(ngModel)]="remarks"></textarea>
+        </mat-form-field>
+
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="submit()"
+          [disabled]="!action || submitting"
+        >
+          Submit
+        </button>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>
+<mat-chip
+  color="accent"
+  selected
+  *ngIf="request?.status === 'Approved' || request?.status === 'Rejected'"
+>
+  This request has already been {{ request?.status }}.
+</mat-chip>
+<ng-template #spn>
+  <div class="spinner">
+    <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+  </div>
+</ng-template>
