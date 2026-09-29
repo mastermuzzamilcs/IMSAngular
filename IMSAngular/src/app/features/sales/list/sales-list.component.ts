@@ -11,12 +11,24 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { CommonModule } from '@angular/common';
+import { MatInputModule } from '@angular/material/input';
 
 @Component({
   selector: 'app-sales-list',
-  standalone:true,
-  imports:[MatPaginatorModule,MatIconModule,MatChipsModule,MatTableModule,MatSortModule,MatLabel,MatFormFieldModule,MatCardModule
-    ,MatButtonModule,MatButtonToggleModule,CommonModule],
+  standalone: true,
+  imports: [
+    MatPaginatorModule,
+    MatIconModule,
+    MatChipsModule,
+    MatTableModule,
+    MatSortModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatCardModule,
+    MatButtonModule,
+    MatButtonToggleModule,
+    CommonModule
+  ],
   templateUrl: './sales-list.component.html',
   styleUrls: ['./sales-list.component.scss']
 })
@@ -28,7 +40,7 @@ export class SalesListComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private dialog: MatDialog) {}
+  constructor(private dialog: MatDialog) { }
 
   ngOnInit(): void {
     // Load sales data

@@ -125,6 +125,6 @@ this.userBranchesLookup=this.route.snapshot.data['branches'];
     this.loadingService.hide();
   }
   ResetPasswordAction(user: any){
-    alert('Implementation Pending');
+    //alert('Implementation Pending');
   }
 }
