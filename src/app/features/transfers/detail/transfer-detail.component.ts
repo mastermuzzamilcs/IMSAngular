@@ -15,4 +15,7 @@ export class TransferDetailComponent {
     public dialogRef: MatDialogRef<TransferDetailComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
   ) {}
+  get transfer() {
+    return this.data.transfer;
+  }
 }

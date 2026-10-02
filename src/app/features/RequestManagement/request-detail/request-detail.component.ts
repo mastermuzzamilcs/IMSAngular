@@ -14,9 +14,13 @@ import { FormsModule } from '@angular/forms';
 import { WorkflowService } from '../../../core/services/Workflow.service';
 import { StockService } from '../../../core/services/stock.service';
 import { StockDetails } from '../../../core/Models/StockModel';
-import { WorkflowRequest } from '../../../core/Models/WorkflowModel';
+import { RequestStatus, RequestType, WorkflowRequest } from '../../../core/Models/WorkflowModel';
+import { WorkflowTransitionOption } from '../../../core/Models/WorkflowStatusTransition';
+import { WorkflowTransitionService } from '../../../core/services/workflow-transition.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ProductService } from '../../../core/services/product.service';
+import { TransferService } from '../../../core/services/transfer.service';
+import { Transfer } from '../../../core/Models/TransferModel';
 
 @Component({
   selector: 'app-request-detail',
@@ -46,6 +50,8 @@ export class RequestDetailComponent implements OnInit {
     private wfSvc: WorkflowService,
     private stockSvc: StockService,
     private _productService: ProductService,
+    private transferSvc: TransferService,
+    private transitionService: WorkflowTransitionService,
   ) {}
 
   // UI state
@@ -53,45 +59,63 @@ export class RequestDetailComponent implements OnInit {
   request!: WorkflowRequest;
   stockHdr: any;
   stockRows: StockDetails[] = [];
+  isTransfer = false;
+  transfer: Transfer | null = null;
+  transferRows: any[] = [];
+  transferColumns = ['transferProduct', 'transferDescription', 'transferQty'];
 
   /** Approval form */
-  action: '' | 'Approved' | 'Rejected' = '';
+  action: RequestStatus | '' = '';
   remarks = '';
   submitting = false;
 
   displayedColumns = ['product', 'qty', 'price', 'disc', 'total'];
+  actions: WorkflowTransitionOption[] = [];
+
+  get showApproval(): boolean {
+    return this.actions.length > 0;
+  }
+
+  get transferDate(): Date | null {
+    const value = this.transfer?.expectedDate;
+    if (!value) {
+      return null;
+    }
+    if (typeof value.toDate === 'function') {
+      return value.toDate();
+    }
+    return value instanceof Date ? value : new Date(value);
+  }
 
   async ngOnInit(): Promise<void> {
     this.request = (await this.wfSvc.getById(this.data.requestId))!;
-    this.stockHdr = await this.stockSvc.getStockById(this.request.moduleId);
-    this.stockRows = await this.stockSvc.getStockDetails(this.request.moduleId);
+    this.isTransfer = this.request.requestType === RequestType.Transfer;
+    if (this.isTransfer) {
+      this.transfer = await this.transferSvc.getTransferById(this.request.moduleId);
+      this.transferRows = this.transfer?.items || [];
+    } else {
+      this.stockHdr = await this.stockSvc.getStockById(this.request.moduleId);
+      this.stockRows = await this.stockSvc.getStockDetails(this.request.moduleId);
+    }
+    const status = this.isTransfer
+      ? this.transfer?.status || this.request.status
+      : this.request.status;
+    this.actions = await this.transitionService.getNext(this.request.requestType, status);
     this.loading = false;
   }
 
   /** Submit approve / reject */
   async submit(): Promise<void> {
-    if (!this.action) return;
+    if (!this.action || !this.request.requestId) return;
     this.submitting = true;
-    if (this.action === 'Approved') {
-      await this.wfSvc.approve(
-        this.request.requestId!,
-        this.stockHdr.stockid,
-        this.stockHdr.branchid,
-        'admin',
-        this.request.requestType,
-        this.remarks,
-      );
-    } else {
-      await this.wfSvc.reject(
-        this.request.requestId!,
-        this.stockHdr.stockid,
-        this.stockHdr.branchid,
-        'admin',
-        this.request.requestType,
-        this.remarks,
-      );
+    try {
+      const status = this.action as RequestStatus;
+      await this.wfSvc.updateStatus(this.request.requestId, status, 'admin', this.remarks);
+      this.dialogRef.close({ updated: true });
+    } catch (err) {
+      console.error('Error updating workflow request:', err);
+      alert(err instanceof Error ? err.message : 'Failed to update request');
     }
     this.submitting = false;
-    this.dialogRef.close({ updated: true });
   }
 }

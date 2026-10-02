@@ -1,14 +1,17 @@
 <h2 mat-dialog-title>New Transfer Request</h2>
+
 <mat-dialog-content>
   <form [formGroup]="transferForm">
     <div class="form-row two-columns">
       <mat-form-field appearance="outline">
         <mat-label>From Branch</mat-label>
+
         <mat-select formControlName="fromBranch" (selectionChange)="loadAvailableLaptops()">
-          <mat-option *ngFor="let branch of branches" [value]="branch.id">
+          <mat-option *ngFor="let branch of branches" [value]="branch.branchid">
             {{ branch.name }}
           </mat-option>
         </mat-select>
+
         <mat-error *ngIf="transferForm.get('fromBranch')?.hasError('required')">
           Source branch is required
         </mat-error>
@@ -16,11 +19,13 @@
 
       <mat-form-field appearance="outline">
         <mat-label>To Branch</mat-label>
+
         <mat-select formControlName="toBranch">
-          <mat-option *ngFor="let branch of branches" [value]="branch.id">
+          <mat-option *ngFor="let branch of branches" [value]="branch.branchid">
             {{ branch.name }}
           </mat-option>
         </mat-select>
+
         <mat-error *ngIf="transferForm.get('toBranch')?.hasError('required')">
           Destination branch is required
         </mat-error>
@@ -30,11 +35,10 @@
     <div class="form-row">
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Reason for Transfer</mat-label>
-        <textarea
-          matInput
-          formControlName="reason"
-          placeholder="Enter reason for transfer"
-        ></textarea>
+
+        <textarea matInput formControlName="reason" placeholder="Enter reason for transfer">
+        </textarea>
+
         <mat-error *ngIf="transferForm.get('reason')?.hasError('required')">
           Reason is required
         </mat-error>
@@ -44,9 +48,13 @@
     <div class="form-row">
       <mat-form-field appearance="outline">
         <mat-label>Expected Transfer Date</mat-label>
+
         <input matInput [matDatepicker]="picker" formControlName="expectedDate" />
-        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+
+        <mat-datepicker-toggle matSuffix [for]="picker"> </mat-datepicker-toggle>
+
         <mat-datepicker #picker></mat-datepicker>
+
         <mat-error *ngIf="transferForm.get('expectedDate')?.hasError('required')">
           Expected date is required
         </mat-error>
@@ -57,23 +65,33 @@
       <h3>Select Laptops to Transfer</h3>
 
       <div class="laptop-selection">
+        <!-- AVAILABLE PRODUCTS -->
+
         <div class="available-laptops">
           <h4>Available Laptops</h4>
+
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Search Laptops</mat-label>
-            <input matInput placeholder="Search by model, serial number..." />
-            <mat-icon matSuffix>search</mat-icon>
+            <mat-label> Search Laptops </mat-label>
+
+            <input
+              matInput
+              placeholder="Search by product name..."
+              (keyup)="searchLaptop($event)"
+            />
+
+            <mat-icon matSuffix> search </mat-icon>
           </mat-form-field>
 
           <div class="laptop-list">
-            <mat-card *ngFor="let laptop of availableLaptops" class="laptop-card">
+            <mat-card *ngFor="let laptop of filteredLaptops" class="laptop-card">
               <mat-card-content>
                 <div class="laptop-info">
-                  <h4>{{ laptop.brand }} {{ laptop.model }}</h4>
-                  <p>SN: {{ laptop.serialNumber }}</p>
-                  <p>{{ laptop.processor }} | {{ laptop.ram }} | {{ laptop.storage }}</p>
+                  <h4>{{ laptop.brand }} {{ laptop.productName }}</h4>
+                  <p>Available Quantity: {{ laptop.quantity }}</p>
+                  <p>{{ laptop.description }}</p>
                 </div>
-                <button mat-icon-button color="primary" (click)="addLaptop(laptop)">
+
+                <button mat-icon-button color="primary" type="button" (click)="addLaptop(laptop)">
                   <mat-icon>add_circle</mat-icon>
                 </button>
               </mat-card-content>
@@ -81,17 +99,25 @@
           </div>
         </div>
 
+        <!-- SELECTED PRODUCTS -->
+
         <div class="selected-laptops">
           <h4>Selected Laptops</h4>
+
           <div class="laptop-list">
             <mat-card *ngFor="let laptop of selectedLaptops" class="laptop-card">
               <mat-card-content>
                 <div class="laptop-info">
-                  <h4>{{ laptop.brand }} {{ laptop.model }}</h4>
-                  <p>SN: {{ laptop.serialNumber }}</p>
+                  <h4>{{ laptop.brand }} {{ laptop.productName }}</h4>
+
+                  <p>
+                    Transfer Quantity:
+                    {{ laptop.quantity }}
+                  </p>
                 </div>
+
                 <button mat-icon-button color="warn" (click)="removeLaptop(laptop)">
-                  <mat-icon>remove_circle</mat-icon>
+                  <mat-icon> remove_circle </mat-icon>
                 </button>
               </mat-card-content>
             </mat-card>
@@ -104,6 +130,7 @@
 
 <mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()">Cancel</button>
+
   <button
     mat-raised-button
     color="primary"

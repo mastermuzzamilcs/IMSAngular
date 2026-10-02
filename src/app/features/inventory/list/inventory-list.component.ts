@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -45,6 +45,8 @@ export class InventoryListComponent implements OnInit, AfterViewInit {
     'description',
     'price',
     'quantity',
+    'balanceQuantity',
+    'reservedQuantity',
     'alert',
   ];
   dataSource = new MatTableDataSource<any>([]);
@@ -91,7 +93,8 @@ export class InventoryListComponent implements OnInit, AfterViewInit {
       this.selectedBranchId,
     );
     this.stockOverviewData.forEach((item) => {
-      item.alert = item.quantity <= 0 ? 'Empty' : item.quantity < 5 ? 'Low' : 'Healthy';
+      const onHand = item.balanceQuantity ?? item.quantity;
+      item.alert = onHand <= 0 ? 'Empty' : onHand < 5 ? 'Low' : 'Healthy';
     });
 
     this.dataSource.data = this.stockOverviewData;

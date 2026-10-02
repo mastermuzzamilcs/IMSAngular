@@ -1,0 +1,26 @@
+.detail-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.detail-row strong {
+  width: 170px;
+}
+
+.product-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.product-table th,
+.product-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.product-table th {
+  font-weight: 600;
+}

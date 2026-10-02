@@ -1,0 +1,110 @@
+<div class="container">
+  <div class="header-container">
+    <h1 class="mat-headline-5">Workflow Functions</h1>
+    <button mat-raised-button color="primary" (click)="openAddFunction()">
+      <mat-icon>add</mat-icon> Add Function
+    </button>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <div class="mat-elevation-z2 table-container">
+        <table mat-table [dataSource]="functions" matSort #functionSort="matSort">
+          <ng-container matColumnDef="code">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Code</th>
+            <td mat-cell *matCellDef="let row">{{ row.code }}</td>
+          </ng-container>
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+            <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+          </ng-container>
+          <ng-container matColumnDef="className">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Class Name</th>
+            <td mat-cell *matCellDef="let row">{{ row.className }}</td>
+          </ng-container>
+          <ng-container matColumnDef="functionActions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let row">
+              <button
+                mat-icon-button
+                color="primary"
+                (click)="openEditFunction(row)"
+                matTooltip="Edit"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                color="warn"
+                (click)="openDeleteFunction(row)"
+                matTooltip="Delete"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="functionColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: functionColumns"></tr>
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell" colspan="4">No workflow functions found.</td>
+          </tr>
+        </table>
+        <mat-paginator #functionPaginator [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="header-container">
+    <h1 class="mat-headline-5">Associations</h1>
+    <button mat-raised-button color="primary" (click)="openAddLink()">
+      <mat-icon>add</mat-icon> Associate
+    </button>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <div class="mat-elevation-z2 table-container">
+        <table mat-table [dataSource]="links" matSort #linkSort="matSort">
+          <ng-container matColumnDef="requestType">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Request Type</th>
+            <td mat-cell *matCellDef="let row">{{ row.requestType }}</td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+            <td mat-cell *matCellDef="let row">{{ row.status }}</td>
+          </ng-container>
+          <ng-container matColumnDef="priority">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Priority</th>
+            <td mat-cell *matCellDef="let row">{{ row.priority }}</td>
+          </ng-container>
+          <ng-container matColumnDef="functionName">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Function</th>
+            <td mat-cell *matCellDef="let row">{{ functionName(row.functionKey) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="linkActions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let row">
+              <button mat-icon-button color="primary" (click)="openEditLink(row)" matTooltip="Edit">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                color="warn"
+                (click)="openDeleteLink(row)"
+                matTooltip="Delete"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="linkColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: linkColumns"></tr>
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell" colspan="5">No associations found.</td>
+          </tr>
+        </table>
+        <mat-paginator #linkPaginator [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

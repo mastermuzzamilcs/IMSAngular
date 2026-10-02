@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -14,33 +15,47 @@ import {
   orderBy,
 } from 'firebase/firestore';
 import { firestore } from '../../firebase-config';
-import { WorkflowRequest } from '../Models/WorkflowModel';
-import { StockService } from './stock.service';
+import { RequestStatus, RequestType, WorkflowRequest } from '../Models/WorkflowModel';
+import { WorkflowExecutor } from '../workflow/workflow-executor';
 
 @Injectable({ providedIn: 'root' })
 export class WorkflowService {
   private readonly topicName = 'workflow_requests';
 
-  constructor(private _stockService: StockService) {}
+  constructor(private executor: WorkflowExecutor) {}
   /* ---------- Create a new request ---------------- */
   async createRequest(partial: {
     moduleId: string;
-    requestType: 'StockIn' | 'StockOut';
+    requestType: WorkflowRequest['requestType'];
     requestedBy: string;
     remarks?: string;
   }): Promise<string> {
     const payload: WorkflowRequest = {
       ...partial,
-      status: 'Pending',
+      status: RequestStatus.Pending,
       requestedOn: new Date(),
     };
     const ref = await addDoc(collection(firestore, this.topicName), payload);
+    try {
+      await this.executor.run(
+        { ...payload, requestId: ref.id },
+        RequestStatus.Pending,
+        payload.remarks || '',
+        payload.requestedBy,
+      );
+    } catch (error) {
+      await deleteDoc(ref);
+      throw error;
+    }
     return ref.id;
   }
 
   /* ---------- Fetch all pending requests ---------- */
   async getPending(): Promise<WorkflowRequest[]> {
-    const q = query(collection(firestore, this.topicName), where('status', '==', 'Pending'));
+    const q = query(
+      collection(firestore, this.topicName),
+      where('status', '==', RequestStatus.Pending),
+    );
     const snap = await getDocs(q);
     return this.mapSnapshot(snap);
   }
@@ -54,8 +69,8 @@ export class WorkflowService {
       return {
         requestId: doc.id,
         moduleId: data['moduleId'] || '',
-        requestType: data['requestType'] || '',
-        status: data['status'] || '',
+        requestType: (data['requestType'] || '') as RequestType,
+        status: (data['status'] || '') as RequestStatus,
         requestedBy: data['requestedBy'] || '',
         requestedOn: data['requestedOn']?.toDate?.() ?? new Date(),
         approvedBy: data['approvedBy'] || '',
@@ -65,48 +80,43 @@ export class WorkflowService {
     });
   }
 
-  /* ---------- Approve a request ------------------- */
-  async approve(
+  async findByModule(moduleId: string, requestType: RequestType): Promise<WorkflowRequest | null> {
+    const q = query(collection(firestore, this.topicName), where('moduleId', '==', moduleId));
+    const snap = await getDocs(q);
+    const match = snap.docs.find((item) => item.data()['requestType'] === requestType);
+    return match ? this.mapDoc(match.data(), match.id) : null;
+  }
+
+  async recordStatus(
     requestId: string,
-    moduleid: string,
-    branchid: string,
+    status: RequestStatus,
     approver: string,
-    requestType: string,
     remarks: string = '',
   ): Promise<void> {
-    this.MarkRequestDetails(moduleid, branchid, requestType, 'Approved');
-    const ref = doc(firestore, this.topicName, requestId);
-    await updateDoc(ref, {
-      status: 'Approved',
+    await updateDoc(doc(firestore, this.topicName, requestId), {
+      status,
       approvedBy: approver,
       approvedOn: Timestamp.now(),
       remarks,
     });
   }
 
-  /* ---------- Reject a request -------------------- */
-  async reject(
+  async updateStatus(
     requestId: string,
-    moduleid: string,
-    branchid: string,
+    status: RequestStatus,
     approver: string,
-    requestType: string,
     remarks: string = '',
   ): Promise<void> {
-    this.MarkRequestDetails(moduleid, branchid, requestType, 'Rejected');
     const ref = doc(firestore, this.topicName, requestId);
     await updateDoc(ref, {
-      status: 'Rejected',
+      status,
       approvedBy: approver,
       approvedOn: Timestamp.now(),
       remarks,
     });
-  }
-  MarkRequestDetails(moduleid: string, branchid: string, requestType: string, status: string) {
-    switch (requestType) {
-      case 'StockIn':
-      case 'StockOut':
-        this._stockService.MarkRequestDetails(moduleid, branchid, status);
+    const request = await this.getById(requestId);
+    if (request) {
+      await this.executor.run(request, status, remarks, approver);
     }
   }
 

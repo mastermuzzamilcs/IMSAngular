@@ -13,6 +13,7 @@ export interface Stock {
   entrydate?: Date;
   status: string;
   stocktype: string;
+  remarks?: string;
 }
 
 export interface StockDetails {
@@ -37,6 +38,8 @@ export interface StockOverview {
   brandid: string;
   brandName: string;
   quantity: number;
+  balanceQuantity?: number;
+  reservedQuantity?: number;
   price: number;
   description: string;
   alert?: 'Empty' | 'Low' | 'Healthy';

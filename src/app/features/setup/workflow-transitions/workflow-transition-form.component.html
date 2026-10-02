@@ -1,0 +1,40 @@
+<h2 mat-dialog-title>{{ dialogTitle }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Request Type</mat-label>
+      <mat-select formControlName="requestType">
+        <mat-option value="">Generic</mat-option>
+        <mat-option *ngFor="let type of requestTypes" [value]="type">{{ type }}</mat-option>
+      </mat-select>
+      <mat-hint>Generic applies to request types with no transitions of their own</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>From Status</mat-label>
+      <mat-select formControlName="fromStatus">
+        <mat-option *ngFor="let status of statuses" [value]="status">{{ status }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>To Status</mat-label>
+      <mat-select formControlName="toStatus">
+        <mat-option *ngFor="let status of statuses" [value]="status">{{ status }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Label</mat-label>
+      <input matInput formControlName="label" placeholder="Approve" />
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="form.invalid">
+    {{ data.mode === 'add' ? 'Add' : 'Update' }}
+  </button>
+</mat-dialog-actions>

@@ -1,0 +1,65 @@
+<div class="container">
+  <div class="header-container">
+    <h1 class="mat-headline-5">Status Transitions</h1>
+    <button mat-raised-button color="primary" (click)="openAddDialog()">
+      <mat-icon>add</mat-icon> Add Transition
+    </button>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <div class="mat-elevation-z2 table-container">
+        <table mat-table [dataSource]="dataSource" matSort>
+          <ng-container matColumnDef="requestType">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Request Type</th>
+            <td mat-cell *matCellDef="let row">{{ requestTypeLabel(row.requestType) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="fromStatus">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>From</th>
+            <td mat-cell *matCellDef="let row">{{ row.fromStatus }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="toStatus">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>To</th>
+            <td mat-cell *matCellDef="let row">{{ row.toStatus }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="label">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Label</th>
+            <td mat-cell *matCellDef="let row">{{ row.label }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let row">
+              <button
+                mat-icon-button
+                color="primary"
+                (click)="openEditDialog(row)"
+                matTooltip="Edit"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                color="warn"
+                (click)="openDeleteDialog(row)"
+                matTooltip="Delete"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell" colspan="5">No status transitions found.</td>
+          </tr>
+        </table>
+        <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
