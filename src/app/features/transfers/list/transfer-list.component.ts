@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
@@ -11,8 +11,12 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
+
 import { TransferFormComponent } from '../form/transfer-form.component';
 import { TransferDetailComponent } from '../detail/transfer-detail.component';
+
+import { TransferService } from '../../../core/services/transfer.service';
+import { Transfer } from '../../../core/Models/TransferModel';
 
 @Component({
   selector: 'app-transfer-list',
@@ -35,7 +39,7 @@ import { TransferDetailComponent } from '../detail/transfer-detail.component';
   templateUrl: './transfer-list.component.html',
   styleUrls: ['./transfer-list.component.scss'],
 })
-export class TransferListComponent implements AfterViewInit {
+export class TransferListComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = [
     'transferId',
     'fromBranch',
@@ -45,32 +49,65 @@ export class TransferListComponent implements AfterViewInit {
     'status',
     'actions',
   ];
-  dataSource = new MatTableDataSource<any>([]);
+
+  dataSource = new MatTableDataSource<Transfer>([]);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private dialog: MatDialog) {}
+  constructor(
+    private dialog: MatDialog,
+    private transferService: TransferService,
+  ) {}
+
+  async ngOnInit(): Promise<void> {
+    await this.loadTransfers();
+  }
 
   ngAfterViewInit() {
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
   }
 
+  async loadTransfers() {
+    try {
+      const transfers = await this.transferService.getTransfers();
+
+      this.dataSource.data = transfers;
+    } catch (error) {
+      console.error('Error loading transfers', error);
+    }
+  }
+
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
+
     this.dataSource.filter = filterValue.trim().toLowerCase();
   }
 
   openNewTransferDialog() {
+    console.log('New Transfer clicked');
+
     const dialogRef = this.dialog.open(TransferFormComponent, {
       width: '800px',
-      data: { mode: 'new' },
+      data: {
+        mode: 'new',
+      },
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
+    dialogRef.afterClosed().subscribe(async (result) => {
+      console.log('Dialog closed', result);
+
       if (result) {
-        // Handle new transfer
+        try {
+          await this.transferService.addTransfer(result as Transfer);
+
+          console.log('Transfer saved successfully');
+
+          await this.loadTransfers();
+        } catch (error) {
+          console.error('Error saving transfer', error);
+        }
       }
     });
   }
@@ -78,26 +115,45 @@ export class TransferListComponent implements AfterViewInit {
   viewTransferDetail(transfer: any) {
     this.dialog.open(TransferDetailComponent, {
       width: '800px',
-      data: { transfer },
+      data: {
+        transfer,
+      },
     });
   }
 
-  updateStatus(_transfer: any, _newStatus: string) {
-    // Update transfer status
+  async updateStatus(transfer: any, newStatus: string) {
+    try {
+      await this.transferService.updateTransfer({
+        ...transfer,
+
+        status: newStatus,
+      });
+
+      await this.loadTransfers();
+
+      console.log('Status Updated', newStatus);
+    } catch (error) {
+      console.error('Status update failed', error);
+    }
   }
 
   getStatusColor(status: string): string {
     switch (status) {
       case 'Pending':
         return 'accent';
+
       case 'Approved':
         return 'primary';
+
       case 'In Transit':
         return 'accent';
+
       case 'Completed':
         return 'primary';
+
       case 'Rejected':
         return 'warn';
+
       default:
         return '';
     }

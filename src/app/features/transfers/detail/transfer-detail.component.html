@@ -1,7 +1,69 @@
 <h2 mat-dialog-title>Transfer Details</h2>
+
 <mat-dialog-content>
-  <!-- Add transfer details content here -->
+  <div class="detail-row">
+    <strong>Transfer ID:</strong>
+    {{ transfer.id || transfer.transferId }}
+  </div>
+
+  <div class="detail-row">
+    <strong>From Branch:</strong>
+    {{ transfer.fromBranchName || transfer.fromBranch }}
+  </div>
+
+  <div class="detail-row">
+    <strong>To Branch:</strong>
+    {{ transfer.toBranchName || transfer.toBranch }}
+  </div>
+
+  <div class="detail-row">
+    <strong>Reason:</strong>
+    {{ transfer.reason }}
+  </div>
+
+  <div class="detail-row">
+    <strong>Status:</strong>
+    {{ transfer.status }}
+  </div>
+
+  <div class="detail-row">
+    <strong>Request Date:</strong>
+    {{ transfer.requestDate | date: 'medium' }}
+  </div>
+
+  <div class="detail-row">
+    <strong>Expected Date:</strong>
+    {{ transfer.expectedDate | date: 'mediumDate' }}
+  </div>
+
+  <hr />
+
+  <h3>Products</h3>
+
+  <table class="product-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Product</th>
+        <th>Brand</th>
+        <th>Quantity</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor="let item of transfer.items; let i = index">
+        <td>{{ i + 1 }}</td>
+
+        <td>{{ item.productName }}</td>
+
+        <td>{{ item.brand }}</td>
+
+        <td>{{ item.quantity }}</td>
+      </tr>
+    </tbody>
+  </table>
 </mat-dialog-content>
+
 <mat-dialog-actions align="end">
   <button mat-button (click)="dialogRef.close()">Close</button>
 </mat-dialog-actions>

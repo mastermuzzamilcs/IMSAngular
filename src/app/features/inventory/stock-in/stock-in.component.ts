@@ -23,6 +23,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatNativeDateModule } from '@angular/material/core';
 import { WorkflowService } from '../../../core/services/Workflow.service';
+import { RequestType } from '../../../core/Models/WorkflowModel';
 import { LoadingService } from '../../../core/services/Loading.service';
 
 @Component({
@@ -160,7 +161,7 @@ export class StockInComponent implements OnInit {
 
       await this._workflowService.createRequest({
         moduleId: stock_id,
-        requestType: 'StockIn',
+        requestType: RequestType.StockIn,
         requestedBy: 'currentUserUid', // replace with auth‑service value
         remarks: 'Auto‑generated from Stock‑In screen',
       });

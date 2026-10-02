@@ -1,0 +1,95 @@
+<div class="container">
+  <div class="header-container">
+    <h1 class="mat-headline-5">New Transfer Request</h1>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <form [formGroup]="transferForm">
+        <!-- Branch Dropdown -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Branch</mat-label>
+          <mat-select formControlName="branch" (selectionChange)="onBranchChange()">
+            <mat-option *ngFor="let branch of branches" [value]="branch.branchid">
+              {{ branch.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- User Dropdown -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>User</mat-label>
+          <mat-select formControlName="user">
+            <mat-option *ngFor="let user of usersForBranch" [value]="user.userid">
+              {{ user.name }} ({{ user.branchName }})
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Date -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Date</mat-label>
+          <input matInput [matDatepicker]="picker" formControlName="date" />
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+
+        <!-- Add Product Button -->
+        <button mat-raised-button color="primary" type="button" (click)="openProductDialog()">
+          <mat-icon>add</mat-icon> Add Item
+        </button>
+      </form>
+
+      <!-- Product Table -->
+      <table mat-table [dataSource]="dataSource" class="mat-elevation-z1">
+        <!-- Product Name -->
+        <ng-container matColumnDef="product">
+          <th mat-header-cell *matHeaderCellDef>Product</th>
+          <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+        </ng-container>
+
+        <!-- Description -->
+        <ng-container matColumnDef="description">
+          <th mat-header-cell *matHeaderCellDef>Description</th>
+          <td mat-cell *matCellDef="let row">{{ row.description }}</td>
+        </ng-container>
+
+        <!-- Quantity -->
+        <ng-container matColumnDef="quantity">
+          <th mat-header-cell *matHeaderCellDef>Quantity</th>
+          <td mat-cell *matCellDef="let row">
+            <input matInput type="number" [(ngModel)]="row.quantity" />
+          </td>
+        </ng-container>
+
+        <!-- Actions -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let row">
+            <button mat-icon-button color="warn" (click)="removeProduct(row)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell" colspan="4">No stock data found.</td>
+        </tr>
+      </table>
+
+      <!-- Submit Button -->
+      <div class="form-actions mt-4">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="submitTransfer()"
+          [disabled]="dataSource.data.length <= 0 || transferForm.invalid"
+        >
+          Generate Request
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
