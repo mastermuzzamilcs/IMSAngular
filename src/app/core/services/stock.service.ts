@@ -100,6 +100,7 @@ export class StockService {
       NetTotal: _payload['NetTotal'] || 0,
       status: _payload['status'] || '',
       stocktype: _payload['stocktype'] || '',
+      ...(_payload['remarks'] ? { remarks: _payload['remarks'] } : {}),
     };
 
     return _stock;
@@ -232,7 +233,6 @@ export class StockService {
     try {
       const stockDocRef = doc(firestore, this.topicName, _stockid);
       await updateDoc(stockDocRef, { status: _status });
-      await this.updateStockOverviewCache(_branchid);
       console.log(`Stock #${_stockid} marked as ${_status}`);
     } catch (error) {
       console.error('Error updating stock status:', error);
@@ -384,27 +384,230 @@ export class StockService {
 
     return Object.values(grouped);
   }
-  async updateStockOverviewCache(branchid: string): Promise<void> {
+  async updateStockOverviewCache(
+    branchid: string,
+    reservedOverride?: Map<string, number>,
+  ): Promise<void> {
     const calculated = await this.calculateOverviewForBranch(branchid);
-
     const overviewCollection = collection(firestore, this.OverviewtopicName);
-
-    // Delete old entries
     const q = query(overviewCollection, where('branchid', '==', branchid));
     const snap = await getDocs(q);
-    const deletions = snap.docs.map((doc) => deleteDoc(doc.ref));
-    await Promise.all(deletions);
+    const reservedByProduct =
+      reservedOverride ??
+      new Map<string, number>(
+        snap.docs.map((overviewDoc) => {
+          const data = overviewDoc.data();
+          return [data['productid'], Number(data['reservedQuantity']) || 0];
+        }),
+      );
+    const balanceByProduct = new Map<string, number>(
+      snap.docs.map((overviewDoc) => {
+        const data = overviewDoc.data();
+        const stored = data['balanceQuantity'];
+        return [
+          data['productid'],
+          stored === undefined || stored === null
+            ? Number(data['quantity']) || 0
+            : Number(stored) || 0,
+        ];
+      }),
+    );
 
-    // Add new entries
+    await Promise.all(snap.docs.map((overviewDoc) => deleteDoc(overviewDoc.ref)));
+
     const additions = calculated.map((item) => {
       const { alert, ...rest } = item;
+      const reservedQuantity = reservedByProduct.get(item.productid) || 0;
+      const balanceQuantity = balanceByProduct.has(item.productid)
+        ? balanceByProduct.get(item.productid) || 0
+        : item.quantity;
       return addDoc(overviewCollection, {
         ...rest,
-        ...(alert !== undefined && { alert }), // only include if defined
+        reservedQuantity,
+        balanceQuantity,
+        ...(alert !== undefined && { alert }),
         lastUpdated: new Date(),
       });
     });
     await Promise.all(additions);
     this.cachedOverview.delete(branchid);
+  }
+
+  private collapseLines(
+    items: { productId: string; quantity: number }[],
+  ): { productId: string; quantity: number }[] {
+    const totals = new Map<string, number>();
+    items.forEach((item) => {
+      const quantity = Number(item.quantity) || 0;
+      totals.set(item.productId, (totals.get(item.productId) || 0) + quantity);
+    });
+    return Array.from(totals.entries()).map(([productId, quantity]) => ({ productId, quantity }));
+  }
+
+  async holdInbound(
+    branchId: string,
+    items: { productId: string; quantity: number }[],
+  ): Promise<void> {
+    await this.adjustQuantities(branchId, items, true, (row) => ({
+      reservedQuantity: this.reserved(row) + this.lineQuantity(row),
+      balanceQuantity: this.balance(row),
+    }));
+  }
+
+  async acceptInbound(
+    branchId: string,
+    items: { productId: string; quantity: number }[],
+  ): Promise<void> {
+    await this.adjustQuantities(branchId, items, true, (row) => ({
+      reservedQuantity: Math.max(0, this.reserved(row) - this.lineQuantity(row)),
+      balanceQuantity: this.balance(row) + this.lineQuantity(row),
+      quantity: this.ledger(row) + this.lineQuantity(row),
+    }));
+  }
+
+  async cancelInbound(
+    branchId: string,
+    items: { productId: string; quantity: number }[],
+  ): Promise<void> {
+    await this.adjustQuantities(branchId, items, true, (row) => ({
+      reservedQuantity: Math.max(0, this.reserved(row) - this.lineQuantity(row)),
+      balanceQuantity: this.balance(row),
+    }));
+  }
+
+  async holdOutbound(
+    branchId: string,
+    items: { productId: string; quantity: number }[],
+  ): Promise<void> {
+    await this.adjustQuantities(branchId, items, false, (row) => {
+      const quantity = this.lineQuantity(row);
+      const balance = this.balance(row);
+      if (quantity > balance) {
+        throw new Error('Quantity is greater than the balance quantity');
+      }
+      return {
+        reservedQuantity: this.reserved(row) + quantity,
+        balanceQuantity: balance - quantity,
+      };
+    });
+  }
+
+  async acceptOutbound(
+    branchId: string,
+    items: { productId: string; quantity: number }[],
+  ): Promise<void> {
+    await this.adjustQuantities(branchId, items, false, (row) => ({
+      reservedQuantity: Math.max(0, this.reserved(row) - this.lineQuantity(row)),
+      balanceQuantity: this.balance(row),
+      quantity: this.ledger(row) - this.lineQuantity(row),
+    }));
+  }
+
+  async cancelOutbound(
+    branchId: string,
+    items: { productId: string; quantity: number }[],
+  ): Promise<void> {
+    await this.adjustQuantities(branchId, items, false, (row) => ({
+      reservedQuantity: Math.max(0, this.reserved(row) - this.lineQuantity(row)),
+      balanceQuantity: this.balance(row) + this.lineQuantity(row),
+    }));
+  }
+
+  async restoreApprovedOutbound(
+    branchId: string,
+    items: { productId: string; quantity: number }[],
+  ): Promise<void> {
+    await this.adjustQuantities(branchId, items, false, (row) => ({
+      reservedQuantity: this.reserved(row),
+      balanceQuantity: this.balance(row) + this.lineQuantity(row),
+      quantity: this.ledger(row) + this.lineQuantity(row),
+    }));
+  }
+
+  private lineQuantity(row: StockOverview & { movementQuantity?: number }): number {
+    return Number(row.movementQuantity) || 0;
+  }
+
+  private reserved(row: StockOverview): number {
+    return Number(row.reservedQuantity) || 0;
+  }
+
+  private balance(row: StockOverview): number {
+    return Number(row.balanceQuantity ?? row.quantity) || 0;
+  }
+
+  private ledger(row: StockOverview): number {
+    return Number(row.quantity) || 0;
+  }
+
+  private async adjustQuantities(
+    branchId: string,
+    items: { productId: string; quantity: number }[],
+    createMissing: boolean,
+    change: (row: StockOverview & { movementQuantity: number }) => {
+      reservedQuantity: number;
+      balanceQuantity: number;
+      quantity?: number;
+    },
+  ): Promise<void> {
+    for (const line of this.collapseLines(items)) {
+      const row = await this.overviewRow(branchId, line.productId, createMissing);
+      const next = change({ ...row, movementQuantity: line.quantity });
+      await updateDoc(doc(firestore, this.OverviewtopicName, row.stockid), {
+        reservedQuantity: next.reservedQuantity,
+        balanceQuantity: next.balanceQuantity,
+        ...(next.quantity !== undefined ? { quantity: next.quantity } : {}),
+        lastUpdated: new Date(),
+      });
+      this.cachedOverview.delete(branchId);
+    }
+  }
+
+  private async overviewRow(
+    branchId: string,
+    productId: string,
+    createMissing: boolean,
+  ): Promise<StockOverview> {
+    const overview = await this.getStockOverviewByBranch(branchId, true);
+    const existing = overview.find((item) => item.productid === productId);
+    if (existing?.stockid) {
+      return existing;
+    }
+    if (!createMissing) {
+      throw new Error('Stock was not found for a selected product');
+    }
+
+    const product = await this._productService.getProductById(productId);
+    const brand = product?.brandId ? await this._brandService.getBrandById(product.brandId) : null;
+    const branch = await this._branchService.getBranchById(branchId);
+    const created = await addDoc(collection(firestore, this.OverviewtopicName), {
+      branchid: branchId,
+      branchName: branch?.name ?? '',
+      productid: productId,
+      productName: product?.name ?? '',
+      brandid: product?.brandId ?? '',
+      brandName: brand?.name ?? '',
+      quantity: 0,
+      balanceQuantity: 0,
+      reservedQuantity: 0,
+      price: product?.price ?? 0,
+      description: product?.description ?? '',
+      lastUpdated: new Date(),
+    });
+    this.cachedOverview.delete(branchId);
+    return {
+      stockid: created.id,
+      branchid: branchId,
+      branchName: branch?.name ?? '',
+      productid: productId,
+      productName: product?.name ?? '',
+      brandid: product?.brandId ?? '',
+      brandName: brand?.name ?? '',
+      quantity: 0,
+      balanceQuantity: 0,
+      reservedQuantity: 0,
+      price: product?.price ?? 0,
+      description: product?.description ?? '',
+    };
   }
 }

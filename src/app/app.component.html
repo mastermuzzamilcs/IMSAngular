@@ -48,20 +48,52 @@
         </mat-action-list>
       </mat-expansion-panel>
 
-      <a mat-list-item routerLink="/requests" routerLinkActive="active">
-        <mat-icon>fact_check</mat-icon>
-        <span>Workflow Requests</span>
-      </a>
+      <mat-expansion-panel class="no-border">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>fact_check</mat-icon>
+            <span style="margin-left: 8px">Workflow Requests</span>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <mat-action-list>
+          <a
+            mat-list-item
+            routerLink="/requests"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            <mat-icon>fact_check</mat-icon>
+            <span>Workflow Requests</span>
+          </a>
+          <a mat-list-item routerLink="/requests/new-transfer" routerLinkActive="active">
+            <mat-icon>swap_horiz</mat-icon>
+            <span>New Transfer Request</span>
+          </a>
+        </mat-action-list>
+      </mat-expansion-panel>
 
-      <a mat-list-item routerLink="/transfers" routerLinkActive="active">
-        <mat-icon>swap_horiz</mat-icon>
-        <span>Transfers</span>
-      </a>
-
-      <a mat-list-item routerLink="/sales" routerLinkActive="active">
-        <mat-icon>point_of_sale</mat-icon>
-        <span>Sales</span>
-      </a>
+      <mat-expansion-panel class="no-border">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>point_of_sale</mat-icon>
+            <span style="margin-left: 8px">Sales</span>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <mat-action-list>
+          <a mat-list-item routerLink="/sales" routerLinkActive="active">
+            <mat-icon>dashboard</mat-icon>
+            <span>Overview</span>
+          </a>
+          <a mat-list-item routerLink="/sales/sales" routerLinkActive="active">
+            <mat-icon>add_shopping_cart</mat-icon>
+            <span>Sales</span>
+          </a>
+          <a mat-list-item routerLink="/sales/sales-return" routerLinkActive="active">
+            <mat-icon>remove_shopping_cart</mat-icon>
+            <span>Sales Return</span>
+          </a>
+        </mat-action-list>
+      </mat-expansion-panel>
 
       <mat-expansion-panel class="no-border">
         <mat-expansion-panel-header>
@@ -119,6 +151,14 @@
           <a mat-list-item routerLink="/setup/brand" routerLinkActive="active">
             <mat-icon>brand</mat-icon>
             <span>Brand</span>
+          </a>
+          <a mat-list-item routerLink="/setup/workflow-transitions" routerLinkActive="active">
+            <mat-icon>account_tree</mat-icon>
+            <span>Status Transitions</span>
+          </a>
+          <a mat-list-item routerLink="/setup/workflow-functions" routerLinkActive="active">
+            <mat-icon>functions</mat-icon>
+            <span>Workflow Functions</span>
           </a>
         </mat-action-list>
       </mat-expansion-panel>
