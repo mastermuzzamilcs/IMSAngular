@@ -3,6 +3,7 @@
 <mat-sidenav-container class="sidenav-container">
   <!-- Side Navigation -->
   <mat-sidenav
+    *ngIf="session$ | async as session"
     #drawer
     class="sidenav"
     fixedInViewport
@@ -15,16 +16,31 @@
       <span>IMS</span>
     </mat-toolbar>
     <mat-nav-list>
-      <a mat-list-item routerLink="/dashboard" routerLinkActive="active">
+      <a
+        mat-list-item
+        routerLink="/dashboard"
+        routerLinkActive="active"
+        *appPrivilege="privileges.dashboard.page"
+      >
         <mat-icon>dashboard</mat-icon>
         <span>Dashboard</span>
       </a>
-      <a mat-list-item routerLink="/branches" routerLinkActive="active">
+      <a
+        mat-list-item
+        routerLink="/branches"
+        routerLinkActive="active"
+        *appPrivilege="privileges.branches.page"
+      >
         <mat-icon>business</mat-icon>
         <span>Branches</span>
       </a>
 
-      <mat-expansion-panel class="no-border">
+      <mat-expansion-panel
+        class="no-border"
+        *ngIf="
+          hasAny([privileges.inventory.page, privileges.stockIn.page, privileges.stockOut.page])
+        "
+      >
         <mat-expansion-panel-header>
           <mat-panel-title>
             <mat-icon>laptop</mat-icon>
@@ -33,22 +49,40 @@
         </mat-expansion-panel-header>
 
         <mat-action-list>
-          <a mat-list-item routerLink="/inventory" routerLinkActive="active">
+          <a
+            mat-list-item
+            routerLink="/inventory"
+            routerLinkActive="active"
+            *appPrivilege="privileges.inventory.page"
+          >
             <mat-icon>group</mat-icon>
             <span>Overview</span>
           </a>
-          <a mat-list-item routerLink="/inventory/stock-in" routerLinkActive="active">
+          <a
+            mat-list-item
+            routerLink="/inventory/stock-in"
+            routerLinkActive="active"
+            *appPrivilege="privileges.stockIn.page"
+          >
             <mat-icon>admin_panel_settings</mat-icon>
             <span>Stock-In</span>
           </a>
-          <a mat-list-item routerLink="/inventory/stock-out" routerLinkActive="active">
+          <a
+            mat-list-item
+            routerLink="/inventory/stock-out"
+            routerLinkActive="active"
+            *appPrivilege="privileges.stockOut.page"
+          >
             <mat-icon>admin_panel_settings</mat-icon>
             <span>Stock-Out</span>
           </a>
         </mat-action-list>
       </mat-expansion-panel>
 
-      <mat-expansion-panel class="no-border">
+      <mat-expansion-panel
+        class="no-border"
+        *ngIf="hasAny([privileges.workflowRequests.page, privileges.newTransfer.page])"
+      >
         <mat-expansion-panel-header>
           <mat-panel-title>
             <mat-icon>fact_check</mat-icon>
@@ -61,18 +95,33 @@
             routerLink="/requests"
             routerLinkActive="active"
             [routerLinkActiveOptions]="{ exact: true }"
+            *appPrivilege="privileges.workflowRequests.page"
           >
             <mat-icon>fact_check</mat-icon>
             <span>Workflow Requests</span>
           </a>
-          <a mat-list-item routerLink="/requests/new-transfer" routerLinkActive="active">
+          <a
+            mat-list-item
+            routerLink="/requests/new-transfer"
+            routerLinkActive="active"
+            *appPrivilege="privileges.newTransfer.page"
+          >
             <mat-icon>swap_horiz</mat-icon>
             <span>New Transfer Request</span>
           </a>
         </mat-action-list>
       </mat-expansion-panel>
 
-      <mat-expansion-panel class="no-border">
+      <mat-expansion-panel
+        class="no-border"
+        *ngIf="
+          hasAny([
+            privileges.salesOverview.page,
+            privileges.sales.page,
+            privileges.salesReturn.page,
+          ])
+        "
+      >
         <mat-expansion-panel-header>
           <mat-panel-title>
             <mat-icon>point_of_sale</mat-icon>
@@ -80,22 +129,37 @@
           </mat-panel-title>
         </mat-expansion-panel-header>
         <mat-action-list>
-          <a mat-list-item routerLink="/sales" routerLinkActive="active">
+          <a
+            mat-list-item
+            routerLink="/sales"
+            routerLinkActive="active"
+            *appPrivilege="privileges.salesOverview.page"
+          >
             <mat-icon>dashboard</mat-icon>
             <span>Overview</span>
           </a>
-          <a mat-list-item routerLink="/sales/sales" routerLinkActive="active">
+          <a
+            mat-list-item
+            routerLink="/sales/sales"
+            routerLinkActive="active"
+            *appPrivilege="privileges.sales.page"
+          >
             <mat-icon>add_shopping_cart</mat-icon>
             <span>Sales</span>
           </a>
-          <a mat-list-item routerLink="/sales/sales-return" routerLinkActive="active">
+          <a
+            mat-list-item
+            routerLink="/sales/sales-return"
+            routerLinkActive="active"
+            *appPrivilege="privileges.salesReturn.page"
+          >
             <mat-icon>remove_shopping_cart</mat-icon>
             <span>Sales Return</span>
           </a>
         </mat-action-list>
       </mat-expansion-panel>
 
-      <mat-expansion-panel class="no-border">
+      <mat-expansion-panel class="no-border" *ngIf="hasAny([privileges.reports.page])">
         <mat-expansion-panel-header>
           <mat-panel-title>
             <mat-icon>people</mat-icon>
@@ -103,15 +167,30 @@
           </mat-panel-title>
         </mat-expansion-panel-header>
         <mat-action-list>
-          <a mat-list-item routerLink="/reports" routerLinkActive="active">
+          <a
+            mat-list-item
+            routerLink="/reports"
+            routerLinkActive="active"
+            *appPrivilege="privileges.reports.page"
+          >
             <mat-icon>assessment</mat-icon>
             <span>Reports</span>
           </a>
         </mat-action-list>
       </mat-expansion-panel>
 
-      <!-- Users expandable section -->
-      <mat-expansion-panel class="no-border">
+      <mat-expansion-panel
+        class="no-border"
+        *ngIf="
+          hasAny([
+            privileges.users.page,
+            privileges.roles.page,
+            privileges.userGroups.page,
+            privileges.groupAssociations.page,
+            privileges.groupPrivileges.page,
+          ])
+        "
+      >
         <mat-expansion-panel-header>
           <mat-panel-title>
             <mat-icon>people</mat-icon>
@@ -120,18 +199,69 @@
         </mat-expansion-panel-header>
 
         <mat-action-list>
-          <a mat-list-item routerLink="/users" routerLinkActive="active">
+          <a
+            mat-list-item
+            routerLink="/users"
+            routerLinkActive="active"
+            *appPrivilege="privileges.users.page"
+          >
             <mat-icon>group</mat-icon>
             <span>All Users</span>
           </a>
-          <a mat-list-item routerLink="/users/roles" routerLinkActive="active">
+          <a
+            mat-list-item
+            routerLink="/users/roles"
+            routerLinkActive="active"
+            *appPrivilege="privileges.roles.page"
+          >
             <mat-icon>admin_panel_settings</mat-icon>
             <span>Roles</span>
+          </a>
+          <a
+            mat-list-item
+            routerLink="/users/groups"
+            routerLinkActive="active"
+            *appPrivilege="privileges.userGroups.page"
+          >
+            <mat-icon>groups</mat-icon>
+            <span>User Groups</span>
+          </a>
+          <a
+            mat-list-item
+            routerLink="/users/group-associations"
+            routerLinkActive="active"
+            *appPrivilege="privileges.groupAssociations.page"
+          >
+            <mat-icon>link</mat-icon>
+            <span>Group Associations</span>
+          </a>
+          <a
+            mat-list-item
+            routerLink="/users/group-privileges"
+            routerLinkActive="active"
+            *appPrivilege="privileges.groupPrivileges.page"
+          >
+            <mat-icon>checklist</mat-icon>
+            <span>Group Privileges</span>
           </a>
         </mat-action-list>
       </mat-expansion-panel>
 
-      <mat-expansion-panel class="no-border">
+      <mat-expansion-panel
+        class="no-border"
+        *ngIf="
+          hasAny([
+            privileges.products.page,
+            privileges.vendors.page,
+            privileges.customers.page,
+            privileges.brands.page,
+            privileges.workflowTransitions.page,
+            privileges.workflowFunctions.page,
+            privileges.notificationTemplates.page,
+            privileges.itemSources.page,
+          ])
+        "
+      >
         <mat-expansion-panel-header>
           <mat-panel-title>
             <mat-icon>settings</mat-icon>
@@ -140,25 +270,77 @@
         </mat-expansion-panel-header>
 
         <mat-action-list>
-          <a mat-list-item routerLink="/setup/products" routerLinkActive="active">
+          <a
+            mat-list-item
+            routerLink="/setup/products"
+            routerLinkActive="active"
+            *appPrivilege="privileges.products.page"
+          >
             <mat-icon>products</mat-icon>
             <span>Products</span>
           </a>
-          <a mat-list-item routerLink="/setup/vendor" routerLinkActive="active">
+          <a
+            mat-list-item
+            routerLink="/setup/vendor"
+            routerLinkActive="active"
+            *appPrivilege="privileges.vendors.page"
+          >
             <mat-icon>vendor</mat-icon>
             <span>Vendor</span>
           </a>
-          <a mat-list-item routerLink="/setup/brand" routerLinkActive="active">
+          <a
+            mat-list-item
+            routerLink="/setup/customers"
+            routerLinkActive="active"
+            *appPrivilege="privileges.customers.page"
+          >
+            <mat-icon>groups</mat-icon>
+            <span>Customers</span>
+          </a>
+          <a
+            mat-list-item
+            routerLink="/setup/brand"
+            routerLinkActive="active"
+            *appPrivilege="privileges.brands.page"
+          >
             <mat-icon>brand</mat-icon>
             <span>Brand</span>
           </a>
-          <a mat-list-item routerLink="/setup/workflow-transitions" routerLinkActive="active">
+          <a
+            mat-list-item
+            routerLink="/setup/workflow-transitions"
+            routerLinkActive="active"
+            *appPrivilege="privileges.workflowTransitions.page"
+          >
             <mat-icon>account_tree</mat-icon>
             <span>Status Transitions</span>
           </a>
-          <a mat-list-item routerLink="/setup/workflow-functions" routerLinkActive="active">
+          <a
+            mat-list-item
+            routerLink="/setup/workflow-functions"
+            routerLinkActive="active"
+            *appPrivilege="privileges.workflowFunctions.page"
+          >
             <mat-icon>functions</mat-icon>
             <span>Workflow Functions</span>
+          </a>
+          <a
+            mat-list-item
+            routerLink="/setup/notification-templates"
+            routerLinkActive="active"
+            *appPrivilege="privileges.notificationTemplates.page"
+          >
+            <mat-icon>notifications</mat-icon>
+            <span>Notification Templates</span>
+          </a>
+          <a
+            mat-list-item
+            routerLink="/setup/item-sources"
+            routerLinkActive="active"
+            *appPrivilege="privileges.itemSources.page"
+          >
+            <mat-icon>dataset</mat-icon>
+            <span>Item Sources</span>
           </a>
         </mat-action-list>
       </mat-expansion-panel>
@@ -167,32 +349,84 @@
 
   <!-- Main Content -->
   <mat-sidenav-content>
-    <mat-toolbar color="primary">
+    <mat-toolbar color="primary" *ngIf="session$ | async as session">
       <button
         type="button"
         aria-label="Toggle sidenav"
         mat-icon-button
-        (click)="drawer.toggle()"
+        (click)="toggleSidenav()"
         *ngIf="isHandset$ | async"
       >
         <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
       </button>
       <span>Inventory Management System</span>
       <span class="toolbar-spacer"></span>
+      <span>{{ session.name }}</span>
+      <button
+        mat-icon-button
+        type="button"
+        [matMenuTriggerFor]="notificationMenu"
+        aria-label="Notifications"
+      >
+        <mat-icon
+          [matBadge]="(unreadCount$ | async) || 0"
+          [matBadgeHidden]="((unreadCount$ | async) || 0) === 0"
+          matBadgeColor="warn"
+          matBadgeSize="small"
+          >notifications</mat-icon
+        >
+      </button>
+      <mat-menu #notificationMenu="matMenu" class="notification-menu" xPosition="before">
+        <div class="notification-menu-head" (click)="$event.stopPropagation()">
+          <span>Notifications</span>
+          <button
+            mat-button
+            type="button"
+            *ngIf="((unreadCount$ | async) || 0) > 0"
+            (click)="markAllRead()"
+          >
+            Mark all read
+          </button>
+        </div>
+        <button
+          mat-menu-item
+          type="button"
+          class="notification-item"
+          *ngFor="let item of (notifications$ | async) || []"
+          (click)="openNotification(item)"
+        >
+          <span class="notification-copy" [class.unread]="!item.read">
+            <strong>{{ item.subject }}</strong>
+            <small>{{ item.summary }}</small>
+          </span>
+        </button>
+        <button mat-menu-item disabled *ngIf="((notifications$ | async) || []).length === 0">
+          No notifications
+        </button>
+      </mat-menu>
       <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="User menu">
         <mat-icon>account_circle</mat-icon>
       </button>
       <mat-menu #userMenu="matMenu">
-        <button mat-menu-item>
-          <mat-icon>person</mat-icon>
-          <span>Profile</span>
+        <button mat-menu-item disabled>
+          <mat-icon>badge</mat-icon>
+          <span>{{ session.roleName || 'No role' }}</span>
         </button>
-        <button mat-menu-item>
-          <mat-icon>settings</mat-icon>
-          <span>Settings</span>
+        <button mat-menu-item disabled>
+          <mat-icon>groups</mat-icon>
+          <span>{{ session.groups.length ? session.groups.join(', ') : 'No groups' }}</span>
         </button>
         <mat-divider></mat-divider>
-        <button mat-menu-item routerLink="/auth/login">
+        <button mat-menu-item type="button" (click)="$event.stopPropagation()">
+          <mat-slide-toggle
+            [checked]="(soundEnabled$ | async) === true"
+            (change)="setNotificationSound($event.checked)"
+            (click)="$event.stopPropagation()"
+          >
+            Notification sound
+          </mat-slide-toggle>
+        </button>
+        <button mat-menu-item type="button" (click)="logout()">
           <mat-icon>exit_to_app</mat-icon>
           <span>Logout</span>
         </button>
@@ -200,7 +434,7 @@
     </mat-toolbar>
 
     <!-- Router Outlet - this is where your feature components will be displayed -->
-    <div class="content-container">
+    <div class="content-container" [class.signed-out]="(session$ | async) === null">
       <router-outlet></router-outlet>
     </div>
   </mat-sidenav-content>

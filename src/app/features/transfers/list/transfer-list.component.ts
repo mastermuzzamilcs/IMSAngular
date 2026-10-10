@@ -16,6 +16,7 @@ import { TransferFormComponent } from '../form/transfer-form.component';
 import { TransferDetailComponent } from '../detail/transfer-detail.component';
 
 import { TransferService } from '../../../core/services/transfer.service';
+import { Status } from '../../../core/enums/status.enum';
 import { Transfer } from '../../../core/Models/TransferModel';
 
 @Component({
@@ -40,6 +41,7 @@ import { Transfer } from '../../../core/Models/TransferModel';
   styleUrls: ['./transfer-list.component.scss'],
 })
 export class TransferListComponent implements OnInit, AfterViewInit {
+  readonly Status = Status;
   displayedColumns: string[] = [
     'transferId',
     'fromBranch',
@@ -121,7 +123,7 @@ export class TransferListComponent implements OnInit, AfterViewInit {
     });
   }
 
-  async updateStatus(transfer: any, newStatus: string) {
+  async updateStatus(transfer: any, newStatus: Status) {
     try {
       await this.transferService.updateTransfer({
         ...transfer,
@@ -139,19 +141,19 @@ export class TransferListComponent implements OnInit, AfterViewInit {
 
   getStatusColor(status: string): string {
     switch (status) {
-      case 'Pending':
+      case Status.Pending:
         return 'accent';
 
-      case 'Approved':
+      case Status.Approved:
         return 'primary';
 
-      case 'In Transit':
+      case Status.InTransit:
         return 'accent';
 
-      case 'Completed':
+      case Status.Completed:
         return 'primary';
 
-      case 'Rejected':
+      case Status.Rejected:
         return 'warn';
 
       default:

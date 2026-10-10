@@ -1,7 +1,12 @@
 <div class="container">
   <div class="header-container">
     <h1 class="mat-headline-5">User Management</h1>
-    <button mat-raised-button color="primary" (click)="openAddUserDialog()">
+    <button
+      mat-raised-button
+      color="primary"
+      *appPrivilege="privileges.users.create"
+      (click)="openAddUserDialog()"
+    >
       <mat-icon>person_add</mat-icon> Add User
     </button>
   </div>
@@ -67,6 +72,7 @@
               <button
                 mat-icon-button
                 color="primary"
+                *appPrivilege="privileges.users.edit"
                 (click)="openEditUserDialog(user)"
                 matTooltip="Edit User"
               >

@@ -15,6 +15,8 @@ import { MatInputModule } from '@angular/material/input';
 import { UsersService } from '../../../core/services/users.service';
 import { LoadingService } from '../../../core/services/Loading.service';
 import { ActivatedRoute } from '@angular/router';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 
 @Component({
   selector: 'app-userlist',
@@ -31,11 +33,13 @@ import { ActivatedRoute } from '@angular/router';
     MatFormFieldModule,
     MatChipsModule,
     MatSlideToggleModule,
+    PrivilegeDirective,
   ],
   templateUrl: './user-list.component.html',
   styleUrls: ['./user-list.component.scss'],
 })
 export class UserListComponent implements OnInit, AfterViewInit {
+  readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'email', 'role', 'branch', 'status', 'actions'];
   dataSource = new MatTableDataSource<any>([]);
   userRolesLookup: any[];

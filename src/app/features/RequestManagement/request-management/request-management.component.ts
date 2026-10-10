@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Status } from '../../../core/enums/status.enum';
 import { WorkflowRequest } from '../../../core/Models/WorkflowModel';
 import { Router } from '@angular/router';
 import { MatChipsModule } from '@angular/material/chips';
@@ -15,6 +16,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { RequestDetailComponent } from '../request-detail/request-detail.component';
 import { LoadingService } from '../../../core/services/Loading.service';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-request-management',
@@ -36,6 +39,8 @@ import { LoadingService } from '../../../core/services/Loading.service';
   ],
 })
 export class RequestManagementComponent implements OnInit, AfterViewInit {
+  readonly Status = Status;
+  readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['stockId', 'type', 'requestedBy', 'requestedOn', 'status'];
   dataSource = new MatTableDataSource<WorkflowRequest>([]);
 
@@ -48,6 +53,7 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
     private _loadingService: LoadingService,
     private dialog: MatDialog,
     private snack: MatSnackBar,
+    private auth: AuthService,
   ) {}
 
   async ngOnInit() {
@@ -66,6 +72,14 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
     this._loadingService.hide();
   }
   onRowDblClick(req: WorkflowRequest) {
+    if (
+      !this.auth.hasPrivilege(
+        this.privileges.workflowRequests.details.moduleId,
+        this.privileges.workflowRequests.details.functionId,
+      )
+    ) {
+      return;
+    }
     this.dialog
       .open(RequestDetailComponent, {
         width: '750px',

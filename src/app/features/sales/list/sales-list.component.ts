@@ -11,6 +11,9 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { CommonModule } from '@angular/common';
+import { Status } from '../../../core/enums/status.enum';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 import { MatInputModule } from '@angular/material/input';
 
 @Component({
@@ -28,11 +31,14 @@ import { MatInputModule } from '@angular/material/input';
     MatButtonModule,
     MatButtonToggleModule,
     CommonModule,
+    PrivilegeDirective,
   ],
   templateUrl: './sales-list.component.html',
   styleUrls: ['./sales-list.component.scss'],
 })
 export class SalesListComponent implements AfterViewInit {
+  readonly Status = Status;
+  readonly privileges = privilegeAccess;
   displayedColumns: string[] = [
     'saleId',
     'date',

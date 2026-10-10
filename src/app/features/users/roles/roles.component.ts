@@ -13,6 +13,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { GlobalDeleteConfirmationComponent } from '../../../shared/components/global-delete-confirmation/global-delete-confirmation.component';
 import { MatSort, MatSortModule } from '@angular/material/sort';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 
 @Component({
   selector: 'app-roles',
@@ -26,12 +28,14 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
     MatCardModule,
     MatChipsModule,
     MatSortModule,
+    PrivilegeDirective,
   ],
   templateUrl: './roles.component.html',
   styleUrl: './roles.component.scss',
   standalone: true,
 })
 export class RolesComponent implements OnInit, AfterViewInit {
+  readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'description', 'status', 'actions'];
   dataSource = new MatTableDataSource<any>();
 

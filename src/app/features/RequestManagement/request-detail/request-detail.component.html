@@ -36,7 +36,11 @@
           <mat-chip color="primary" selected>{{ request.status }}</mat-chip>
           <p><strong>Type:</strong> {{ request.requestType }}</p>
           <p><strong>Branch:</strong> {{ stockHdr?.branchName }}</p>
-          <p><strong>Vendor:</strong> {{ stockHdr?.vendorName }}</p>
+          <p *ngIf="stockHdr?.vendorName"><strong>Vendor:</strong> {{ stockHdr?.vendorName }}</p>
+          <p *ngIf="stockHdr?.customerName">
+            <strong>Customer:</strong> {{ stockHdr?.customerName }}
+            <span *ngIf="stockHdr?.customerPhone"> · {{ stockHdr?.customerPhone }}</span>
+          </p>
           <p><strong>Date:</strong> {{ stockHdr?.entrydate | date: 'mediumDate' }}</p>
           <p><strong>Sub‑total:</strong> {{ stockHdr?.subtotal | currency }}</p>
           <p><strong>Discount:</strong> {{ stockHdr?.discountvalue | currency }}</p>

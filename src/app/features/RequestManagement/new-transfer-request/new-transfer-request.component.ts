@@ -24,6 +24,9 @@ import { BranchService } from '../../../core/services/branchservice.service';
 import { StockService } from '../../../core/services/stock.service';
 import { TransferService } from '../../../core/services/transfer.service';
 import { WorkflowService } from '../../../core/services/Workflow.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 import { LoadingService } from '../../../core/services/Loading.service';
 import { Transfer } from '../../../core/Models/TransferModel';
 import { RequestStatus, RequestType } from '../../../core/Models/WorkflowModel';
@@ -44,11 +47,13 @@ import { RequestStatus, RequestType } from '../../../core/Models/WorkflowModel';
     MatButtonModule,
     MatCardModule,
     MatNativeDateModule,
+    PrivilegeDirective,
   ],
   templateUrl: './new-transfer-request.component.html',
   styleUrls: ['./new-transfer-request.component.scss'],
 })
 export class NewTransferRequestComponent implements OnInit {
+  readonly privileges = privilegeAccess;
   dataSource = new MatTableDataSource<any>([]);
   displayedColumns: string[] = ['product', 'description', 'quantity', 'actions'];
   transferForm!: FormGroup;
@@ -66,6 +71,7 @@ export class NewTransferRequestComponent implements OnInit {
     private transferService: TransferService,
     private workflowService: WorkflowService,
     private loadingService: LoadingService,
+    private auth: AuthService,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -196,7 +202,7 @@ export class NewTransferRequestComponent implements OnInit {
       await this.workflowService.createRequest({
         moduleId: transferId,
         requestType: RequestType.Transfer,
-        requestedBy: 'currentUserUid',
+        requestedBy: this.auth.currentUserId(),
         remarks: 'Auto-generated from New Transfer Request',
       });
       alert('Transfer request added successfully');

@@ -1,0 +1,9 @@
+const PASSWORD_PREFIX = 'ims-user:';
+
+export async function hashPassword(password: string): Promise<string> {
+  const encoded = new TextEncoder().encode(`${PASSWORD_PREFIX}${password}`);
+  const digest = await crypto.subtle.digest('SHA-256', encoded);
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}

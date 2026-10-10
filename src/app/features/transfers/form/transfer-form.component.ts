@@ -14,6 +14,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 
 import { StockService } from '../../../core/services/stock.service';
 import { BranchService } from '../../../core/services/branchservice.service';
+import { Status } from '../../../core/enums/status.enum';
 import { Branch } from '../../../core/Models/BranchModel';
 
 @Component({
@@ -156,7 +157,7 @@ export class TransferFormComponent implements OnInit {
 
         items: this.selectedLaptops,
 
-        status: 'Pending',
+        status: Status.Pending,
 
         requestDate: new Date(),
       };

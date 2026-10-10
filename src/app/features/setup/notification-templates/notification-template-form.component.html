@@ -1,0 +1,141 @@
+<h2 mat-dialog-title>{{ dialogTitle }}</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="template-form">
+    <p class="hint">
+      Placeholders: {{ '{{requestId}}' }} {{ '{{requestType}}' }} {{ '{{status}}' }}
+      {{ '{{remarks}}' }} {{ '{{approver}}' }} {{ '{{moduleId}}' }}. Item sources, such as
+      {{ '{{IS_RequestRequestedBy}}' }}, are filled in the subject, summary, or body when the
+      notification is generated. Saving links the Send notifications workflow function to each
+      selected event.
+    </p>
+    <div class="form-row">
+      <mat-form-field appearance="outline">
+        <mat-label>Code</mat-label>
+        <input matInput formControlName="code" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Name</mat-label>
+        <input matInput formControlName="name" />
+      </mat-form-field>
+    </div>
+    <div class="form-row">
+      <mat-form-field appearance="outline">
+        <mat-label>Type</mat-label>
+        <mat-select formControlName="channel">
+          <mat-option *ngFor="let channel of channels" [value]="channel">{{
+            channelLabel[channel]
+          }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Audience</mat-label>
+        <mat-select formControlName="audience">
+          <mat-option *ngFor="let audience of audiences" [value]="audience">{{
+            audienceLabel[audience]
+          }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <mat-form-field
+      appearance="outline"
+      class="full"
+      *ngIf="form.get('audience')?.value === Audience.Group"
+    >
+      <mat-label>Groups</mat-label>
+      <mat-select formControlName="groupIds" multiple>
+        <mat-option *ngFor="let group of groups" [value]="group.id">{{ group.name }}</mat-option>
+      </mat-select>
+      <mat-error *ngIf="form.get('groupIds')?.hasError('required')"
+        >Select at least one group</mat-error
+      >
+    </mat-form-field>
+    <div class="user-picker" *ngIf="form.get('audience')?.value === Audience.CustomUsers">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Users</mat-label>
+        <input matInput [value]="selectedUserLabel" readonly />
+      </mat-form-field>
+      <button mat-stroked-button type="button" (click)="openUserDialog()">Select users</button>
+    </div>
+    <p
+      class="field-error"
+      *ngIf="
+        form.get('audience')?.value === Audience.CustomUsers &&
+        form.get('userIds')?.hasError('required') &&
+        form.get('userIds')?.touched
+      "
+    >
+      Select at least one user
+    </p>
+    <div class="item-source" *ngIf="itemSources.length">
+      <mat-form-field appearance="outline">
+        <mat-label>Item source</mat-label>
+        <mat-select [value]="insertCode" (selectionChange)="insertCode = $event.value">
+          <mat-option *ngFor="let source of itemSources" [value]="source.code">
+            {{ source.name }} ({{ source.code }})
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <button mat-stroked-button type="button" (click)="insertItemSource('subject')">
+        Subject
+      </button>
+      <button mat-stroked-button type="button" (click)="insertItemSource('summary')">
+        Summary
+      </button>
+      <button mat-stroked-button type="button" (click)="insertItemSource('body')">Body</button>
+    </div>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Subject</mat-label>
+      <input matInput formControlName="subject" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Summary</mat-label>
+      <input matInput formControlName="summary" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Body</mat-label>
+      <textarea matInput rows="4" formControlName="body"></textarea>
+    </mat-form-field>
+    <div class="events-head">
+      <h3>Events</h3>
+      <button mat-stroked-button type="button" (click)="addEvent()">
+        <mat-icon>add</mat-icon>
+        Add event
+      </button>
+    </div>
+    <div
+      class="event-row"
+      *ngFor="let event of events.controls; let index = index"
+      [formGroup]="$any(event)"
+    >
+      <mat-form-field appearance="outline">
+        <mat-label>Request type</mat-label>
+        <mat-select formControlName="requestType">
+          <mat-option *ngFor="let type of requestTypes" [value]="type">{{ type }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          <mat-option *ngFor="let status of requestStatuses" [value]="status">{{
+            status
+          }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <button
+        mat-icon-button
+        type="button"
+        color="warn"
+        aria-label="Remove event"
+        (click)="removeEvent(index)"
+      >
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+    <p class="hint" *ngIf="events.length === 0">This template is not sent until it has an event.</p>
+    <mat-slide-toggle formControlName="enabled">Enabled</mat-slide-toggle>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="onCancel()">Cancel</button>
+  <button mat-raised-button color="primary" type="button" (click)="onSubmit()">Save</button>
+</mat-dialog-actions>

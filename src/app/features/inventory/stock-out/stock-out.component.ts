@@ -23,8 +23,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatNativeDateModule } from '@angular/material/core';
 import { WorkflowService } from '../../../core/services/Workflow.service';
+import { Status } from '../../../core/enums/status.enum';
 import { RequestType } from '../../../core/Models/WorkflowModel';
 import { LoadingService } from '../../../core/services/Loading.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 
 @Component({
   selector: 'app-stock-out',
@@ -42,11 +46,13 @@ import { LoadingService } from '../../../core/services/Loading.service';
     MatCardModule,
     MatNativeDateModule,
     FormsModule,
+    PrivilegeDirective,
   ],
   templateUrl: './stock-out.component.html',
   styleUrls: ['./stock-out.component.scss'],
 })
 export class StockOutComponent implements OnInit {
+  readonly privileges = privilegeAccess;
   dataSource = new MatTableDataSource<any>([]);
   displayedColumns: string[] = [
     'product',
@@ -77,6 +83,7 @@ export class StockOutComponent implements OnInit {
     private branchService: BranchService,
     private _workflowService: WorkflowService,
     private _loadingService: LoadingService,
+    private auth: AuthService,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -156,7 +163,7 @@ export class StockOutComponent implements OnInit {
       DiscountType: this.discountType,
       DiscountValue: this.discountValue,
       NetTotal: this.netTotal,
-      status: 'Pending',
+      status: Status.Pending,
       stocktype: 'out',
     };
 
@@ -166,7 +173,7 @@ export class StockOutComponent implements OnInit {
       await this._workflowService.createRequest({
         moduleId: stock_id,
         requestType: RequestType.StockOut,
-        requestedBy: 'currentUserUid', // replace with auth‑service value
+        requestedBy: this.auth.currentUserId(),
         remarks: 'Auto‑generated from Stock‑Out screen',
       });
       alert('Stock-out entry added successfully');

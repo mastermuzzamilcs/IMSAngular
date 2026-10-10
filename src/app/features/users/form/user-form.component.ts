@@ -6,6 +6,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { CommonModule } from '@angular/common';
 import { Role } from '../../../core/Models/RoleModel';
 import { Branch } from '../../../core/Models/BranchModel';
+import { asStatus, Status } from '../../../core/enums/status.enum';
 import { User } from '../../../core/Models/UsersModel';
 import { UsersService } from '../../../core/services/users.service';
 import jsonData from '../../../Assets/appConfig.json';
@@ -18,6 +19,7 @@ import jsonData from '../../../Assets/appConfig.json';
   styleUrls: ['./user-form.component.scss'],
 })
 export class UserFormComponent implements OnInit {
+  readonly Status = Status;
   userForm!: FormGroup;
   dialogTitle: string = 'Add User';
   _roles: Role[] | null = null;
@@ -55,10 +57,16 @@ export class UserFormComponent implements OnInit {
     this.userForm = this.fb.group({
       name: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
+      password: [
+        '',
+        this.data?.mode === 'edit'
+          ? [Validators.minLength(6)]
+          : [Validators.required, Validators.minLength(6)],
+      ],
       role: ['', [Validators.required]],
       manager: [''],
       branch: [''],
-      status: ['Active'],
+      status: [Status.Active],
     });
   }
   patchFormValues(): void {
@@ -69,7 +77,7 @@ export class UserFormComponent implements OnInit {
       role: user.roleid || user.role,
       branch: user.branchid || user.branch,
       manager: user.manager,
-      status: user.status,
+      status: asStatus(user.status),
     });
   }
   onSubmit(): void {

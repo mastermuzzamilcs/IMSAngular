@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { collection, addDoc, getDocs, doc, deleteDoc, setDoc } from 'firebase/firestore';
 import { firestore } from '../../firebase-config';
+import { asStatus } from '../enums/status.enum';
 import { Role } from '../Models/RoleModel';
 
 @Injectable({ providedIn: 'root' })
@@ -20,7 +21,7 @@ export class RoleService {
         id: doc.id,
         name: data['name'] || '',
         description: data['description'] || '',
-        status: data['status'] || '',
+        status: asStatus(data['status']),
       };
     });
     return this.cachedRoles;

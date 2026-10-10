@@ -1,3 +1,5 @@
+import { Status } from '../enums/status.enum';
+
 export interface Product {
   id?: string;
   name: string;
@@ -5,5 +7,5 @@ export interface Product {
   brand: string;
   description: string;
   price: number;
-  status: string;
+  status: Status;
 }

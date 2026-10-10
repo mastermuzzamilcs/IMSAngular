@@ -26,6 +26,7 @@ import { TransferOpenStockOutFunction } from './transfer-open-stock-out.function
 import { TransferReceiveFunction } from './transfer-receive.function';
 import { TransferRejectFunction } from './transfer-reject.function';
 import { TransferUpdateStatusFunction } from './transfer-update-status.function';
+import { NotifyFunction } from './notify.function';
 
 @Injectable({ providedIn: 'root' })
 export class WorkflowActionBootstrap {
@@ -57,5 +58,6 @@ export class WorkflowActionBootstrap {
     _transferReceive: TransferReceiveFunction,
     _transferReject: TransferRejectFunction,
     _transferCourierReturn: TransferCourierReturnFunction,
+    _notify: NotifyFunction,
   ) {}
 }

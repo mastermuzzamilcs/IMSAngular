@@ -1,22 +1,26 @@
+import { Status } from '../enums/status.enum';
+
+export const RequestStatus = {
+  Pending: Status.Pending,
+  Approved: Status.Approved,
+  Rejected: Status.Rejected,
+  InProcess: Status.InProcess,
+  Dispatched: Status.Dispatched,
+  InTransit: Status.InTransit,
+  ArrivedAtStation: Status.ArrivedAtStation,
+  Received: Status.Received,
+  CourierReturned: Status.CourierReturned,
+  Completed: Status.Completed,
+} as const;
+
+export type RequestStatus = (typeof RequestStatus)[keyof typeof RequestStatus];
+
 export enum RequestType {
   StockIn = 'StockIn',
   StockOut = 'StockOut',
   Sales = 'Sales',
   SalesReturn = 'SalesReturn',
   Transfer = 'Transfer',
-}
-
-export enum RequestStatus {
-  Pending = 'Pending',
-  Approved = 'Approved',
-  Rejected = 'Rejected',
-  InProcess = 'In Process',
-  Dispatched = 'Dispatched',
-  InTransit = 'In Transit',
-  ArrivedAtStation = 'Arrived at Station',
-  Received = 'Received',
-  CourierReturned = 'Courier Returned',
-  Completed = 'Completed',
 }
 
 export interface WorkflowRequest {

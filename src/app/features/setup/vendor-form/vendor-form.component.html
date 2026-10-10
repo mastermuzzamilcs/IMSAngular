@@ -36,8 +36,8 @@
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Status</mat-label>
         <mat-select formControlName="status">
-          <mat-option value="active">Active</mat-option>
-          <mat-option value="inactive">Inactive</mat-option>
+          <mat-option [value]="Status.Active">Active</mat-option>
+          <mat-option [value]="Status.Inactive">Inactive</mat-option>
         </mat-select>
       </mat-form-field>
     </div>

@@ -1,7 +1,12 @@
 <div class="container">
   <div class="header-container">
     <h1 class="mat-headline-5">Status Transitions</h1>
-    <button mat-raised-button color="primary" (click)="openAddDialog()">
+    <button
+      mat-raised-button
+      color="primary"
+      *appPrivilege="privileges.workflowTransitions.create"
+      (click)="openAddDialog()"
+    >
       <mat-icon>add</mat-icon> Add Transition
     </button>
   </div>
@@ -36,6 +41,7 @@
               <button
                 mat-icon-button
                 color="primary"
+                *appPrivilege="privileges.workflowTransitions.edit"
                 (click)="openEditDialog(row)"
                 matTooltip="Edit"
               >
@@ -44,6 +50,7 @@
               <button
                 mat-icon-button
                 color="warn"
+                *appPrivilege="privileges.workflowTransitions.delete"
                 (click)="openDeleteDialog(row)"
                 matTooltip="Delete"
               >

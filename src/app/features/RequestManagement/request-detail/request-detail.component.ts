@@ -11,6 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { FormsModule } from '@angular/forms';
 
+import { AuthService } from '../../../core/services/auth.service';
 import { WorkflowService } from '../../../core/services/Workflow.service';
 import { StockService } from '../../../core/services/stock.service';
 import { StockDetails } from '../../../core/Models/StockModel';
@@ -52,6 +53,7 @@ export class RequestDetailComponent implements OnInit {
     private _productService: ProductService,
     private transferSvc: TransferService,
     private transitionService: WorkflowTransitionService,
+    private auth: AuthService,
   ) {}
 
   // UI state
@@ -110,7 +112,12 @@ export class RequestDetailComponent implements OnInit {
     this.submitting = true;
     try {
       const status = this.action as RequestStatus;
-      await this.wfSvc.updateStatus(this.request.requestId, status, 'admin', this.remarks);
+      await this.wfSvc.updateStatus(
+        this.request.requestId,
+        status,
+        this.auth.currentUserId(),
+        this.remarks,
+      );
       this.dialogRef.close({ updated: true });
     } catch (err) {
       console.error('Error updating workflow request:', err);

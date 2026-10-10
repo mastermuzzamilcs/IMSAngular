@@ -1,7 +1,10 @@
+import { Status } from '../enums/status.enum';
+
 export interface Customer {
   id?: string;
   name: string;
-  location: string;
-  description: string;
-  status: string;
+  phone: string;
+  email: string;
+  address: string;
+  status: Status;
 }
