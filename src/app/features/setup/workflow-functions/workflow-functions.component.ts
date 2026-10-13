@@ -4,16 +4,19 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatCardModule } from '@angular/material/card';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import {
+  MxButtonComponent,
+  MxGridComponent,
+  MxEmptyStateComponent,
+  MxPageHeaderComponent,
+} from '@mesix/custom-control';
 import { WorkflowFunctionRecord } from '../../../core/Models/WorkflowFunctionRecord';
 import { WorkflowFunctionLink } from '../../../core/Models/WorkflowFunctionLink';
 import { WorkflowFunctionDefinitionService } from '../../../core/services/workflow-function-definition.service';
 import { WorkflowFunctionLinkService } from '../../../core/services/workflow-function-link.service';
 import { LoadingService } from '../../../core/services/Loading.service';
-import { GlobalDeleteConfirmationComponent } from '../../../shared/components/global-delete-confirmation/global-delete-confirmation.component';
+import { ConfirmService } from '../../../core/services/confirm.service';
 import { WorkflowFunctionFormComponent } from './workflow-function-form.component';
 import { WorkflowFunctionLinkFormComponent } from './workflow-function-link-form.component';
 
@@ -26,10 +29,11 @@ import { WorkflowFunctionLinkFormComponent } from './workflow-function-link-form
     MatPaginatorModule,
     MatSortModule,
     MatIconModule,
-    MatButtonModule,
     MatDialogModule,
-    MatCardModule,
-    MatTooltipModule,
+    MxPageHeaderComponent,
+    MxButtonComponent,
+    MxGridComponent,
+    MxEmptyStateComponent,
   ],
   templateUrl: './workflow-functions.component.html',
 })
@@ -49,6 +53,7 @@ export class WorkflowFunctionsComponent implements OnInit, AfterViewInit {
     private linkService: WorkflowFunctionLinkService,
     private loadingService: LoadingService,
     private dialog: MatDialog,
+    private confirm: ConfirmService,
   ) {}
 
   ngOnInit(): void {
@@ -105,39 +110,32 @@ export class WorkflowFunctionsComponent implements OnInit, AfterViewInit {
   }
 
   openDeleteFunction(record: WorkflowFunctionRecord): void {
-    const dialogRef = this.dialog.open(GlobalDeleteConfirmationComponent, {
-      width: '300px',
-      data: {
-        title: 'Delete Workflow Function',
-        message: `Delete ${record.name}?`,
-      },
-    });
-    dialogRef.afterClosed().subscribe(async (result) => {
-      if (result && record.id) {
-        this.loadingService.show();
-        await this.definitionService.deleteFunction(record.id);
-        this.loadingService.hide();
-        this.load();
-      }
-    });
+    this.confirm
+      .confirmDelete(`Delete ${record.name}?`, 'Delete Workflow Function')
+      .subscribe(async (confirmed) => {
+        if (confirmed && record.id) {
+          this.loadingService.show();
+          await this.definitionService.deleteFunction(record.id);
+          this.loadingService.hide();
+          this.load();
+        }
+      });
   }
 
   openDeleteLink(link: WorkflowFunctionLink): void {
-    const dialogRef = this.dialog.open(GlobalDeleteConfirmationComponent, {
-      width: '300px',
-      data: {
-        title: 'Delete Association',
-        message: `Remove ${this.functionName(link.functionKey)} from ${link.requestType} / ${link.status}?`,
-      },
-    });
-    dialogRef.afterClosed().subscribe(async (result) => {
-      if (result && link.id) {
-        this.loadingService.show();
-        await this.linkService.deleteLink(link.id);
-        this.loadingService.hide();
-        this.load();
-      }
-    });
+    this.confirm
+      .confirmDelete(
+        `Remove ${this.functionName(link.functionKey)} from ${link.requestType} / ${link.status}?`,
+        'Delete Association',
+      )
+      .subscribe(async (confirmed) => {
+        if (confirmed && link.id) {
+          this.loadingService.show();
+          await this.linkService.deleteLink(link.id);
+          this.loadingService.hide();
+          this.load();
+        }
+      });
   }
 
   private openFunctionDialog(mode: string, record?: WorkflowFunctionRecord): void {
@@ -186,5 +184,13 @@ export class WorkflowFunctionsComponent implements OnInit, AfterViewInit {
       }
       this.loadingService.hide();
     });
+  }
+
+  onFunctionsFilter(value: string) {
+    this.functions.filter = value.trim().toLowerCase();
+  }
+
+  onLinksFilter(value: string) {
+    this.links.filter = value.trim().toLowerCase();
   }
 }

@@ -5,15 +5,19 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ProductsFormComponent } from '../products-form/products-form.component';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
 import { LoadingService } from '../../../core/services/Loading.service';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { GlobalDeleteConfirmationComponent } from '../../../shared/components/global-delete-confirmation/global-delete-confirmation.component';
+import { ConfirmService } from '../../../core/services/confirm.service';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { ProductService } from '../../../core/services/product.service';
 import { Product } from '../../../core/Models/ProductModel';
 import { BrandService } from '../../../core/services/brand.service';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxGridComponent,
+  MxEmptyStateComponent,
+  MxPageHeaderComponent,
+} from '@mesix/custom-control';
 
 @Component({
   selector: 'app-products-setup',
@@ -22,11 +26,13 @@ import { BrandService } from '../../../core/services/brand.service';
     MatTableModule,
     MatPaginatorModule,
     MatIconModule,
-    MatButtonModule,
     MatDialogModule,
-    MatCardModule,
-    MatChipsModule,
     MatSortModule,
+    MxPageHeaderComponent,
+    MxButtonComponent,
+    MxGridComponent,
+    MxBadgeComponent,
+    MxEmptyStateComponent,
   ],
   templateUrl: './products-setup.component.html',
   styleUrl: './products-setup.component.scss',
@@ -44,6 +50,7 @@ export class ProductsSetupComponent implements OnInit, AfterViewInit {
     private _brandService: BrandService,
     private _loadingService: LoadingService,
     private dialog: MatDialog,
+    private confirm: ConfirmService,
   ) {}
 
   ngOnInit() {
@@ -110,23 +117,21 @@ export class ProductsSetupComponent implements OnInit, AfterViewInit {
       }
     });
   }
+
   openDeleteDialog(_product: Product) {
-    const dialogRef = this.dialog.open(GlobalDeleteConfirmationComponent, {
-      width: '300px',
-      data: {
-        title: 'Delete Product',
-        message: `Are you sure you want to Product "${_product.name}"?`,
-      },
-    });
-    dialogRef.afterClosed().subscribe(async (result) => {
-      if (result) {
-        if (_product.id) {
+    this.confirm
+      .confirmDelete(`Are you sure you want to delete "${_product.name}"?`, 'Delete Product')
+      .subscribe(async (confirmed) => {
+        if (confirmed && _product.id) {
           this._loadingService.show();
           await this._productService.deleteProduct(_product.id);
           this._loadingService.hide();
           this.loadProducts();
         }
-      }
-    });
+      });
+  }
+
+  onGridFilter(value: string) {
+    this.dataSource.filter = value.trim().toLowerCase();
   }
 }

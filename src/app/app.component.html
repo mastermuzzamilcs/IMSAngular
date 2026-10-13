@@ -1,7 +1,8 @@
-<app-global-spinner></app-global-spinner>
+<mx-spinner></mx-spinner>
+<mx-toast-host></mx-toast-host>
+<mx-dialog-host></mx-dialog-host>
 
 <mat-sidenav-container class="sidenav-container">
-  <!-- Side Navigation -->
   <mat-sidenav
     #drawer
     class="sidenav"
@@ -10,164 +11,163 @@
     [mode]="(isHandset$ | async) ? 'over' : 'side'"
     [opened]="(isHandset$ | async) === false"
   >
-    <mat-toolbar>
+    <mat-toolbar class="brand-toolbar">
       <img src="assets/logo.png" alt="IMS Logo" class="logo" />
-      <span>IMS</span>
+      <span class="brand-title">IMS</span>
     </mat-toolbar>
-    <mat-nav-list>
-      <a mat-list-item routerLink="/dashboard" routerLinkActive="active">
-        <mat-icon>dashboard</mat-icon>
-        <span>Dashboard</span>
-      </a>
-      <a mat-list-item routerLink="/branches" routerLinkActive="active">
-        <mat-icon>business</mat-icon>
-        <span>Branches</span>
-      </a>
 
-      <mat-expansion-panel class="no-border">
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            <mat-icon>laptop</mat-icon>
-            <span style="margin-left: 8px">Inventory</span>
-          </mat-panel-title>
-        </mat-expansion-panel-header>
+    <nav class="nav-scroll">
+      <mat-nav-list class="drive-nav">
+        <a mat-list-item class="nav-item" routerLink="/dashboard" routerLinkActive="active">
+          <mat-icon>dashboard</mat-icon>
+          <span class="nav-label">Dashboard</span>
+        </a>
+        <a mat-list-item class="nav-item" routerLink="/branches" routerLinkActive="active">
+          <mat-icon>business</mat-icon>
+          <span class="nav-label">Branches</span>
+        </a>
 
-        <mat-action-list>
-          <a mat-list-item routerLink="/inventory" routerLinkActive="active">
-            <mat-icon>group</mat-icon>
-            <span>Overview</span>
-          </a>
-          <a mat-list-item routerLink="/inventory/stock-in" routerLinkActive="active">
-            <mat-icon>admin_panel_settings</mat-icon>
-            <span>Stock-In</span>
-          </a>
-          <a mat-list-item routerLink="/inventory/stock-out" routerLinkActive="active">
-            <mat-icon>admin_panel_settings</mat-icon>
-            <span>Stock-Out</span>
-          </a>
-        </mat-action-list>
-      </mat-expansion-panel>
+        <mat-expansion-panel class="nav-group">
+          <mat-expansion-panel-header collapsedHeight="40px" expandedHeight="40px">
+            <mat-panel-title>
+              <mat-icon>inventory_2</mat-icon>
+              <span class="nav-label">Inventory</span>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <mat-action-list class="nav-children">
+            <a mat-list-item class="nav-item child" routerLink="/inventory" routerLinkActive="active">
+              <mat-icon>view_list</mat-icon>
+              <span class="nav-label">Overview</span>
+            </a>
+            <a mat-list-item class="nav-item child" routerLink="/inventory/stock-in" routerLinkActive="active">
+              <mat-icon>move_to_inbox</mat-icon>
+              <span class="nav-label">Stock-In</span>
+            </a>
+            <a mat-list-item class="nav-item child" routerLink="/inventory/stock-out" routerLinkActive="active">
+              <mat-icon>outbox</mat-icon>
+              <span class="nav-label">Stock-Out</span>
+            </a>
+          </mat-action-list>
+        </mat-expansion-panel>
 
-      <mat-expansion-panel class="no-border">
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            <mat-icon>fact_check</mat-icon>
-            <span style="margin-left: 8px">Workflow Requests</span>
-          </mat-panel-title>
-        </mat-expansion-panel-header>
-        <mat-action-list>
-          <a
-            mat-list-item
-            routerLink="/requests"
-            routerLinkActive="active"
-            [routerLinkActiveOptions]="{ exact: true }"
-          >
-            <mat-icon>fact_check</mat-icon>
-            <span>Workflow Requests</span>
-          </a>
-          <a mat-list-item routerLink="/requests/new-transfer" routerLinkActive="active">
-            <mat-icon>swap_horiz</mat-icon>
-            <span>New Transfer Request</span>
-          </a>
-        </mat-action-list>
-      </mat-expansion-panel>
+        <mat-expansion-panel class="nav-group">
+          <mat-expansion-panel-header collapsedHeight="40px" expandedHeight="40px">
+            <mat-panel-title>
+              <mat-icon>fact_check</mat-icon>
+              <span class="nav-label">Workflow Requests</span>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <mat-action-list class="nav-children">
+            <a
+              mat-list-item
+              class="nav-item child"
+              routerLink="/requests"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="{ exact: true }"
+            >
+              <mat-icon>rule</mat-icon>
+              <span class="nav-label">Workflow Requests</span>
+            </a>
+            <a mat-list-item class="nav-item child" routerLink="/requests/new-transfer" routerLinkActive="active">
+              <mat-icon>swap_horiz</mat-icon>
+              <span class="nav-label">New Transfer Request</span>
+            </a>
+          </mat-action-list>
+        </mat-expansion-panel>
 
-      <mat-expansion-panel class="no-border">
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            <mat-icon>point_of_sale</mat-icon>
-            <span style="margin-left: 8px">Sales</span>
-          </mat-panel-title>
-        </mat-expansion-panel-header>
-        <mat-action-list>
-          <a mat-list-item routerLink="/sales" routerLinkActive="active">
-            <mat-icon>dashboard</mat-icon>
-            <span>Overview</span>
-          </a>
-          <a mat-list-item routerLink="/sales/sales" routerLinkActive="active">
-            <mat-icon>add_shopping_cart</mat-icon>
-            <span>Sales</span>
-          </a>
-          <a mat-list-item routerLink="/sales/sales-return" routerLinkActive="active">
-            <mat-icon>remove_shopping_cart</mat-icon>
-            <span>Sales Return</span>
-          </a>
-        </mat-action-list>
-      </mat-expansion-panel>
+        <mat-expansion-panel class="nav-group">
+          <mat-expansion-panel-header collapsedHeight="40px" expandedHeight="40px">
+            <mat-panel-title>
+              <mat-icon>point_of_sale</mat-icon>
+              <span class="nav-label">Sales</span>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <mat-action-list class="nav-children">
+            <a mat-list-item class="nav-item child" routerLink="/sales" routerLinkActive="active">
+              <mat-icon>dashboard</mat-icon>
+              <span class="nav-label">Overview</span>
+            </a>
+            <a mat-list-item class="nav-item child" routerLink="/sales/sales" routerLinkActive="active">
+              <mat-icon>add_shopping_cart</mat-icon>
+              <span class="nav-label">Sales</span>
+            </a>
+            <a mat-list-item class="nav-item child" routerLink="/sales/sales-return" routerLinkActive="active">
+              <mat-icon>remove_shopping_cart</mat-icon>
+              <span class="nav-label">Sales Return</span>
+            </a>
+          </mat-action-list>
+        </mat-expansion-panel>
 
-      <mat-expansion-panel class="no-border">
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            <mat-icon>people</mat-icon>
-            <span style="margin-left: 8px">Reports</span>
-          </mat-panel-title>
-        </mat-expansion-panel-header>
-        <mat-action-list>
-          <a mat-list-item routerLink="/reports" routerLinkActive="active">
-            <mat-icon>assessment</mat-icon>
-            <span>Reports</span>
-          </a>
-        </mat-action-list>
-      </mat-expansion-panel>
+        <mat-expansion-panel class="nav-group">
+          <mat-expansion-panel-header collapsedHeight="40px" expandedHeight="40px">
+            <mat-panel-title>
+              <mat-icon>assessment</mat-icon>
+              <span class="nav-label">Reports</span>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <mat-action-list class="nav-children">
+            <a mat-list-item class="nav-item child" routerLink="/reports" routerLinkActive="active">
+              <mat-icon>bar_chart</mat-icon>
+              <span class="nav-label">Reports</span>
+            </a>
+          </mat-action-list>
+        </mat-expansion-panel>
 
-      <!-- Users expandable section -->
-      <mat-expansion-panel class="no-border">
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            <mat-icon>people</mat-icon>
-            <span style="margin-left: 8px">Users</span>
-          </mat-panel-title>
-        </mat-expansion-panel-header>
+        <mat-expansion-panel class="nav-group">
+          <mat-expansion-panel-header collapsedHeight="40px" expandedHeight="40px">
+            <mat-panel-title>
+              <mat-icon>people</mat-icon>
+              <span class="nav-label">Users</span>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <mat-action-list class="nav-children">
+            <a mat-list-item class="nav-item child" routerLink="/users" routerLinkActive="active">
+              <mat-icon>group</mat-icon>
+              <span class="nav-label">All Users</span>
+            </a>
+            <a mat-list-item class="nav-item child" routerLink="/users/roles" routerLinkActive="active">
+              <mat-icon>admin_panel_settings</mat-icon>
+              <span class="nav-label">Roles</span>
+            </a>
+          </mat-action-list>
+        </mat-expansion-panel>
 
-        <mat-action-list>
-          <a mat-list-item routerLink="/users" routerLinkActive="active">
-            <mat-icon>group</mat-icon>
-            <span>All Users</span>
-          </a>
-          <a mat-list-item routerLink="/users/roles" routerLinkActive="active">
-            <mat-icon>admin_panel_settings</mat-icon>
-            <span>Roles</span>
-          </a>
-        </mat-action-list>
-      </mat-expansion-panel>
-
-      <mat-expansion-panel class="no-border">
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            <mat-icon>settings</mat-icon>
-            <span style="margin-left: 8px">Setup</span>
-          </mat-panel-title>
-        </mat-expansion-panel-header>
-
-        <mat-action-list>
-          <a mat-list-item routerLink="/setup/products" routerLinkActive="active">
-            <mat-icon>products</mat-icon>
-            <span>Products</span>
-          </a>
-          <a mat-list-item routerLink="/setup/vendor" routerLinkActive="active">
-            <mat-icon>vendor</mat-icon>
-            <span>Vendor</span>
-          </a>
-          <a mat-list-item routerLink="/setup/brand" routerLinkActive="active">
-            <mat-icon>brand</mat-icon>
-            <span>Brand</span>
-          </a>
-          <a mat-list-item routerLink="/setup/workflow-transitions" routerLinkActive="active">
-            <mat-icon>account_tree</mat-icon>
-            <span>Status Transitions</span>
-          </a>
-          <a mat-list-item routerLink="/setup/workflow-functions" routerLinkActive="active">
-            <mat-icon>functions</mat-icon>
-            <span>Workflow Functions</span>
-          </a>
-        </mat-action-list>
-      </mat-expansion-panel>
-    </mat-nav-list>
+        <mat-expansion-panel class="nav-group">
+          <mat-expansion-panel-header collapsedHeight="40px" expandedHeight="40px">
+            <mat-panel-title>
+              <mat-icon>settings</mat-icon>
+              <span class="nav-label">Setup</span>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <mat-action-list class="nav-children">
+            <a mat-list-item class="nav-item child" routerLink="/setup/products" routerLinkActive="active">
+              <mat-icon>category</mat-icon>
+              <span class="nav-label">Products</span>
+            </a>
+            <a mat-list-item class="nav-item child" routerLink="/setup/vendor" routerLinkActive="active">
+              <mat-icon>storefront</mat-icon>
+              <span class="nav-label">Vendor</span>
+            </a>
+            <a mat-list-item class="nav-item child" routerLink="/setup/brand" routerLinkActive="active">
+              <mat-icon>sell</mat-icon>
+              <span class="nav-label">Brand</span>
+            </a>
+            <a mat-list-item class="nav-item child" routerLink="/setup/workflow-transitions" routerLinkActive="active">
+              <mat-icon>account_tree</mat-icon>
+              <span class="nav-label">Status Transitions</span>
+            </a>
+            <a mat-list-item class="nav-item child" routerLink="/setup/workflow-functions" routerLinkActive="active">
+              <mat-icon>functions</mat-icon>
+              <span class="nav-label">Workflow Functions</span>
+            </a>
+          </mat-action-list>
+        </mat-expansion-panel>
+      </mat-nav-list>
+    </nav>
   </mat-sidenav>
 
-  <!-- Main Content -->
   <mat-sidenav-content>
-    <mat-toolbar color="primary">
+    <mat-toolbar class="app-toolbar">
       <button
         type="button"
         aria-label="Toggle sidenav"
@@ -175,11 +175,11 @@
         (click)="drawer.toggle()"
         *ngIf="isHandset$ | async"
       >
-        <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+        <mat-icon>menu</mat-icon>
       </button>
-      <span>Inventory Management System</span>
+      <span class="app-title">Inventory Management System</span>
       <span class="toolbar-spacer"></span>
-      <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="User menu">
+      <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="User menu" class="user-btn">
         <mat-icon>account_circle</mat-icon>
       </button>
       <mat-menu #userMenu="matMenu">
@@ -191,6 +191,21 @@
           <mat-icon>settings</mat-icon>
           <span>Settings</span>
         </button>
+        <button
+          mat-menu-item
+          class="theme-menu-item"
+          disableRipple
+          (click)="$event.stopPropagation()"
+        >
+          <mat-icon>{{ darkMode ? 'dark_mode' : 'light_mode' }}</mat-icon>
+          <span>Dark theme</span>
+          <mat-slide-toggle
+            class="theme-toggle"
+            [checked]="darkMode"
+            (change)="onDarkModeChange($event.checked)"
+            (click)="$event.stopPropagation()"
+          ></mat-slide-toggle>
+        </button>
         <mat-divider></mat-divider>
         <button mat-menu-item routerLink="/auth/login">
           <mat-icon>exit_to_app</mat-icon>
@@ -199,7 +214,6 @@
       </mat-menu>
     </mat-toolbar>
 
-    <!-- Router Outlet - this is where your feature components will be displayed -->
     <div class="content-container">
       <router-outlet></router-outlet>
     </div>

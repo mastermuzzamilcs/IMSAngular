@@ -19,9 +19,14 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { MatNativeDateModule } from '@angular/material/core';
+import {
+  MxButtonComponent,
+  MxCardComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+} from '@mesix/custom-control';
 import { WorkflowService } from '../../../core/services/Workflow.service';
 import { RequestType } from '../../../core/Models/WorkflowModel';
 import { LoadingService } from '../../../core/services/Loading.service';
@@ -38,10 +43,13 @@ import { LoadingService } from '../../../core/services/Loading.service';
     MatDatepickerModule,
     MatIconModule,
     MatTableModule,
-    MatButtonModule,
-    MatCardModule,
     MatNativeDateModule,
     FormsModule,
+    MxPageHeaderComponent,
+    MxButtonComponent,
+    MxCardComponent,
+    MxGridComponent,
+    MxEmptyStateComponent,
   ],
   templateUrl: './stock-out.component.html',
   styleUrls: ['./stock-out.component.scss'],

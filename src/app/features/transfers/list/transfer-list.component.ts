@@ -6,11 +6,17 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxGridComponent,
+  MxEmptyStateComponent,
+  MxPageHeaderComponent,
+} from '@mesix/custom-control';
+import type { MxTone } from '@mesix/custom-control';
 
 import { TransferFormComponent } from '../form/transfer-form.component';
 import { TransferDetailComponent } from '../detail/transfer-detail.component';
@@ -29,12 +35,15 @@ import { Transfer } from '../../../core/Models/TransferModel';
     MatDialogModule,
     MatButtonModule,
     MatIconModule,
-    MatCardModule,
     MatFormFieldModule,
     MatInputModule,
-    MatChipsModule,
     MatMenuModule,
     DatePipe,
+    MxPageHeaderComponent,
+    MxButtonComponent,
+    MxGridComponent,
+    MxBadgeComponent,
+    MxEmptyStateComponent,
   ],
   templateUrl: './transfer-list.component.html',
   styleUrls: ['./transfer-list.component.scss'],
@@ -137,25 +146,24 @@ export class TransferListComponent implements OnInit, AfterViewInit {
     }
   }
 
-  getStatusColor(status: string): string {
+  getStatusTone(status: string): MxTone {
     switch (status) {
       case 'Pending':
-        return 'accent';
-
+        return 'warning';
       case 'Approved':
         return 'primary';
-
       case 'In Transit':
-        return 'accent';
-
+        return 'info';
       case 'Completed':
-        return 'primary';
-
+        return 'success';
       case 'Rejected':
-        return 'warn';
-
+        return 'danger';
       default:
-        return '';
+        return 'neutral';
     }
+  }
+
+  onGridFilter(value: string) {
+    this.dataSource.filter = value.trim().toLowerCase();
   }
 }

@@ -9,7 +9,8 @@
     "test": "ng test",
     "lint": "ng lint",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "sync:mesix": "node scripts/sync-mesix-packages.mjs"
   },
   "private": true,
   "dependencies": {
@@ -22,6 +23,8 @@
     "@angular/platform-browser": "^19.2.0",
     "@angular/platform-browser-dynamic": "^19.2.0",
     "@angular/router": "^19.2.0",
+    "@mesix/custom-control": "file:CustomPackages/@mesix/custom-control",
+    "@mesix/theme": "file:CustomPackages/@mesix/theme",
     "@ngneat/tailwind": "^7.0.3",
     "@tailwindcss/postcss": "^4.1.11",
     "chart.js": "^4.4.9",

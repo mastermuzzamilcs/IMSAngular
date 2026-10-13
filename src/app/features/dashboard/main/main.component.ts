@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
+import { MxCardComponent, MxPageHeaderComponent } from '@mesix/custom-control';
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
@@ -11,7 +11,14 @@ Chart.register(...registerables);
 @Component({
   selector: 'app-main',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatIconModule, MatListModule, MatDividerModule],
+  imports: [
+    CommonModule,
+    MatIconModule,
+    MatListModule,
+    MatDividerModule,
+    MxCardComponent,
+    MxPageHeaderComponent,
+  ],
   templateUrl: './main.component.html',
   styleUrls: ['./main.component.scss'],
 })

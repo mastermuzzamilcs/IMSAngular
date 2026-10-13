@@ -5,14 +5,16 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { WorkflowRequest } from '../../../core/Models/WorkflowModel';
 import { Router } from '@angular/router';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatCardModule } from '@angular/material/card';
-import { MatDividerModule } from '@angular/material/divider';
+import {
+  MxBadgeComponent,
+  MxGridComponent,
+  MxEmptyStateComponent,
+  MxPageHeaderComponent,
+} from '@mesix/custom-control';
 import { RequestDetailComponent } from '../request-detail/request-detail.component';
 import { LoadingService } from '../../../core/services/Loading.service';
 
@@ -27,12 +29,12 @@ import { LoadingService } from '../../../core/services/Loading.service';
     MatPaginatorModule,
     MatSortModule,
     MatIconModule,
-    MatButtonModule,
     MatDialogModule,
     MatSnackBarModule,
-    MatChipsModule,
-    MatCardModule,
-    MatDividerModule,
+    MxPageHeaderComponent,
+    MxGridComponent,
+    MxBadgeComponent,
+    MxEmptyStateComponent,
   ],
 })
 export class RequestManagementComponent implements OnInit, AfterViewInit {
@@ -75,5 +77,9 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
       .subscribe((res) => {
         if (res?.updated) this.loadRequests(); // refresh grid
       });
+  }
+
+  onGridFilter(value: string) {
+    this.dataSource.filter = value.trim().toLowerCase();
   }
 }

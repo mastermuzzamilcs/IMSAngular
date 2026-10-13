@@ -1,8 +1,20 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MxCardComponent, MxPageHeaderComponent } from '@mesix/custom-control';
 import { Chart } from 'chart.js';
 
 @Component({
   selector: 'app-dashboard',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatIconModule,
+    MatExpansionModule,
+    MxCardComponent,
+    MxPageHeaderComponent,
+  ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
 })
@@ -38,6 +50,7 @@ export class DashboardComponent implements OnInit {
 
   initSalesChart(): void {
     const ctx = document.getElementById('salesChart') as HTMLCanvasElement;
+    if (!ctx) return;
     this.salesChart = new Chart(ctx, {
       type: 'line',
       data: {
@@ -56,6 +69,7 @@ export class DashboardComponent implements OnInit {
 
   initInventoryChart(): void {
     const ctx = document.getElementById('inventoryChart') as HTMLCanvasElement;
+    if (!ctx) return;
     this.inventoryChart = new Chart(ctx, {
       type: 'doughnut',
       data: {
@@ -72,6 +86,7 @@ export class DashboardComponent implements OnInit {
 
   initTransferChart(): void {
     const ctx = document.getElementById('transferChart') as HTMLCanvasElement;
+    if (!ctx) return;
     this.transferChart = new Chart(ctx, {
       type: 'bar',
       data: {

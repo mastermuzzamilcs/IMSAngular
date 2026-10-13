@@ -5,13 +5,17 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatDialog } from '@angular/material/dialog';
 import { SalesFormComponent } from '../form/sales-form.component';
 import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { CommonModule } from '@angular/common';
 import { MatInputModule } from '@angular/material/input';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxGridComponent,
+  MxEmptyStateComponent,
+  MxPageHeaderComponent,
+} from '@mesix/custom-control';
 
 @Component({
   selector: 'app-sales-list',
@@ -19,15 +23,17 @@ import { MatInputModule } from '@angular/material/input';
   imports: [
     MatPaginatorModule,
     MatIconModule,
-    MatChipsModule,
     MatTableModule,
     MatSortModule,
     MatFormFieldModule,
     MatInputModule,
-    MatCardModule,
-    MatButtonModule,
     MatButtonToggleModule,
     CommonModule,
+    MxPageHeaderComponent,
+    MxButtonComponent,
+    MxGridComponent,
+    MxBadgeComponent,
+    MxEmptyStateComponent,
   ],
   templateUrl: './sales-list.component.html',
   styleUrls: ['./sales-list.component.scss'],
@@ -81,5 +87,9 @@ export class SalesListComponent implements AfterViewInit {
 
   exportSales() {
     // Export sales data to CSV/Excel
+  }
+
+  onGridFilter(value: string) {
+    this.dataSource.filter = value.trim().toLowerCase();
   }
 }

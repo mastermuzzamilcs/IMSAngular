@@ -15,9 +15,14 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { MatNativeDateModule } from '@angular/material/core';
+import {
+  MxButtonComponent,
+  MxCardComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+} from '@mesix/custom-control';
 import { ItemSearchModalComponent } from '../../inventory/item-search-modal/item-search-modal.component';
 import { UsersService } from '../../../core/services/users.service';
 import { BranchService } from '../../../core/services/branchservice.service';
@@ -41,9 +46,12 @@ import { RequestStatus, RequestType } from '../../../core/Models/WorkflowModel';
     MatDatepickerModule,
     MatIconModule,
     MatTableModule,
-    MatButtonModule,
-    MatCardModule,
     MatNativeDateModule,
+    MxPageHeaderComponent,
+    MxButtonComponent,
+    MxCardComponent,
+    MxGridComponent,
+    MxEmptyStateComponent,
   ],
   templateUrl: './new-transfer-request.component.html',
   styleUrls: ['./new-transfer-request.component.scss'],

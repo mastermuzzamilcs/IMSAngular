@@ -5,14 +5,18 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { VendorFormComponent } from '../vendor-form/vendor-form.component';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
 import { LoadingService } from '../../../core/services/Loading.service';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { GlobalDeleteConfirmationComponent } from '../../../shared/components/global-delete-confirmation/global-delete-confirmation.component';
+import { ConfirmService } from '../../../core/services/confirm.service';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { VendorService } from '../../../core/services/vendor.service';
 import { Vendor } from '../../../core/Models/VendorModel';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxGridComponent,
+  MxEmptyStateComponent,
+  MxPageHeaderComponent,
+} from '@mesix/custom-control';
 
 @Component({
   selector: 'app-vendor-setup',
@@ -21,11 +25,13 @@ import { Vendor } from '../../../core/Models/VendorModel';
     MatTableModule,
     MatPaginatorModule,
     MatIconModule,
-    MatButtonModule,
     MatDialogModule,
-    MatCardModule,
-    MatChipsModule,
     MatSortModule,
+    MxPageHeaderComponent,
+    MxButtonComponent,
+    MxGridComponent,
+    MxBadgeComponent,
+    MxEmptyStateComponent,
   ],
   templateUrl: './vendor-setup.component.html',
   styleUrl: './vendor-setup.component.scss',
@@ -42,6 +48,7 @@ export class VendorSetupComponent implements OnInit, AfterViewInit {
     private _vendorService: VendorService,
     private _loadingService: LoadingService,
     private dialog: MatDialog,
+    private confirm: ConfirmService,
   ) {}
 
   ngOnInit() {
@@ -99,23 +106,21 @@ export class VendorSetupComponent implements OnInit, AfterViewInit {
       }
     });
   }
+
   openDeleteDialog(_vendor: Vendor) {
-    const dialogRef = this.dialog.open(GlobalDeleteConfirmationComponent, {
-      width: '300px',
-      data: {
-        title: 'Delete Vendor',
-        message: `Are you sure you want to delete "${_vendor.name}"?`,
-      },
-    });
-    dialogRef.afterClosed().subscribe(async (result) => {
-      if (result) {
-        if (_vendor.id) {
+    this.confirm
+      .confirmDelete(`Are you sure you want to delete "${_vendor.name}"?`, 'Delete Vendor')
+      .subscribe(async (confirmed) => {
+        if (confirmed && _vendor.id) {
           this._loadingService.show();
           await this._vendorService.deleteVendor(_vendor.id);
           this._loadingService.hide();
           this.loadVendors();
         }
-      }
-    });
+      });
+  }
+
+  onGridFilter(value: string) {
+    this.dataSource.filter = value.trim().toLowerCase();
   }
 }

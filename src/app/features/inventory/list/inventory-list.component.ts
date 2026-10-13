@@ -2,13 +2,19 @@ import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { MatCardModule } from '@angular/material/card';
-import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+  MxSelectComponent,
+  MxSelectOption,
+} from '@mesix/custom-control';
+import type { MxTone } from '@mesix/custom-control';
 import { StockService } from '../../../core/services/stock.service';
 import { BranchService } from '../../../core/services/branchservice.service';
 import { VendorService } from '../../../core/services/vendor.service';
@@ -16,7 +22,6 @@ import { ProductService } from '../../../core/services/product.service';
 import { Stock, StockOverview } from '../../../core/Models/StockModel';
 import { Branch } from '../../../core/Models/BranchModel';
 import { LoadingService } from '../../../core/services/Loading.service';
-import { RouterModule } from '@angular/router';
 
 @Component({
   standalone: true,
@@ -26,14 +31,14 @@ import { RouterModule } from '@angular/router';
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
-    MatFormFieldModule,
-    MatSelectModule,
-    MatCardModule,
-    MatInputModule,
     MatIconModule,
-    MatButtonModule,
     CommonModule,
-    RouterModule,
+    MxPageHeaderComponent,
+    MxButtonComponent,
+    MxGridComponent,
+    MxBadgeComponent,
+    MxEmptyStateComponent,
+    MxSelectComponent,
   ],
   styleUrls: ['./inventory-list.component.scss'],
 })
@@ -51,6 +56,7 @@ export class InventoryListComponent implements OnInit, AfterViewInit {
   ];
   dataSource = new MatTableDataSource<any>([]);
   branches: Branch[] = [];
+  branchOptions: MxSelectOption[] = [];
   selectedBranchId: string = '';
   allStock: Stock[] = [];
   stockOverviewData: StockOverview[] = [];
@@ -64,11 +70,24 @@ export class InventoryListComponent implements OnInit, AfterViewInit {
     private vendorService: VendorService,
     private productService: ProductService,
     private loadingService: LoadingService,
+    private router: Router,
   ) {}
+
+  goStockIn(): void {
+    this.router.navigate(['/inventory/stock-in']);
+  }
+
+  goStockOut(): void {
+    this.router.navigate(['/inventory/stock-out']);
+  }
 
   async ngOnInit(): Promise<void> {
     this.loadingService.show();
     this.branches = await this.branchService.getBranches();
+    this.branchOptions = this.branches.map((b) => ({
+      value: b.branchid || '',
+      label: b.name,
+    }));
     const loggedInBranchId = '3nMj9NbLzWPwiqDAsOWn';
     this.selectedBranchId = loggedInBranchId;
     await this.filterByBranch();
@@ -82,7 +101,29 @@ export class InventoryListComponent implements OnInit, AfterViewInit {
 
   applyFilter(event: Event): void {
     const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+    this.onGridFilter(filterValue);
+  }
+
+  onGridFilter(value: string): void {
+    this.dataSource.filter = value.trim().toLowerCase();
+  }
+
+  onBranchChange(branchId: string): void {
+    this.selectedBranchId = branchId;
+    void this.filterByBranch();
+  }
+
+  getAlertTone(alert: string): MxTone {
+    switch (alert) {
+      case 'Empty':
+        return 'danger';
+      case 'Low':
+        return 'warning';
+      case 'Healthy':
+        return 'success';
+      default:
+        return 'neutral';
+    }
   }
 
   async filterByBranch(): Promise<void> {

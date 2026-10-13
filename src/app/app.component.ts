@@ -5,7 +5,6 @@ import {
   RouterLink,
   RouterLinkActive,
   Router,
-  NavigationStart,
   NavigationEnd,
   NavigationCancel,
   NavigationError,
@@ -13,8 +12,13 @@ import {
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
-import { GlobalSpinnerComponent } from './shared/global-spinner/global-spinner.component';
-// Material Imports
+import { MxThemeService } from '@mesix/theme';
+import {
+  MxSpinnerComponent,
+  MxToastHostComponent,
+  MxDialogHostComponent,
+} from '@mesix/custom-control';
+import { applyImsTheme, readStoredThemeId } from './core/theme/theme-preference';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -23,6 +27,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { LoadingService } from './core/services/Loading.service';
 
 @Component({
@@ -40,7 +45,10 @@ import { LoadingService } from './core/services/Loading.service';
     MatListModule,
     MatMenuModule,
     MatDividerModule,
-    GlobalSpinnerComponent,
+    MatSlideToggleModule,
+    MxSpinnerComponent,
+    MxToastHostComponent,
+    MxDialogHostComponent,
     MatExpansionModule,
   ],
   templateUrl: './app.component.html',
@@ -49,27 +57,33 @@ import { LoadingService } from './core/services/Loading.service';
 export class AppComponent {
   title = 'IMSAngular';
   isHandset$: Observable<boolean>;
+  darkMode = false;
 
   constructor(
     private breakpointObserver: BreakpointObserver,
     private router: Router,
     private loadingService: LoadingService,
+    private theme: MxThemeService,
   ) {
+    this.darkMode = readStoredThemeId() === 'dark';
     this.isHandset$ = this.breakpointObserver.observe(Breakpoints.Handset).pipe(
       map((result) => result.matches),
       shareReplay(),
     );
     this.router.events.subscribe((event) => {
-      if (event instanceof NavigationStart) {
-        this.loadingService.show();
-      }
+      // Clear any leftover overlay after navigation settles; pages own their own show/hide.
       if (
         event instanceof NavigationEnd ||
         event instanceof NavigationCancel ||
         event instanceof NavigationError
       ) {
-        this.loadingService.hide();
+        this.loadingService.reset();
       }
     });
+  }
+
+  onDarkModeChange(enabled: boolean): void {
+    this.darkMode = enabled;
+    applyImsTheme(this.theme, enabled ? 'dark' : 'light');
   }
 }

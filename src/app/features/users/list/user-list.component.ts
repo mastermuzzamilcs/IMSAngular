@@ -1,17 +1,19 @@
 import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
+import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { UserFormComponent } from '../form/user-form.component';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatInputModule } from '@angular/material/input';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+} from '@mesix/custom-control';
+import type { MxTone } from '@mesix/custom-control';
 import { UsersService } from '../../../core/services/users.service';
 import { LoadingService } from '../../../core/services/Loading.service';
 import { ActivatedRoute } from '@angular/router';
@@ -23,14 +25,14 @@ import { ActivatedRoute } from '@angular/router';
     CommonModule,
     MatTableModule,
     MatPaginatorModule,
+    MatSortModule,
     MatIconModule,
-    MatButtonModule,
-    MatInputModule,
     MatDialogModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatChipsModule,
-    MatSlideToggleModule,
+    MxPageHeaderComponent,
+    MxButtonComponent,
+    MxGridComponent,
+    MxBadgeComponent,
+    MxEmptyStateComponent,
   ],
   templateUrl: './user-list.component.html',
   styleUrls: ['./user-list.component.scss'],
@@ -64,7 +66,11 @@ export class UserListComponent implements OnInit, AfterViewInit {
 
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+    this.onGridFilter(filterValue);
+  }
+
+  onGridFilter(value: string) {
+    this.dataSource.filter = value.trim().toLowerCase();
   }
 
   openAddUserDialog() {
@@ -113,18 +119,19 @@ export class UserListComponent implements OnInit, AfterViewInit {
     // Toggle user active status
   }
 
-  getRoleColor(role: string): string {
+  getRoleTone(role: string): MxTone {
     switch (role) {
       case 'Admin':
-        return 'warn';
+        return 'danger';
       case 'Manager':
-        return 'accent';
+        return 'warning';
       case 'Staff':
         return 'primary';
       default:
-        return '';
+        return 'neutral';
     }
   }
+
   async LoadUsers() {
     this.loadingService.show();
     try {
@@ -143,8 +150,9 @@ export class UserListComponent implements OnInit, AfterViewInit {
     } catch (err) {
       console.error('Error loading Users', err);
       alert('Error loading Users ');
+    } finally {
+      this.loadingService.hide();
     }
-    this.loadingService.hide();
   }
   ResetPasswordAction(_user: any) {
     //alert('Implementation Pending');

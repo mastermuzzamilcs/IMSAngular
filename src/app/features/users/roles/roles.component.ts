@@ -7,12 +7,16 @@ import { RoleService } from '../../../core/services/role.service';
 import { RolesFormComponent } from '../roles-form/roles-form.component';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
 import { LoadingService } from '../../../core/services/Loading.service';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { GlobalDeleteConfirmationComponent } from '../../../shared/components/global-delete-confirmation/global-delete-confirmation.component';
+import { ConfirmService } from '../../../core/services/confirm.service';
 import { MatSort, MatSortModule } from '@angular/material/sort';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxGridComponent,
+  MxEmptyStateComponent,
+  MxPageHeaderComponent,
+} from '@mesix/custom-control';
 
 @Component({
   selector: 'app-roles',
@@ -21,11 +25,13 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
     MatTableModule,
     MatPaginatorModule,
     MatIconModule,
-    MatButtonModule,
     MatDialogModule,
-    MatCardModule,
-    MatChipsModule,
     MatSortModule,
+    MxPageHeaderComponent,
+    MxButtonComponent,
+    MxGridComponent,
+    MxBadgeComponent,
+    MxEmptyStateComponent,
   ],
   templateUrl: './roles.component.html',
   styleUrl: './roles.component.scss',
@@ -42,6 +48,7 @@ export class RolesComponent implements OnInit, AfterViewInit {
     private roleService: RoleService,
     private _loadingService: LoadingService,
     private dialog: MatDialog,
+    private confirm: ConfirmService,
   ) {}
 
   ngOnInit() {
@@ -99,23 +106,21 @@ export class RolesComponent implements OnInit, AfterViewInit {
       }
     });
   }
+
   openDeleteDialog(role: Role) {
-    const dialogRef = this.dialog.open(GlobalDeleteConfirmationComponent, {
-      width: '300px',
-      data: {
-        title: 'Delete Role',
-        message: `Are you sure you want to delete "${role.name}"?`,
-      },
-    });
-    dialogRef.afterClosed().subscribe(async (result) => {
-      if (result) {
-        if (role.id) {
+    this.confirm
+      .confirmDelete(`Are you sure you want to delete "${role.name}"?`, 'Delete Role')
+      .subscribe(async (confirmed) => {
+        if (confirmed && role.id) {
           this._loadingService.show();
           await this.roleService.deleteRole(role.id);
           this._loadingService.hide();
           this.loadRoles();
         }
-      }
-    });
+      });
+  }
+
+  onGridFilter(value: string) {
+    this.dataSource.filter = value.trim().toLowerCase();
   }
 }

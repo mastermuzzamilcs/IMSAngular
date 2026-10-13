@@ -1,26 +1,87 @@
 @import 'tailwindcss';
-/* You can add global styles to this file, and also import other style files */
+/* Global app styles. Colors/fonts come from @mesix/theme (mesix-theme.scss + MxThemeService). */
 
 html,
 body {
   height: 100%;
 }
+
 body {
   margin: 0;
-  font-family: Roboto, 'Helvetica Neue', sans-serif;
+  font-family: var(--mx-font, Roboto, 'Helvetica Neue', sans-serif);
+  background: var(--mx-bg, #f4f6f9);
+  color: var(--mx-text, #101828);
 }
+
 /* Global style for mat-table containers */
 .table-container {
   overflow-x: auto;
-  border-radius: 4px;
+  border-radius: var(--mx-radius, 10px);
 }
 
 /* Global style for mat-table rows on hover */
 .mat-row:hover {
-  background-color: rgba(0, 100, 100, 100);
+  background-color: color-mix(in srgb, var(--mx-primary, #0b5fff) 8%, transparent);
   cursor: pointer;
 }
+
 .mat-header-cell,
 .mat-cell {
   padding: 12px 16px;
+}
+
+/* Shared transaction / form screens (Stock In/Out, Sales, Transfer, …) */
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-surface {
+  display: block;
+}
+
+.form-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.form-fields .full-width {
+  width: 100%;
+}
+
+.summary-panel {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: var(--mx-radius, 10px);
+  background: color-mix(in srgb, var(--mx-primary, #0b5fff) 6%, var(--mx-surface, #fff));
+  border: 1px solid var(--mx-border, rgba(0, 0, 0, 0.08));
+}
+
+.summary-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px 16px;
+}
+
+.summary-row .full-width {
+  width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.dense-field {
+  width: 100%;
+  margin: 0;
+}
+
+.dense-field .mat-mdc-form-field-subscript-wrapper {
+  display: none;
 }
