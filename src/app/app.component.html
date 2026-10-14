@@ -12,8 +12,8 @@
     [opened]="(isHandset$ | async) === false"
   >
     <mat-toolbar>
-      <img src="assets/logo.png" alt="IMS Logo" class="logo" />
-      <span>IMS</span>
+      <img [src]="(appLogo$ | async) || 'assets/logo.png'" alt="App logo" class="logo" />
+      <span>{{ (appTitle$ | async) || 'IMS' }}</span>
     </mat-toolbar>
     <mat-nav-list>
       <a
@@ -451,6 +451,15 @@
           {{ branch.name }}
         </button>
       </mat-menu>
+      <button
+        mat-icon-button
+        type="button"
+        routerLink="/settings"
+        aria-label="Settings"
+        matTooltip="Settings"
+      >
+        <mat-icon>settings</mat-icon>
+      </button>
       <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="User menu">
         <mat-icon>account_circle</mat-icon>
       </button>
@@ -464,24 +473,6 @@
           <span>{{ session.groups.length ? session.groups.join(', ') : 'No groups' }}</span>
         </button>
         <mat-divider></mat-divider>
-        <button mat-menu-item type="button" (click)="$event.stopPropagation()">
-          <mat-slide-toggle
-            [checked]="(soundEnabled$ | async) === true"
-            (change)="setNotificationSound($event.checked)"
-            (click)="$event.stopPropagation()"
-          >
-            Notification sound
-          </mat-slide-toggle>
-        </button>
-        <button
-          mat-menu-item
-          type="button"
-          *ngFor="let option of sounds"
-          (click)="chooseNotificationSound(option.id)"
-        >
-          <mat-icon>{{ (soundId$ | async) === option.id ? 'check' : 'music_note' }}</mat-icon>
-          <span>{{ option.label }}</span>
-        </button>
         <button mat-menu-item type="button" (click)="logout()">
           <mat-icon>exit_to_app</mat-icon>
           <span>Logout</span>

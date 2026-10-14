@@ -29,6 +29,11 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard.module').then((m) => m.DashboardModule),
       },
       {
+        path: 'settings',
+        loadComponent: () =>
+          import('./features/settings/settings.component').then((m) => m.SettingsComponent),
+      },
+      {
         path: 'branches',
         canActivate: [privilegeGuard],
         data: { privilege: privileges.branches.page },

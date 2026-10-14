@@ -44,6 +44,11 @@ const entities: Record<string, EntityDef> = {
   vendors: { collection: 'Sys_Vendors', aliases: ['vendor', 'vendors'], idField: 'vendorid' },
   brands: { collection: 'Sys_Brands', aliases: ['brand', 'brands'], idField: 'brandid' },
   transfers: { collection: 'Transfers', aliases: ['transfer', 'transfers'], idField: 'transferid' },
+  teamhierarchy: {
+    collection: 'Users_team_hirearchy',
+    aliases: ['teamhierarchy', 'team', 'hierarchy'],
+    idField: 'id',
+  },
 };
 
 const fieldAliases: Record<string, string> = {
