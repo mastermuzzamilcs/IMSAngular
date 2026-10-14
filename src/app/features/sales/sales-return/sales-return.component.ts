@@ -10,7 +10,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { Customer } from '../../../core/Models/CustomerModel';
 import { StockService } from '../../../core/services/stock.service';
-import { BranchService } from '../../../core/services/branchservice.service';
 import { ItemSearchModalComponent } from '../item-search-modal/item-search-modal.component';
 import { CustomerSearchModalComponent } from '../../../shared/components/customer-search-modal/customer-search-modal.component';
 import { CommonModule } from '@angular/common';
@@ -67,7 +66,6 @@ export class SalesReturnComponent implements OnInit {
     'actions',
   ];
   salesReturnForm!: FormGroup;
-  branches: any[] = [];
   saleDetails: any[] = [];
   private linkedCustomer: Customer | null = null;
   subTotal = 0;
@@ -78,14 +76,12 @@ export class SalesReturnComponent implements OnInit {
     private fb: FormBuilder,
     private dialog: MatDialog,
     private stockService: StockService,
-    private branchService: BranchService,
     private _workflowService: WorkflowService,
     private _loadingService: LoadingService,
     private auth: AuthService,
   ) {}
   async ngOnInit(): Promise<void> {
     this.salesReturnForm = this.fb.group({
-      branch: ['', Validators.required],
       customerId: [''],
       customerName: ['', Validators.required],
       customerPhone: [''],
@@ -93,7 +89,6 @@ export class SalesReturnComponent implements OnInit {
       customerAddress: [''],
       date: [new Date(), Validators.required],
     });
-    this.branches = await this.branchService.getBranches();
   }
   openCustomerDialog(): void {
     const dialogRef = this.dialog.open(CustomerSearchModalComponent, {
@@ -163,6 +158,11 @@ export class SalesReturnComponent implements OnInit {
     this.recalculateTotal();
   }
   async submitSalesReturn(): Promise<void> {
+    const branch = this.auth.currentBranchId();
+    if (!branch) {
+      alert('Choose a branch from the top bar before continuing.');
+      return;
+    }
     this._loadingService.show();
     if (this.salesReturnForm.invalid || this.dataSource.data.length === 0) {
       this.salesReturnForm.markAllAsTouched();
@@ -171,6 +171,7 @@ export class SalesReturnComponent implements OnInit {
     }
     const payload = {
       ...this.salesReturnForm.value,
+      branch,
       customerId: this.selectedCustomerId(),
       stockItems: this.dataSource.data,
       TotalItems: this.dataSource.data.length,
@@ -187,6 +188,7 @@ export class SalesReturnComponent implements OnInit {
         moduleId: sale_id,
         requestType: RequestType.SalesReturn,
         requestedBy: this.auth.currentUserId(),
+        branchId: this.auth.currentBranchId(),
         remarks: 'Auto-generated from Sale-Return screen',
       });
       alert('Sale-return entry added successfully');

@@ -29,7 +29,13 @@ import { privileges as privilegeAccess } from '../../../core/auth/privilege-cata
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 import { LoadingService } from '../../../core/services/Loading.service';
 import { Transfer } from '../../../core/Models/TransferModel';
+import { User } from '../../../core/Models/UsersModel';
 import { RequestStatus, RequestType } from '../../../core/Models/WorkflowModel';
+import {
+  ALL_BRANCHES_ID,
+  UserBranchAssociationService,
+} from '../../../core/services/user-branch-association.service';
+import { CustomerSearchModalComponent } from '../../../shared/components/customer-search-modal/customer-search-modal.component';
 
 @Component({
   selector: 'app-new-transfer-request',
@@ -58,7 +64,9 @@ export class NewTransferRequestComponent implements OnInit {
   displayedColumns: string[] = ['product', 'description', 'quantity', 'actions'];
   transferForm!: FormGroup;
   branches: any[] = [];
-  users: any[] = [];
+  users: User[] = [];
+  private linksByUser = new Map<string, string[]>();
+  searchedUser: User | null = null;
   private itemDialogRef: MatDialogRef<ItemSearchModalComponent> | null = null;
   private addItemOpen = false;
 
@@ -66,6 +74,7 @@ export class NewTransferRequestComponent implements OnInit {
     private fb: FormBuilder,
     private dialog: MatDialog,
     private usersService: UsersService,
+    private branchAssociationService: UserBranchAssociationService,
     private branchService: BranchService,
     private stockService: StockService,
     private transferService: TransferService,
@@ -76,42 +85,85 @@ export class NewTransferRequestComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     this.transferForm = this.fb.group({
-      branch: ['', Validators.required],
+      toBranch: ['', Validators.required],
       user: ['', Validators.required],
       date: [new Date(), Validators.required],
     });
 
-    const [users, branches] = await Promise.all([
+    const [users, branches, links] = await Promise.all([
       this.usersService.getUsers(),
       this.branchService.getBranches(),
+      this.branchAssociationService.getAssociations(),
     ]);
 
     this.branches = branches;
-    this.users = users
-      .filter((user) => !!user.branchid)
-      .map((user) => ({
-        ...user,
-        branchName: branches.find((branch) => branch.branchid === user.branchid)?.name || '',
-      }));
+    this.users = users;
+    links.forEach((link) => {
+      const current = this.linksByUser.get(link.userid) || [];
+      current.push(link.branchid);
+      this.linksByUser.set(link.userid, current);
+    });
   }
 
-  get usersForBranch(): any[] {
-    const branchId = this.transferForm?.get('branch')?.value;
-    if (!branchId) {
-      return this.users;
+  get userChoices(): User[] {
+    const toBranch = this.transferForm?.get('toBranch')?.value || '';
+    if (!toBranch) {
+      return this.searchedUser ? [this.searchedUser] : [];
     }
-    return this.users.filter((user) => user.branchid !== branchId);
+    const fromBranch = this.auth.currentBranchId();
+    const allowed = new Set([fromBranch, toBranch]);
+    const choices = this.users.filter((user) => this.userServes(user.userid || '', allowed));
+    if (
+      this.searchedUser?.userid &&
+      !choices.some((user) => user.userid === this.searchedUser?.userid)
+    ) {
+      choices.unshift(this.searchedUser);
+    }
+    return choices;
   }
 
-  onBranchChange(): void {
-    this.dataSource.data = [];
-    const branchId = this.transferForm.get('branch')?.value;
-    const selectedUser = this.users.find(
-      (user) => user.userid === this.transferForm.get('user')?.value,
-    );
-    if (selectedUser && selectedUser.branchid === branchId) {
+  onToBranchChange(): void {
+    const selected = this.transferForm.get('user')?.value || '';
+    const toBranch = this.transferForm.get('toBranch')?.value || '';
+    const allowed = new Set([this.auth.currentBranchId(), toBranch].filter((id) => id.length > 0));
+    if (!this.userServes(selected, allowed)) {
+      this.searchedUser = null;
       this.transferForm.patchValue({ user: '' });
     }
+  }
+
+  openUserSearch(): void {
+    this.dialog
+      .open(CustomerSearchModalComponent, {
+        width: '95vw',
+        maxWidth: '960px',
+        maxHeight: '85vh',
+        data: { type: 'all', isMultiSelect: false },
+      })
+      .afterClosed()
+      .subscribe((user: User | null) => {
+        if (!user?.userid) {
+          return;
+        }
+        this.searchedUser = user;
+        if (!this.users.some((item) => item.userid === user.userid)) {
+          this.users = [user, ...this.users];
+        }
+        this.transferForm.patchValue({ user: user.userid });
+      });
+  }
+
+  private userServes(userid: string, branches: Set<string>): boolean {
+    if (!userid || branches.size === 0) {
+      return false;
+    }
+    const links = this.linksByUser.get(userid) || [];
+    return links.some((branchid) => branchid === ALL_BRANCHES_ID || branches.has(branchid));
+  }
+
+  get destinationBranches(): any[] {
+    const current = this.auth.currentBranchId();
+    return this.branches.filter((branch) => branch.branchid !== current);
   }
 
   async openProductDialog(): Promise<void> {
@@ -121,7 +173,7 @@ export class NewTransferRequestComponent implements OnInit {
     this.addItemOpen = true;
 
     try {
-      const branchId = this.transferForm.get('branch')?.value;
+      const branchId = this.auth.currentBranchId();
       const allowedIds = new Set<string>();
       if (branchId) {
         const stock = await this.stockService.getStockOverviewByBranch(branchId);
@@ -168,24 +220,30 @@ export class NewTransferRequestComponent implements OnInit {
   }
 
   async submitTransfer(): Promise<void> {
+    const fromBranchId = this.auth.currentBranchId();
+    if (!fromBranchId) {
+      alert('Choose a branch from the top bar before continuing.');
+      return;
+    }
     if (this.transferForm.invalid || this.dataSource.data.length === 0) {
       return;
     }
 
     this.loadingService.show();
     const formValue = this.transferForm.value;
-    const branch = this.branches.find((item) => item.branchid === formValue.branch);
+    const fromBranch = this.branches.find((item) => item.branchid === fromBranchId);
+    const toBranch = this.branches.find((item) => item.branchid === formValue.toBranch);
     const user = this.users.find((item) => item.userid === formValue.user);
 
     const transfer: Transfer = {
-      fromBranch: formValue.branch,
-      fromBranchName: branch?.name || '',
-      branchId: formValue.branch,
-      branchName: branch?.name || '',
+      fromBranch: fromBranchId,
+      fromBranchName: fromBranch?.name || '',
+      branchId: fromBranchId,
+      branchName: fromBranch?.name || '',
       userId: formValue.user,
       userName: user?.name || '',
-      toBranch: user?.branchid || '',
-      toBranchName: user?.branchName || '',
+      toBranch: formValue.toBranch,
+      toBranchName: toBranch?.name || '',
       expectedDate: formValue.date,
       requestDate: new Date(),
       status: RequestStatus.Pending,
@@ -203,6 +261,8 @@ export class NewTransferRequestComponent implements OnInit {
         moduleId: transferId,
         requestType: RequestType.Transfer,
         requestedBy: this.auth.currentUserId(),
+        branchId: fromBranchId,
+        toBranchId: formValue.toBranch,
         remarks: 'Auto-generated from New Transfer Request',
       });
       alert('Transfer request added successfully');

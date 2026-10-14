@@ -40,7 +40,7 @@ import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 })
 export class UserListComponent implements OnInit, AfterViewInit {
   readonly privileges = privilegeAccess;
-  displayedColumns: string[] = ['name', 'email', 'role', 'branch', 'status', 'actions'];
+  displayedColumns: string[] = ['name', 'email', 'role', 'status', 'actions'];
   dataSource = new MatTableDataSource<any>([]);
   userRolesLookup: any[];
   userBranchesLookup: any[];
@@ -106,6 +106,7 @@ export class UserListComponent implements OnInit, AfterViewInit {
       if (result) {
         this.loadingService.show();
         result.userid = user.userid;
+        result.branch = user.branchid || user.branch || '';
         await this._userService.updateUser(result);
         this.loadingService.hide();
         this.LoadUsers();
@@ -135,11 +136,9 @@ export class UserListComponent implements OnInit, AfterViewInit {
       const Users = await this._userService.getUsers();
       const usersWithRoleNames = Users.map((user) => {
         const matchedRole = this.userRolesLookup.find((r) => r.id === user.roleid);
-        const matchedBranch = this.userBranchesLookup.find((b) => b.branchid === user.branchid);
         return {
           ...user,
           role: matchedRole ? matchedRole.name : 'Unknown',
-          branch: matchedBranch ? matchedBranch.name : 'Unknown',
         };
       });
 

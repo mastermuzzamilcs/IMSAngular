@@ -14,6 +14,7 @@ import { firestore } from '../../firebase-config';
 import { hashPassword } from '../auth/password-hash';
 import { asStatus, isStatus, Status } from '../enums/status.enum';
 import { User } from '../Models/UsersModel';
+import { SYSTEM_USER_ID, SYSTEM_USER_NAME } from '../system-user';
 
 @Injectable({
   providedIn: 'root',
@@ -21,6 +22,23 @@ import { User } from '../Models/UsersModel';
 export class UsersService {
   constructor() {}
   private readonly topicName: string = 'Users';
+
+  async ensureSystemUser(): Promise<void> {
+    const ref = doc(firestore, this.topicName, SYSTEM_USER_ID);
+    const existing = await getDoc(ref);
+    if (existing.exists()) {
+      return;
+    }
+    await setDoc(ref, {
+      name: SYSTEM_USER_NAME,
+      email: 'system@ims.local',
+      role: '',
+      manager: '',
+      branch: '',
+      status: Status.Active,
+      passwordHash: '',
+    });
+  }
 
   async getUsers(): Promise<User[]> {
     const querySnapshot = await getDocs(collection(firestore, this.topicName));
@@ -126,7 +144,6 @@ export class UsersService {
       name: source.name?.trim() || '',
       email: source.email?.trim() || '',
       role: source.role || source.roleid || '',
-      manager: source.manager || '',
       branch: source.branch || source.branchid || '',
       status: asStatus(source.status),
     };

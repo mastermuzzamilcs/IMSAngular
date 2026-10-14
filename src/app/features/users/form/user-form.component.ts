@@ -5,12 +5,7 @@ import { MaterialModule } from '../../../shared/material/material.module';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Role } from '../../../core/Models/RoleModel';
-import { Branch } from '../../../core/Models/BranchModel';
 import { asStatus, Status } from '../../../core/enums/status.enum';
-import { User } from '../../../core/Models/UsersModel';
-import { UsersService } from '../../../core/services/users.service';
-import jsonData from '../../../Assets/appConfig.json';
-
 @Component({
   selector: 'app-user-form',
   standalone: true,
@@ -23,30 +18,16 @@ export class UserFormComponent implements OnInit {
   userForm!: FormGroup;
   dialogTitle: string = 'Add User';
   _roles: Role[] | null = null;
-  _branches: Branch[] | null = null;
-  _managerUsers: User[] = [];
-  managerRoleName: string = jsonData.managerRoleName;
 
   constructor(
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<UserFormComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
-    private userService: UsersService,
   ) {}
 
   ngOnInit(): void {
     this.InitForm();
     this._roles = this.data.rolesLookup;
-    this._branches = this.data.branchesLookup;
-
-    const managerRole = this._roles?.find(
-      (r) => r.name.toLowerCase() === this.managerRoleName.toLowerCase(),
-    );
-    if (managerRole?.id) {
-      this.userService.getUsersByRole(managerRole.id).then((tempUsers) => {
-        this._managerUsers = tempUsers;
-      });
-    }
 
     if (this.data.mode === 'edit') {
       this.dialogTitle = 'Edit User';
@@ -64,8 +45,6 @@ export class UserFormComponent implements OnInit {
           : [Validators.required, Validators.minLength(6)],
       ],
       role: ['', [Validators.required]],
-      manager: [''],
-      branch: [''],
       status: [Status.Active],
     });
   }
@@ -75,8 +54,6 @@ export class UserFormComponent implements OnInit {
       name: user.name,
       email: user.email,
       role: user.roleid || user.role,
-      branch: user.branchid || user.branch,
-      manager: user.manager,
       status: asStatus(user.status),
     });
   }

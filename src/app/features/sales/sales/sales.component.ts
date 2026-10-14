@@ -10,7 +10,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { Customer } from '../../../core/Models/CustomerModel';
 import { StockService } from '../../../core/services/stock.service';
-import { BranchService } from '../../../core/services/branchservice.service';
 import { ItemSearchModalComponent } from '../item-search-modal/item-search-modal.component';
 import { CustomerSearchModalComponent } from '../../../shared/components/customer-search-modal/customer-search-modal.component';
 import { CommonModule } from '@angular/common';
@@ -65,7 +64,6 @@ export class SalesComponent implements OnInit {
     'actions',
   ];
   salesForm!: FormGroup;
-  branches: any[] = [];
   saleDetails: any[] = [];
   private linkedCustomer: Customer | null = null;
 
@@ -78,7 +76,6 @@ export class SalesComponent implements OnInit {
     private fb: FormBuilder,
     private dialog: MatDialog,
     private stockService: StockService,
-    private branchService: BranchService,
     private _workflowService: WorkflowService,
     private _loadingService: LoadingService,
     private auth: AuthService,
@@ -86,7 +83,6 @@ export class SalesComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     this.salesForm = this.fb.group({
-      branch: ['', Validators.required],
       customerId: [''],
       customerName: ['', Validators.required],
       customerPhone: [''],
@@ -94,8 +90,6 @@ export class SalesComponent implements OnInit {
       customerAddress: [''],
       date: [new Date(), Validators.required],
     });
-
-    this.branches = await this.branchService.getBranches();
   }
 
   openCustomerDialog(): void {
@@ -183,10 +177,17 @@ export class SalesComponent implements OnInit {
       return;
     }
 
+    const branch = this.auth.currentBranchId();
+    if (!branch) {
+      alert('Choose a branch from the top bar before continuing.');
+      return;
+    }
+
     this._loadingService.show();
 
     const payload = {
       ...this.salesForm.value,
+      branch,
       customerId: this.selectedCustomerId(),
       stockItems: this.dataSource.data,
       TotalItems: this.dataSource.data.length,
@@ -205,6 +206,7 @@ export class SalesComponent implements OnInit {
         moduleId: sale_id,
         requestType: RequestType.Sales,
         requestedBy: this.auth.currentUserId(),
+        branchId: this.auth.currentBranchId(),
         remarks: 'Auto-generated from Sales screen',
       });
 

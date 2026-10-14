@@ -23,6 +23,13 @@ export enum RequestType {
   Transfer = 'Transfer',
 }
 
+export interface RequestTypeSetting {
+  requestType: RequestType;
+  IS_Auto_Approve: boolean;
+  /** Item source code resolved to the user who must act on new requests of this type. */
+  assignedToSource: string;
+}
+
 export interface WorkflowRequest {
   requestId?: string;
   moduleId: string;
@@ -30,7 +37,13 @@ export interface WorkflowRequest {
   status: RequestStatus;
   requestedBy: string;
   requestedOn: Date;
+  /** User who must perform every workflow action on this request. */
+  assignedTo: string;
   approvedBy?: string;
   approvedOn?: Date;
   remarks?: string;
+  /** Home / from branch. Internal request types are visible only here. */
+  branchId?: string;
+  /** Transfer destination. Transfer requests are visible on branchId and toBranchId. */
+  toBranchId?: string;
 }

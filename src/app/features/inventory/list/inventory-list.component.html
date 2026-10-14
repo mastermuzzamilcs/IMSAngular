@@ -1,14 +1,6 @@
 <div class="container">
   <div class="header-container">
     <h1 class="mat-headline-5">Inventory Overview</h1>
-    <mat-form-field appearance="outline" class="branch-select">
-      <mat-label>Select Branch</mat-label>
-      <mat-select [(value)]="selectedBranchId" (selectionChange)="filterByBranch()">
-        <mat-option *ngFor="let branch of branches" [value]="branch.branchid">
-          {{ branch.name }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
     <div class="actions">
       <button mat-raised-button color="primary" [routerLink]="['/inventory/stock-in']">
         <mat-icon>add_box</mat-icon> Stock In

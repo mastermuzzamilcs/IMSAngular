@@ -2,6 +2,7 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import {
   MAT_DIALOG_DATA,
   MatDialog,
@@ -21,7 +22,6 @@ import { UserGroup } from '../../../core/Models/UserGroupModel';
 import { RequestStatus, RequestType } from '../../../core/Models/WorkflowModel';
 import { NotificationDispatcherRegistry } from '../../../core/notifications/notification-dispatcher.registry';
 import {
-  notificationAudienceLabel,
   notificationChannelLabel,
   NotificationAudience,
   NotificationChannel,
@@ -30,6 +30,9 @@ import {
 } from '../../../core/notifications/notification.model';
 import { UserGroupService } from '../../../core/services/user-group.service';
 import { UsersService } from '../../../core/services/users.service';
+import { ALL_BRANCHES_ID } from '../../../core/services/user-branch-association.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { SessionBranch } from '../../../core/Models/AuthSession';
 import { CustomerSearchModalComponent } from '../../../shared/components/customer-search-modal/customer-search-modal.component';
 
 @Component({
@@ -43,6 +46,7 @@ import { CustomerSearchModalComponent } from '../../../shared/components/custome
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
+    MatCheckboxModule,
     MatIconModule,
     MatSlideToggleModule,
   ],
@@ -50,15 +54,14 @@ import { CustomerSearchModalComponent } from '../../../shared/components/custome
   styleUrl: './notification-template-form.component.scss',
 })
 export class NotificationTemplateFormComponent implements OnInit {
-  readonly audiences = Object.values(NotificationAudience);
-  readonly audienceLabel = notificationAudienceLabel;
   readonly channelLabel = notificationChannelLabel;
-  readonly Audience = NotificationAudience;
   readonly requestTypes = Object.values(RequestType);
   readonly requestStatuses = Object.values(RequestStatus);
   form!: FormGroup;
   dialogTitle = 'Add Notification Template';
+  readonly allBranchesId = ALL_BRANCHES_ID;
   channels: NotificationChannel[] = [];
+  branches: SessionBranch[] = [];
   groups: UserGroup[] = [];
   users: User[] = [];
   selectedUsers: { id: string; name: string }[] = [];
@@ -71,6 +74,7 @@ export class NotificationTemplateFormComponent implements OnInit {
     private groupService: UserGroupService,
     private usersService: UsersService,
     private itemSourceService: ItemSourceService,
+    private auth: AuthService,
     private dialog: MatDialog,
     public dialogRef: MatDialogRef<NotificationTemplateFormComponent>,
     @Inject(MAT_DIALOG_DATA)
@@ -82,10 +86,14 @@ export class NotificationTemplateFormComponent implements OnInit {
     this.form = this.fb.group({
       code: ['', Validators.required],
       name: ['', Validators.required],
+      branchid: [this.auth.currentBranchId() || ALL_BRANCHES_ID, Validators.required],
       channel: [this.channels[0] || NotificationChannel.InApp, Validators.required],
-      audience: [NotificationAudience.Public, Validators.required],
+      includePublic: [false],
+      includeGroups: [false],
+      includeUsers: [false],
       groupIds: [[] as string[]],
       userIds: [[] as string[]],
+      audienceSources: [[] as string[]],
       subject: ['', Validators.required],
       summary: [''],
       body: [''],
@@ -96,7 +104,13 @@ export class NotificationTemplateFormComponent implements OnInit {
     if (this.data.mode === 'edit' && this.data.template) {
       this.dialogTitle = 'Edit Notification Template';
       const template = this.data.template;
-      this.form.patchValue(template);
+      this.form.patchValue({
+        ...template,
+        includePublic: template.includePublic,
+        includeGroups: template.groupIds.length > 0,
+        includeUsers: template.userIds.length > 0,
+        audienceSources: template.audienceSources || [],
+      });
       template.events.forEach((event) => this.addEvent(event));
     }
   }
@@ -167,20 +181,29 @@ export class NotificationTemplateFormComponent implements OnInit {
       this.form.markAllAsTouched();
       return;
     }
-    const value = this.form.getRawValue() as NotificationTemplate;
-    const audience = value.audience;
-    if (audience === NotificationAudience.Group && value.groupIds.length === 0) {
+    const value = this.form.getRawValue();
+    const includePublic = value.includePublic === true;
+    const includeGroups = value.includeGroups === true;
+    const includeUsers = value.includeUsers === true;
+    const groupIds = includeGroups ? (value.groupIds as string[]) : [];
+    const userIds = includeUsers ? (value.userIds as string[]) : [];
+    const audienceSources = (value.audienceSources as string[]) || [];
+    if (includeGroups && groupIds.length === 0) {
       this.form.get('groupIds')?.setErrors({ required: true });
       this.form.get('groupIds')?.markAsTouched();
       return;
     }
-    if (audience === NotificationAudience.CustomUsers && value.userIds.length === 0) {
+    if (includeUsers && userIds.length === 0) {
       this.form.get('userIds')?.setErrors({ required: true });
       this.form.get('userIds')?.markAsTouched();
       return;
     }
+    if (!includePublic && groupIds.length === 0 && userIds.length === 0 && audienceSources.length === 0) {
+      alert('Choose at least one audience: public, groups, custom users, or an item source.');
+      return;
+    }
     const seen = new Set<string>();
-    const events = value.events.filter((event) => {
+    const events = (value.events as NotificationEventBinding[]).filter((event) => {
       const key = `${event.requestType}|${event.status}`;
       if (seen.has(key)) {
         return false;
@@ -194,8 +217,15 @@ export class NotificationTemplateFormComponent implements OnInit {
       name: value.name.trim(),
       summary: (value.summary || '').trim(),
       body: (value.body || '').trim(),
-      groupIds: audience === NotificationAudience.Group ? value.groupIds : [],
-      userIds: audience === NotificationAudience.CustomUsers ? value.userIds : [],
+      includePublic,
+      groupIds,
+      userIds,
+      audienceSources,
+      audience: includePublic
+        ? NotificationAudience.Public
+        : groupIds.length
+          ? NotificationAudience.Group
+          : NotificationAudience.CustomUsers,
       events,
     });
   }
@@ -205,6 +235,7 @@ export class NotificationTemplateFormComponent implements OnInit {
       this.groupService.getGroups(),
       this.usersService.getUsers(),
     ]);
+    this.branches = this.auth.currentSession()?.branches || [];
     this.groups = groups.filter((group) => !isStatus(group.status, Status.Inactive));
     this.users = users.filter((user) => user.userid && !isStatus(user.status, Status.Inactive));
     const selectedIds = (this.form.value.userIds || []) as string[];

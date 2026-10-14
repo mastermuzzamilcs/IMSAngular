@@ -4,6 +4,9 @@ import { provideNativeDateAdapter } from '@angular/material/core';
 
 import { routes } from './app.routes';
 import { NotificationChannelBootstrap } from './core/notifications/notification-channel.bootstrap';
+import { RequestTypeService } from './core/services/request-type.service';
+import { RoleService } from './core/services/role.service';
+import { UsersService } from './core/services/users.service';
 import { WorkflowActionBootstrap } from './workflow-functions/workflow-actions';
 
 export function registerWorkflowActions(
@@ -16,6 +19,24 @@ export function registerWorkflowActions(
   };
 }
 
+export function seedSystemRecords(
+  users: UsersService,
+  requestTypes: RequestTypeService,
+  roles: RoleService,
+): () => Promise<void> {
+  return async () => {
+    try {
+      await Promise.all([
+        users.ensureSystemUser(),
+        requestTypes.ensureDefaults(),
+        roles.ensureRoles(),
+      ]);
+    } catch (error) {
+      console.error('System seed failed', error);
+    }
+  };
+}
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
@@ -25,6 +46,12 @@ export const appConfig: ApplicationConfig = {
       provide: APP_INITIALIZER,
       useFactory: registerWorkflowActions,
       deps: [WorkflowActionBootstrap, NotificationChannelBootstrap],
+      multi: true,
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: seedSystemRecords,
+      deps: [UsersService, RequestTypeService, RoleService],
       multi: true,
     },
   ],

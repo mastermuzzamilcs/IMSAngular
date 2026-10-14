@@ -6,25 +6,29 @@
   <mat-card>
     <mat-card-content>
       <form [formGroup]="transferForm">
-        <!-- Branch Dropdown -->
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Branch</mat-label>
-          <mat-select formControlName="branch" (selectionChange)="onBranchChange()">
-            <mat-option *ngFor="let branch of branches" [value]="branch.branchid">
+          <mat-label>To branch</mat-label>
+          <mat-select formControlName="toBranch" (selectionChange)="onToBranchChange()">
+            <mat-option *ngFor="let branch of destinationBranches" [value]="branch.branchid">
               {{ branch.name }}
             </mat-option>
           </mat-select>
         </mat-form-field>
 
-        <!-- User Dropdown -->
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>User</mat-label>
-          <mat-select formControlName="user">
-            <mat-option *ngFor="let user of usersForBranch" [value]="user.userid">
-              {{ user.name }} ({{ user.branchName }})
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
+        <div style="display: flex; gap: 1rem; align-items: center">
+          <mat-form-field appearance="outline" style="flex: 1">
+            <mat-label>User</mat-label>
+            <mat-select formControlName="user">
+              <mat-option *ngFor="let user of userChoices" [value]="user.userid">
+                {{ user.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <button mat-stroked-button type="button" (click)="openUserSearch()">
+            <mat-icon>person_search</mat-icon>
+            Search User
+          </button>
+        </div>
 
         <!-- Date -->
         <mat-form-field appearance="outline" class="full-width">

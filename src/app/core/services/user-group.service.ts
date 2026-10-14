@@ -41,6 +41,7 @@ export class UserGroupService {
       name: group.name?.trim() || '',
       description: group.description?.trim() || '',
       status: asStatus(group.status),
+      canApprove: !!group.canApprove,
     };
   }
 
@@ -50,6 +51,7 @@ export class UserGroupService {
       name: String(data['name'] || ''),
       description: String(data['description'] || ''),
       status: asStatus(data['status']),
+      canApprove: !!data['canApprove'],
     };
   }
 }

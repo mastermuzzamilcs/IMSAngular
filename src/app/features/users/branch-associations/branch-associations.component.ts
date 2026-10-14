@@ -1,0 +1,129 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
+import { MatTableModule } from '@angular/material/table';
+import { isStatus, Status } from '../../../core/enums/status.enum';
+import { Branch } from '../../../core/Models/BranchModel';
+import { User } from '../../../core/Models/UsersModel';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
+import { BranchService } from '../../../core/services/branchservice.service';
+import { LoadingService } from '../../../core/services/Loading.service';
+import {
+  ALL_BRANCHES_ID,
+  UserBranchAssociation,
+  UserBranchAssociationService,
+} from '../../../core/services/user-branch-association.service';
+import { UsersService } from '../../../core/services/users.service';
+
+@Component({
+  selector: 'app-branch-associations',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTableModule,
+    PrivilegeDirective,
+  ],
+  templateUrl: './branch-associations.component.html',
+})
+export class BranchAssociationsComponent implements OnInit {
+  readonly privileges = privilegeAccess;
+  readonly allBranchesId = ALL_BRANCHES_ID;
+  users: User[] = [];
+  branches: Branch[] = [];
+  associations: UserBranchAssociation[] = [];
+  displayedColumns = ['userName', 'branchName', 'actions'];
+  associationForm;
+
+  constructor(
+    private fb: FormBuilder,
+    private usersService: UsersService,
+    private branchService: BranchService,
+    private associationService: UserBranchAssociationService,
+    private loadingService: LoadingService,
+  ) {
+    this.associationForm = this.fb.group({
+      userid: ['', Validators.required],
+      branchid: ['', Validators.required],
+    });
+  }
+
+  ngOnInit(): void {
+    void this.load();
+  }
+
+  async load(): Promise<void> {
+    this.loadingService.show();
+    try {
+      const [users, branches, associations] = await Promise.all([
+        this.usersService.getUsers(),
+        this.branchService.getBranches(),
+        this.associationService.getAssociations(),
+      ]);
+      this.users = users.filter((user) => isStatus(user.status, Status.Active));
+      this.branches = branches.filter((branch) => !isStatus(branch.status, Status.Inactive));
+      this.associations = associations.map((association) => ({
+        ...association,
+        userName:
+          users.find((user) => user.userid === association.userid)?.name || association.userid,
+        branchName: this.branchLabel(association.branchid, branches),
+      }));
+    } catch (error) {
+      console.error('Error loading branch associations', error);
+      alert('Error loading branch associations');
+    }
+    this.loadingService.hide();
+  }
+
+  async associate(): Promise<void> {
+    if (this.associationForm.invalid) {
+      this.associationForm.markAllAsTouched();
+      return;
+    }
+    const userid = this.associationForm.value.userid || '';
+    const branchid = this.associationForm.value.branchid || '';
+    this.loadingService.show();
+    try {
+      await this.associationService.associate(userid, branchid);
+      this.associationForm.patchValue({ branchid: '' });
+      await this.load();
+    } catch (error) {
+      console.error('Error assigning branch', error);
+      alert('Could not assign the branch');
+      this.loadingService.hide();
+    }
+  }
+
+  async remove(association: UserBranchAssociation): Promise<void> {
+    if (!association.id) {
+      return;
+    }
+    this.loadingService.show();
+    try {
+      await this.associationService.disassociate(association.id);
+      await this.load();
+    } catch (error) {
+      console.error('Error removing branch assignment', error);
+      alert('Could not remove the branch assignment');
+      this.loadingService.hide();
+    }
+  }
+
+  private branchLabel(branchid: string, branches: Branch[]): string {
+    if (branchid === ALL_BRANCHES_ID) {
+      return 'All branches';
+    }
+    return branches.find((branch) => branch.branchid === branchid)?.name || branchid;
+  }
+}

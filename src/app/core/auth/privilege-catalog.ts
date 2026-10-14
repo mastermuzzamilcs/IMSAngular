@@ -59,6 +59,7 @@ export const privilegeCatalog: CatalogPrivilege[] = [
   ...defs(PrivilegeModule.Roles, 'Roles', [page, create, edit, remove]),
   ...defs(PrivilegeModule.UserGroups, 'User Groups', [page, create, edit, remove]),
   ...defs(PrivilegeModule.GroupAssociations, 'Group Associations', [page, create, remove]),
+  ...defs(PrivilegeModule.BranchAssociations, 'Branch Associations', [page, create, remove]),
   ...defs(PrivilegeModule.Products, 'Products', [page, create, edit, remove]),
   ...defs(PrivilegeModule.Vendors, 'Vendors', [page, create, edit, remove]),
   ...defs(PrivilegeModule.Customers, 'Customers', [page, create, edit, remove]),
@@ -139,6 +140,11 @@ export const privileges = {
     page: ref(PrivilegeModule.GroupAssociations, page),
     create: ref(PrivilegeModule.GroupAssociations, create),
     delete: ref(PrivilegeModule.GroupAssociations, remove),
+  },
+  branchAssociations: {
+    page: ref(PrivilegeModule.BranchAssociations, page),
+    create: ref(PrivilegeModule.BranchAssociations, create),
+    delete: ref(PrivilegeModule.BranchAssociations, remove),
   },
   products: {
     page: ref(PrivilegeModule.Products, page),

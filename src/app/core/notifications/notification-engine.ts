@@ -3,9 +3,10 @@ import { ItemSourceEvaluator } from '../item-sources/item-source-evaluator';
 import { WorkflowFunctionContext } from '../workflow/workflow-action';
 import { NotificationAudienceResolver } from './audience-resolver';
 import { NotificationDispatcherRegistry } from './notification-dispatcher.registry';
-import { NotificationTemplate } from './notification.model';
+import { legacyNotificationAudience, NotificationTemplate } from './notification.model';
 import { renderNotificationText } from './notification-renderer';
 import { NotificationTemplateService } from '../services/notification-template.service';
+import { ALL_BRANCHES_ID } from '../services/user-branch-association.service';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationEngine {
@@ -39,13 +40,13 @@ export class NotificationEngine {
       if (!dispatcher) {
         continue;
       }
-      const recipientIds = await this.audienceResolver.resolve(template);
+      const recipientIds = await this.audienceResolver.resolve(template, context);
       if (!recipientIds.length) {
         continue;
       }
       await dispatcher.dispatch({
         channel: template.channel,
-        audience: template.audience,
+        audience: legacyNotificationAudience(template),
         templateCode: template.code,
         subject: renderNotificationText(template.subject, textTokens),
         body: renderNotificationText(template.body, textTokens),
@@ -79,9 +80,19 @@ export class NotificationEngine {
   }
 
   private matches(template: NotificationTemplate, context: WorkflowFunctionContext): boolean {
-    return template.events.some(
+    const eventMatch = template.events.some(
       (event) =>
         event.requestType === context.request.requestType && event.status === context.status,
     );
+    if (!eventMatch) {
+      return false;
+    }
+    const templateBranch = template.branchid || ALL_BRANCHES_ID;
+    if (templateBranch === ALL_BRANCHES_ID) {
+      return true;
+    }
+    return [context.request.branchId, context.request.toBranchId]
+      .filter((value): value is string => !!value)
+      .includes(templateBranch);
   }
 }

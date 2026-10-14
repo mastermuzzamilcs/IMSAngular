@@ -6,6 +6,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { SessionBranch } from '../../../core/Models/AuthSession';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -17,6 +19,7 @@ import { AuthService } from '../../../core/services/auth.service';
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     MatButtonModule,
   ],
   templateUrl: './login.component.html',
@@ -25,7 +28,10 @@ import { AuthService } from '../../../core/services/auth.service';
 export class LoginComponent {
   errorMessage = '';
   submitting = false;
+  choosingBranch = false;
+  branches: SessionBranch[] = [];
   loginForm;
+  branchForm;
 
   constructor(
     private fb: FormBuilder,
@@ -36,6 +42,9 @@ export class LoginComponent {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
+    });
+    this.branchForm = this.fb.group({
+      branchid: ['', Validators.required],
     });
     if (this.auth.isAuthenticated()) {
       void this.router.navigateByUrl(this.safeReturnUrl());
@@ -52,9 +61,14 @@ export class LoginComponent {
     try {
       const email = this.loginForm.value.email || '';
       const password = this.loginForm.value.password || '';
-      const signedIn = await this.auth.login(email, password);
-      if (!signedIn) {
+      const result = await this.auth.login(email, password);
+      if (!result.ok) {
         this.errorMessage = 'Email or password is incorrect, or the user is inactive.';
+        return;
+      }
+      if (result.chooseBranch) {
+        this.branches = result.branches;
+        this.choosingBranch = true;
         return;
       }
       await this.router.navigateByUrl(this.safeReturnUrl());
@@ -64,6 +78,19 @@ export class LoginComponent {
     } finally {
       this.submitting = false;
     }
+  }
+
+  async confirmBranch(): Promise<void> {
+    if (this.branchForm.invalid) {
+      this.branchForm.markAllAsTouched();
+      return;
+    }
+    const branchid = this.branchForm.value.branchid || '';
+    if (!this.auth.selectBranch(branchid)) {
+      this.errorMessage = 'Choose a branch to continue.';
+      return;
+    }
+    await this.router.navigateByUrl(this.safeReturnUrl());
   }
 
   private safeReturnUrl(): string {

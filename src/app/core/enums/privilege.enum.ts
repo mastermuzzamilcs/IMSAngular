@@ -35,4 +35,5 @@ export enum PrivilegeModule {
   GroupPrivileges = 22,
   NotificationTemplates = 23,
   ItemSources = 24,
+  BranchAssociations = 25,
 }

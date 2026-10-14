@@ -10,7 +10,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { StockService } from '../../../core/services/stock.service';
 import { VendorService } from '../../../core/services/vendor.service';
-import { BranchService } from '../../../core/services/branchservice.service';
 import { ItemSearchModalComponent } from '../item-search-modal/item-search-modal.component';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -66,7 +65,6 @@ export class StockOutComponent implements OnInit {
     'actions',
   ];
   stockOutForm!: FormGroup;
-  branches: any[] = [];
   vendors: any[] = [];
   stockDetails: any[] = [];
 
@@ -80,7 +78,6 @@ export class StockOutComponent implements OnInit {
     private dialog: MatDialog,
     private stockService: StockService,
     private vendorService: VendorService,
-    private branchService: BranchService,
     private _workflowService: WorkflowService,
     private _loadingService: LoadingService,
     private auth: AuthService,
@@ -88,12 +85,10 @@ export class StockOutComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     this.stockOutForm = this.fb.group({
-      branch: ['', Validators.required],
       vendor: ['', Validators.required],
       date: [new Date(), Validators.required],
     });
 
-    this.branches = await this.branchService.getBranches();
     this.vendors = await this.vendorService.getVendors();
   }
 
@@ -153,10 +148,16 @@ export class StockOutComponent implements OnInit {
   }
 
   async submitStockOut(): Promise<void> {
+    const branch = this.auth.currentBranchId();
+    if (!branch) {
+      alert('Choose a branch from the top bar before continuing.');
+      return;
+    }
     this._loadingService.show();
     if (this.stockOutForm.invalid || this.dataSource.data.length === 0) return;
     const payload = {
       ...this.stockOutForm.value,
+      branch,
       stockItems: this.dataSource.data,
       TotalItems: this.dataSource.data.length,
       SubTotal: this.subTotal,
@@ -174,6 +175,7 @@ export class StockOutComponent implements OnInit {
         moduleId: stock_id,
         requestType: RequestType.StockOut,
         requestedBy: this.auth.currentUserId(),
+        branchId: this.auth.currentBranchId(),
         remarks: 'Auto‑generated from Stock‑Out screen',
       });
       alert('Stock-out entry added successfully');

@@ -25,16 +25,6 @@
         <mat-icon>dashboard</mat-icon>
         <span>Dashboard</span>
       </a>
-      <a
-        mat-list-item
-        routerLink="/branches"
-        routerLinkActive="active"
-        *appPrivilege="privileges.branches.page"
-      >
-        <mat-icon>business</mat-icon>
-        <span>Branches</span>
-      </a>
-
       <mat-expansion-panel
         class="no-border"
         *ngIf="
@@ -237,6 +227,24 @@
           </a>
           <a
             mat-list-item
+            routerLink="/users/branch-associations"
+            routerLinkActive="active"
+            *appPrivilege="privileges.users.page"
+          >
+            <mat-icon>account_tree</mat-icon>
+            <span>Branch Associations</span>
+          </a>
+          <a
+            mat-list-item
+            routerLink="/users/team-hierarchy"
+            routerLinkActive="active"
+            *appPrivilege="privileges.users.page"
+          >
+            <mat-icon>schema</mat-icon>
+            <span>Team Hierarchy</span>
+          </a>
+          <a
+            mat-list-item
             routerLink="/users/group-privileges"
             routerLinkActive="active"
             *appPrivilege="privileges.groupPrivileges.page"
@@ -251,6 +259,7 @@
         class="no-border"
         *ngIf="
           hasAny([
+            privileges.branches.page,
             privileges.products.page,
             privileges.vendors.page,
             privileges.customers.page,
@@ -270,6 +279,15 @@
         </mat-expansion-panel-header>
 
         <mat-action-list>
+          <a
+            mat-list-item
+            routerLink="/branches"
+            routerLinkActive="active"
+            *appPrivilege="privileges.branches.page"
+          >
+            <mat-icon>business</mat-icon>
+            <span>Branches</span>
+          </a>
           <a
             mat-list-item
             routerLink="/setup/products"
@@ -305,6 +323,15 @@
           >
             <mat-icon>brand</mat-icon>
             <span>Brand</span>
+          </a>
+          <a
+            mat-list-item
+            routerLink="/setup/request-types"
+            routerLinkActive="active"
+            *appPrivilege="privileges.workflowTransitions.page"
+          >
+            <mat-icon>rule</mat-icon>
+            <span>Request Types</span>
           </a>
           <a
             mat-list-item
@@ -404,6 +431,26 @@
           No notifications
         </button>
       </mat-menu>
+      <button
+        mat-button
+        type="button"
+        class="branch-switch"
+        [matMenuTriggerFor]="branchMenu"
+        [disabled]="(session.branches || []).length < 2"
+      >
+        <mat-icon>store</mat-icon>
+        {{ session.branchName || 'No branch' }}
+      </button>
+      <mat-menu #branchMenu="matMenu">
+        <button
+          mat-menu-item
+          type="button"
+          *ngFor="let branch of session.branches || []"
+          (click)="switchBranch(branch.branchid)"
+        >
+          {{ branch.name }}
+        </button>
+      </mat-menu>
       <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="User menu">
         <mat-icon>account_circle</mat-icon>
       </button>
@@ -425,6 +472,15 @@
           >
             Notification sound
           </mat-slide-toggle>
+        </button>
+        <button
+          mat-menu-item
+          type="button"
+          *ngFor="let option of sounds"
+          (click)="chooseNotificationSound(option.id)"
+        >
+          <mat-icon>{{ (soundId$ | async) === option.id ? 'check' : 'music_note' }}</mat-icon>
+          <span>{{ option.label }}</span>
         </button>
         <button mat-menu-item type="button" (click)="logout()">
           <mat-icon>exit_to_app</mat-icon>

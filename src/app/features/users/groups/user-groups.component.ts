@@ -38,7 +38,7 @@ import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 })
 export class UserGroupsComponent implements OnInit, AfterViewInit {
   readonly privileges = privilegeAccess;
-  displayedColumns: string[] = ['name', 'description', 'status', 'actions'];
+  displayedColumns: string[] = ['name', 'description', 'canApprove', 'status', 'actions'];
   dataSource = new MatTableDataSource<UserGroup>([]);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;

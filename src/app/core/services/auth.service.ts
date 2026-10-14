@@ -1,13 +1,22 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { privilegeKey } from '../auth/privilege-catalog';
+import { isStatus, Status } from '../enums/status.enum';
 import { ApplicationId, PrivilegeFunction, PrivilegeModule } from '../enums/privilege.enum';
-import { AuthSession } from '../Models/AuthSession';
+import { AuthSession, SessionBranch } from '../Models/AuthSession';
+import { BranchService } from './branchservice.service';
 import { GroupPrivilegeService } from './group-privilege.service';
 import { RoleService } from './role.service';
+import { UserBranchAssociationService, ALL_BRANCHES_ID } from './user-branch-association.service';
 import { UserGroupAssociationService } from './user-group-association.service';
 import { UserGroupService } from './user-group.service';
 import { UsersService } from './users.service';
+
+export interface LoginResult {
+  ok: boolean;
+  chooseBranch: boolean;
+  branches: SessionBranch[];
+}
 
 const SESSION_KEY = 'ims.session';
 
@@ -15,6 +24,7 @@ const SESSION_KEY = 'ims.session';
 export class AuthService {
   private readonly sessionSubject = new BehaviorSubject<AuthSession | null>(this.readSession());
   readonly session$ = this.sessionSubject.asObservable();
+  private pending: AuthSession | null = null;
 
   constructor(
     private usersService: UsersService,
@@ -22,6 +32,8 @@ export class AuthService {
     private groupService: UserGroupService,
     private associationService: UserGroupAssociationService,
     private groupPrivilegeService: GroupPrivilegeService,
+    private branchService: BranchService,
+    private branchAssociationService: UserBranchAssociationService,
   ) {
     if (this.sessionSubject.value) {
       void this.refreshAccess();
@@ -38,6 +50,10 @@ export class AuthService {
 
   currentUserId(): string {
     return this.sessionSubject.value?.userid || '';
+  }
+
+  currentBranchId(): string {
+    return this.sessionSubject.value?.branchid || '';
   }
 
   hasPrivilege(moduleId: PrivilegeModule, functionId: PrivilegeFunction): boolean {
@@ -61,16 +77,17 @@ export class AuthService {
     return names.some((name) => owned.includes(name.toLowerCase()));
   }
 
-  async login(email: string, password: string): Promise<boolean> {
+  async login(email: string, password: string): Promise<LoginResult> {
     const user = await this.usersService.authenticate(email, password);
     if (!user?.userid) {
-      return false;
+      return { ok: false, chooseBranch: false, branches: [] };
     }
-    const [roles, groups, associations, hasAssociations] = await Promise.all([
+    const [roles, groups, associations, hasAssociations, branches] = await Promise.all([
       this.roleService.getRoles(),
       this.groupService.getGroups(),
       this.associationService.getByUser(user.userid),
       this.associationService.hasAny(),
+      this.availableBranches(user.userid),
     ]);
     const roleName = roles.find((role) => role.id === user.roleid)?.name || '';
     const groupIds = associations.map((association) => association.groupid);
@@ -78,18 +95,40 @@ export class AuthService {
       .map((association) => groups.find((group) => group.id === association.groupid)?.name || '')
       .filter((name) => name.length > 0);
     const privilegeKeys = await this.privilegeKeys(groupIds);
+    const chosen = branches.length === 1 ? branches[0] : undefined;
     const session: AuthSession = {
       userid: user.userid,
       name: user.name,
       email: user.email,
       roleid: user.roleid,
       roleName,
-      branchid: user.branchid,
+      branchid: chosen?.branchid || '',
+      branchName: chosen?.name || '',
+      branches,
       groups: groupNames,
       canAdminister: this.canAdminister(groupNames, hasAssociations),
+      canApprove: associations.some((association) =>
+        groups.some((group) => group.id === association.groupid && group.canApprove),
+      ),
       privileges: privilegeKeys,
     };
+    if (branches.length > 1) {
+      this.pending = session;
+      return { ok: true, chooseBranch: true, branches };
+    }
+    this.pending = null;
     this.persist(session);
+    return { ok: true, chooseBranch: false, branches };
+  }
+
+  selectBranch(branchid: string): boolean {
+    const source = this.pending || this.sessionSubject.value;
+    const branch = (source?.branches || []).find((item) => item.branchid === branchid);
+    if (!source || !branch) {
+      return false;
+    }
+    this.pending = null;
+    this.persist({ ...source, branchid: branch.branchid, branchName: branch.name });
     return true;
   }
 
@@ -98,21 +137,47 @@ export class AuthService {
     if (!current) {
       return;
     }
-    const [groups, associations, hasAssociations] = await Promise.all([
+    const [groups, associations, hasAssociations, branches] = await Promise.all([
       this.groupService.getGroups(),
       this.associationService.getByUser(current.userid),
       this.associationService.hasAny(),
+      this.availableBranches(current.userid),
     ]);
     const groupIds = associations.map((association) => association.groupid);
     const groupNames = associations
       .map((association) => groups.find((group) => group.id === association.groupid)?.name || '')
       .filter((name) => name.length > 0);
+    const selected =
+      branches.find((branch) => branch.branchid === current.branchid) ||
+      (branches.length === 1 ? branches[0] : undefined);
     this.persist({
       ...current,
+      branchid: selected?.branchid || '',
+      branchName: selected?.name || '',
+      branches,
       groups: groupNames,
       canAdminister: this.canAdminister(groupNames, hasAssociations),
+      canApprove: associations.some((association) =>
+        groups.some((group) => group.id === association.groupid && group.canApprove),
+      ),
       privileges: await this.privilegeKeys(groupIds),
     });
+  }
+
+  canApproveRequests(): boolean {
+    return !!this.sessionSubject.value?.canApprove;
+  }
+
+  private async availableBranches(userid: string): Promise<SessionBranch[]> {
+    const [links, branches] = await Promise.all([
+      this.branchAssociationService.getByUser(userid),
+      this.branchService.getBranches(),
+    ]);
+    const active = branches.filter((branch) => !isStatus(branch.status, Status.Inactive));
+    const allowed = links.some((link) => link.branchid === ALL_BRANCHES_ID)
+      ? active
+      : active.filter((branch) => links.some((link) => link.branchid === branch.branchid));
+    return allowed.map((branch) => ({ branchid: branch.branchid, name: branch.name }));
   }
 
   private async privilegeKeys(groupIds: string[]): Promise<string[]> {
@@ -121,6 +186,7 @@ export class AuthService {
   }
 
   logout(): void {
+    this.pending = null;
     sessionStorage.removeItem(SESSION_KEY);
     this.sessionSubject.next(null);
   }
@@ -141,7 +207,11 @@ export class AuthService {
       return null;
     }
     try {
-      return JSON.parse(raw) as AuthSession;
+      const session = JSON.parse(raw) as AuthSession;
+      session.branches = session.branches || [];
+      session.branchName = session.branchName || '';
+      session.canApprove = !!session.canApprove;
+      return session;
     } catch {
       sessionStorage.removeItem(SESSION_KEY);
       return null;

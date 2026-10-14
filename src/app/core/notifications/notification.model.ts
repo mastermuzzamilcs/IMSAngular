@@ -32,15 +32,51 @@ export interface NotificationTemplate {
   id?: string;
   code: string;
   name: string;
+  branchid: string;
   channel: NotificationChannel;
   audience: NotificationAudience;
+  includePublic: boolean;
   groupIds: string[];
   userIds: string[];
+  audienceSources: string[];
   subject: string;
   body: string;
   summary: string;
   enabled: boolean;
   events: NotificationEventBinding[];
+}
+
+export function legacyNotificationAudience(template: {
+  includePublic: boolean;
+  groupIds: string[];
+}): NotificationAudience {
+  if (template.includePublic) {
+    return NotificationAudience.Public;
+  }
+  if (template.groupIds.length) {
+    return NotificationAudience.Group;
+  }
+  return NotificationAudience.CustomUsers;
+}
+
+export function notificationAudienceSummary(template: {
+  includePublic: boolean;
+  groupIds: string[];
+  userIds: string[];
+  audienceSources: string[];
+}): string {
+  const parts: string[] = [];
+  if (template.includePublic) {
+    parts.push('Public');
+  }
+  if (template.groupIds.length) {
+    parts.push('Groups');
+  }
+  if (template.userIds.length) {
+    parts.push('Custom users');
+  }
+  parts.push(...template.audienceSources);
+  return parts.join(', ') || 'None';
 }
 
 export interface NotificationDispatch {

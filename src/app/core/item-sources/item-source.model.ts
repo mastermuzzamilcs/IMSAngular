@@ -47,6 +47,7 @@ export const parameterTables: ParameterTable[] = [
       { field: 'requestType', label: 'Request type' },
       { field: 'status', label: 'Status' },
       { field: 'remarks', label: 'Remarks' },
+      { field: 'assignedTo', label: 'Assigned to' },
       { field: 'approvedBy', label: 'Approved by' },
       { field: 'requestedOn', label: 'Requested on' },
       { field: 'approvedOn', label: 'Approved on' },
@@ -85,6 +86,7 @@ export const sourceTables: ParameterTable[] = [
       { field: 'requesttype', label: 'Request type' },
       { field: 'status', label: 'Status' },
       { field: 'remarks', label: 'Remarks' },
+      { field: 'assignedto', label: 'Assigned to' },
       { field: 'approvedby', label: 'Approved by' },
     ],
   },
@@ -220,6 +222,8 @@ export function resolveWorkflowValue(
       return String(request.status || '');
     case 'request.remarks':
       return request.remarks || '';
+    case 'request.assignedTo':
+      return request.assignedTo || '';
     case 'request.approvedBy':
       return request.approvedBy || '';
     case 'request.requestedOn':

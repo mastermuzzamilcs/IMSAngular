@@ -8,10 +8,12 @@ import {
   NotificationChannel,
   NotificationEventBinding,
   NotificationTemplate,
+  legacyNotificationAudience,
 } from '../notifications/notification.model';
 import { RequestStatus, RequestType } from '../Models/WorkflowModel';
 import { WorkflowFunctionDefinitionService } from './workflow-function-definition.service';
 import { WorkflowFunctionLinkService } from './workflow-function-link.service';
+import { ALL_BRANCHES_ID } from './user-branch-association.service';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationTemplateService {
@@ -97,10 +99,13 @@ export class NotificationTemplateService {
     return {
       code: template.code.trim(),
       name: template.name.trim(),
+      branchid: template.branchid || ALL_BRANCHES_ID,
       channel: template.channel,
-      audience: template.audience,
+      audience: legacyNotificationAudience(template),
+      includePublic: template.includePublic === true,
       groupIds: template.groupIds,
       userIds: template.userIds,
+      audienceSources: template.audienceSources,
       subject: template.subject,
       body: template.body,
       summary: template.summary,
@@ -114,14 +119,22 @@ export class NotificationTemplateService {
 
   private mapTemplate(id: string, data: Record<string, unknown>): NotificationTemplate {
     const events = Array.isArray(data['events']) ? data['events'] : [];
+    const audience = (data['audience'] as NotificationAudience) || NotificationAudience.Public;
+    const includePublic =
+      data['includePublic'] === undefined
+        ? audience === NotificationAudience.Public
+        : data['includePublic'] === true;
     return {
       id,
       code: String(data['code'] || ''),
       name: String(data['name'] || ''),
+      branchid: String(data['branchid'] ?? ALL_BRANCHES_ID),
       channel: (data['channel'] as NotificationChannel) || NotificationChannel.InApp,
-      audience: (data['audience'] as NotificationAudience) || NotificationAudience.Public,
+      audience,
+      includePublic,
       groupIds: this.stringList(data['groupIds']),
       userIds: this.stringList(data['userIds']),
+      audienceSources: this.stringList(data['audienceSources']),
       subject: String(data['subject'] || ''),
       body: String(data['body'] || ''),
       summary: String(data['summary'] || ''),

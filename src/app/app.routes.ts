@@ -138,6 +138,24 @@ export const routes: Routes = [
               ),
           },
           {
+            path: 'team-hierarchy',
+            canActivate: [privilegeGuard],
+            data: { privilege: privileges.users.page },
+            loadComponent: () =>
+              import('./features/users/team-hierarchy/team-hierarchy.component').then(
+                (m) => m.TeamHierarchyComponent,
+              ),
+          },
+          {
+            path: 'branch-associations',
+            canActivate: [privilegeGuard],
+            data: { privilege: privileges.users.page },
+            loadComponent: () =>
+              import('./features/users/branch-associations/branch-associations.component').then(
+                (m) => m.BranchAssociationsComponent,
+              ),
+          },
+          {
             path: 'group-privileges',
             canActivate: [privilegeGuard],
             data: { privilege: privileges.groupPrivileges.page },
@@ -191,6 +209,15 @@ export const routes: Routes = [
             loadComponent: () =>
               import('./features/setup/brand-setup/brand-setup.component').then(
                 (m) => m.BrandSetupComponent,
+              ),
+          },
+          {
+            path: 'request-types',
+            canActivate: [privilegeGuard],
+            data: { privilege: privileges.workflowTransitions.page },
+            loadComponent: () =>
+              import('./features/setup/request-types/request-types.component').then(
+                (m) => m.RequestTypesComponent,
               ),
           },
           {

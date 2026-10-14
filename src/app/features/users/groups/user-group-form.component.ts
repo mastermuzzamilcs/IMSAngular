@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { asStatus, Status } from '../../../core/enums/status.enum';
 import { UserGroup } from '../../../core/Models/UserGroupModel';
 
@@ -19,6 +20,7 @@ import { UserGroup } from '../../../core/Models/UserGroupModel';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatCheckboxModule,
     MatButtonModule,
   ],
   templateUrl: './user-group-form.component.html',
@@ -39,12 +41,14 @@ export class UserGroupFormComponent implements OnInit {
       name: ['', Validators.required],
       description: [''],
       status: [Status.Active, Validators.required],
+      canApprove: [false],
     });
     if (this.data.mode === 'edit' && this.data.group) {
       this.dialogTitle = 'Edit User Group';
       this.groupForm.patchValue({
         ...this.data.group,
         status: asStatus(this.data.group.status),
+        canApprove: !!this.data.group.canApprove,
       });
     }
   }

@@ -48,34 +48,6 @@
 
     <div class="form-row">
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Branch</mat-label>
-        <mat-select formControlName="branch">
-          <mat-option *ngFor="let branch of _branches" [value]="branch.branchid">
-            {{ branch.name }}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="userForm.get('branch')?.hasError('required')">
-          Branch is required
-        </mat-error>
-      </mat-form-field>
-    </div>
-
-    <div class="form-row">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Manager</mat-label>
-        <mat-select formControlName="manager">
-          <mat-option *ngFor="let manager of _managerUsers" [value]="manager.userid">
-            {{ manager.name }}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="userForm.get('manager')?.hasError('required')">
-          Manager name is required
-        </mat-error>
-      </mat-form-field>
-    </div>
-
-    <div class="form-row">
-      <mat-form-field appearance="outline" class="full-width">
         <mat-label>Status</mat-label>
         <mat-select formControlName="status">
           <mat-option [value]="Status.Active">Active</mat-option>

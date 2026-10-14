@@ -5,6 +5,8 @@ export interface UserGroup {
   name: string;
   description: string;
   status: Status;
+  /** Members of this group may act on workflow requests assigned to them. */
+  canApprove: boolean;
 }
 
 export interface UserGroupAssociation {

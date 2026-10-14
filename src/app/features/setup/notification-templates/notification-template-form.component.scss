@@ -42,6 +42,13 @@
   flex: 1;
 }
 
+.audience-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 0.25rem 0 0.75rem;
+}
+
 .user-picker {
   display: flex;
   align-items: flex-start;

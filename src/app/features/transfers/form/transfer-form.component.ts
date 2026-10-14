@@ -14,6 +14,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 
 import { StockService } from '../../../core/services/stock.service';
 import { BranchService } from '../../../core/services/branchservice.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Status } from '../../../core/enums/status.enum';
 import { Branch } from '../../../core/Models/BranchModel';
 
@@ -49,6 +50,7 @@ export class TransferFormComponent implements OnInit {
     private fb: FormBuilder,
     private stockService: StockService,
     private branchService: BranchService,
+    private auth: AuthService,
     private dialogRef: MatDialogRef<TransferFormComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
   ) {}
@@ -57,6 +59,13 @@ export class TransferFormComponent implements OnInit {
     this.initForm();
 
     this.branches = await this.branchService.getBranches();
+    this.transferForm.patchValue({ fromBranch: this.auth.currentBranchId() });
+    await this.loadAvailableLaptops();
+  }
+
+  get destinationBranches(): Branch[] {
+    const fromBranch = this.transferForm?.get('fromBranch')?.value;
+    return this.branches.filter((branch) => branch.branchid !== fromBranch);
   }
 
   initForm() {

@@ -8,6 +8,15 @@
       notification is generated. Saving links the Send notifications workflow function to each
       selected event.
     </p>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Branch</mat-label>
+      <mat-select formControlName="branchid">
+        <mat-option [value]="allBranchesId">All branches</mat-option>
+        <mat-option *ngFor="let branch of branches" [value]="branch.branchid">
+          {{ branch.name }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
     <div class="form-row">
       <mat-form-field appearance="outline">
         <mat-label>Code</mat-label>
@@ -27,19 +36,16 @@
           }}</mat-option>
         </mat-select>
       </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Audience</mat-label>
-        <mat-select formControlName="audience">
-          <mat-option *ngFor="let audience of audiences" [value]="audience">{{
-            audienceLabel[audience]
-          }}</mat-option>
-        </mat-select>
-      </mat-form-field>
+    </div>
+    <div class="audience-options">
+      <mat-checkbox formControlName="includePublic">Public</mat-checkbox>
+      <mat-checkbox formControlName="includeGroups">Groups</mat-checkbox>
+      <mat-checkbox formControlName="includeUsers">Custom users</mat-checkbox>
     </div>
     <mat-form-field
       appearance="outline"
       class="full"
-      *ngIf="form.get('audience')?.value === Audience.Group"
+      *ngIf="form.get('includeGroups')?.value"
     >
       <mat-label>Groups</mat-label>
       <mat-select formControlName="groupIds" multiple>
@@ -49,7 +55,7 @@
         >Select at least one group</mat-error
       >
     </mat-form-field>
-    <div class="user-picker" *ngIf="form.get('audience')?.value === Audience.CustomUsers">
+    <div class="user-picker" *ngIf="form.get('includeUsers')?.value">
       <mat-form-field appearance="outline" class="full">
         <mat-label>Users</mat-label>
         <input matInput [value]="selectedUserLabel" readonly />
@@ -59,13 +65,22 @@
     <p
       class="field-error"
       *ngIf="
-        form.get('audience')?.value === Audience.CustomUsers &&
+        form.get('includeUsers')?.value &&
         form.get('userIds')?.hasError('required') &&
         form.get('userIds')?.touched
       "
     >
       Select at least one user
     </p>
+    <mat-form-field appearance="outline" class="full" *ngIf="itemSources.length">
+      <mat-label>Audience item sources</mat-label>
+      <mat-select formControlName="audienceSources" multiple>
+        <mat-option *ngFor="let source of itemSources" [value]="source.code">
+          {{ source.name }} ({{ source.code }})
+        </mat-option>
+      </mat-select>
+      <mat-hint>Each source is resolved to users by id, email, or name when the notification is sent.</mat-hint>
+    </mat-form-field>
     <div class="item-source" *ngIf="itemSources.length">
       <mat-form-field appearance="outline">
         <mat-label>Item source</mat-label>
