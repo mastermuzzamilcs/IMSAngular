@@ -1,0 +1,78 @@
+<div class="container">
+  <div class="header-container">
+    <h1 class="mat-headline-5">Customers</h1>
+    <button
+      mat-raised-button
+      color="primary"
+      type="button"
+      *appPrivilege="privileges.customers.create"
+      (click)="openAddDialog()"
+    >
+      <mat-icon>person_add</mat-icon>
+      Add Customer
+    </button>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <div class="mat-elevation-z2 table-container">
+        <table mat-table [dataSource]="dataSource" matSort>
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+            <td mat-cell *matCellDef="let customer">{{ customer.name }}</td>
+          </ng-container>
+          <ng-container matColumnDef="phone">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Phone</th>
+            <td mat-cell *matCellDef="let customer">{{ customer.phone }}</td>
+          </ng-container>
+          <ng-container matColumnDef="email">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
+            <td mat-cell *matCellDef="let customer">{{ customer.email }}</td>
+          </ng-container>
+          <ng-container matColumnDef="address">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Address</th>
+            <td mat-cell *matCellDef="let customer">{{ customer.address }}</td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+            <td mat-cell *matCellDef="let customer">
+              <mat-chip selected>{{ customer.status }}</mat-chip>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let customer">
+              <button
+                mat-icon-button
+                color="primary"
+                type="button"
+                *appPrivilege="privileges.customers.edit"
+                (click)="openEditDialog(customer)"
+                matTooltip="Edit Customer"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                color="warn"
+                type="button"
+                *appPrivilege="privileges.customers.delete"
+                (click)="openDeleteDialog(customer)"
+                matTooltip="Delete Customer"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell" colspan="6">No customers found</td>
+          </tr>
+        </table>
+        <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]" aria-label="Select page of customers">
+        </mat-paginator>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

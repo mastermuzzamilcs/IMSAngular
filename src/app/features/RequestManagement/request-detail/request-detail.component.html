@@ -8,8 +8,11 @@
         <div class="overview-grid">
           <mat-chip color="primary" selected>{{ request.status }}</mat-chip>
           <p><strong>Type:</strong> {{ request.requestType }}</p>
-          <p><strong>Branch:</strong> {{ transfer?.branchName }}</p>
-          <p><strong>User:</strong> {{ transfer?.userName }}</p>
+          <p>
+            <strong>From branch:</strong> {{ transfer?.fromBranchName || transfer?.branchName }}
+          </p>
+          <p><strong>To branch:</strong> {{ transfer?.toBranchName }}</p>
+          <p><strong>Assigned to:</strong> {{ assignedToName || request.assignedTo || '—' }}</p>
           <p><strong>Date:</strong> {{ transferDate | date: 'mediumDate' }}</p>
         </div>
 
@@ -36,7 +39,12 @@
           <mat-chip color="primary" selected>{{ request.status }}</mat-chip>
           <p><strong>Type:</strong> {{ request.requestType }}</p>
           <p><strong>Branch:</strong> {{ stockHdr?.branchName }}</p>
-          <p><strong>Vendor:</strong> {{ stockHdr?.vendorName }}</p>
+          <p><strong>Assigned to:</strong> {{ assignedToName || request.assignedTo || '—' }}</p>
+          <p *ngIf="stockHdr?.vendorName"><strong>Vendor:</strong> {{ stockHdr?.vendorName }}</p>
+          <p *ngIf="stockHdr?.customerName">
+            <strong>Customer:</strong> {{ stockHdr?.customerName }}
+            <span *ngIf="stockHdr?.customerPhone"> · {{ stockHdr?.customerPhone }}</span>
+          </p>
           <p><strong>Date:</strong> {{ stockHdr?.entrydate | date: 'mediumDate' }}</p>
           <p><strong>Sub‑total:</strong> {{ stockHdr?.subtotal | currency }}</p>
           <p><strong>Discount:</strong> {{ stockHdr?.discountvalue | currency }}</p>
@@ -99,9 +107,16 @@
         </button>
       </div>
     </mat-tab>
+    <mat-tab label="Approval" *ngIf="showApprovalBlocked">
+      <p class="approval-form">{{ actionBlockedReason }}</p>
+    </mat-tab>
   </mat-tab-group>
 </div>
-<mat-chip color="accent" selected *ngIf="!loading && request && !showApproval">
+<mat-chip
+  color="accent"
+  selected
+  *ngIf="!loading && request && !showApproval && !showApprovalBlocked"
+>
   This request has already been {{ request?.status }}.
 </mat-chip>
 <ng-template #spn>

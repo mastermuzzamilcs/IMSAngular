@@ -4,6 +4,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MaterialModule } from '../../../shared/material/material.module';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { asStatus, Status } from '../../../core/enums/status.enum';
 
 @Component({
   selector: 'app-roles-form',
@@ -13,6 +14,7 @@ import { CommonModule } from '@angular/common';
   styleUrl: './roles-form.component.scss',
 })
 export class RolesFormComponent implements OnInit {
+  readonly Status = Status;
   userRoleForm!: FormGroup;
   dialogTitle: string = 'Add Role';
 
@@ -33,11 +35,14 @@ export class RolesFormComponent implements OnInit {
     this.userRoleForm = this.fb.group({
       name: ['', [Validators.required]],
       description: [''],
-      status: ['Active', [Validators.required]],
+      status: [Status.Active, [Validators.required]],
     });
   }
   patchFormValues(): void {
-    this.userRoleForm.patchValue(this.data.role);
+    this.userRoleForm.patchValue({
+      ...this.data.role,
+      status: asStatus(this.data.role?.status),
+    });
   }
   onSubmit() {
     if (this.userRoleForm.valid) {

@@ -4,6 +4,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MaterialModule } from '../../../shared/material/material.module';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { asStatus, Status } from '../../../core/enums/status.enum';
 
 @Component({
   selector: 'app-brand-form',
@@ -13,6 +14,7 @@ import { CommonModule } from '@angular/common';
   styleUrl: './brand-form.component.scss',
 })
 export class BrandFormComponent implements OnInit {
+  readonly Status = Status;
   brandForm!: FormGroup;
   dialogTitle: string = 'Add Brand';
 
@@ -35,11 +37,14 @@ export class BrandFormComponent implements OnInit {
       alias: [''],
       description: [''],
       country: [''],
-      status: ['Active', [Validators.required]],
+      status: [Status.Active, [Validators.required]],
     });
   }
   patchFormValues(): void {
-    this.brandForm.patchValue(this.data._brand);
+    this.brandForm.patchValue({
+      ...this.data._brand,
+      status: asStatus(this.data._brand?.status),
+    });
   }
   onSubmit() {
     if (this.brandForm.valid) {

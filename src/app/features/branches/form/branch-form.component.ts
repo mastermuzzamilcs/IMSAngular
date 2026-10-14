@@ -5,6 +5,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MaterialModule } from '../../../shared/material/material.module';
 import { CommonModule } from '@angular/common';
 import jsonData from '../../../Assets/appConfig.json';
+import { asStatus, Status } from '../../../core/enums/status.enum';
 import { User } from '../../../core/Models/UsersModel';
 import { Role } from '../../../core/Models/RoleModel';
 
@@ -16,6 +17,7 @@ import { Role } from '../../../core/Models/RoleModel';
   styleUrls: ['./branch-form.component.scss'],
 })
 export class BranchFormComponent implements OnInit {
+  readonly Status = Status;
   branchForm!: FormGroup;
   dialogTitle: string = 'Add Branch';
   _roles: Role[] | null = null;
@@ -45,7 +47,7 @@ export class BranchFormComponent implements OnInit {
       manager: ['', [Validators.required]],
       contact: ['', [Validators.required, Validators.pattern(/^\+?[0-9\s-()]{10,15}$/)]],
       email: ['', [Validators.email]],
-      status: ['Active'],
+      status: [Status.Active],
       address: ['', [Validators.required]],
     });
   }
@@ -58,7 +60,7 @@ export class BranchFormComponent implements OnInit {
       manager: branch.managerid || branch.manager,
       contact: branch.contact,
       email: branch.email,
-      status: branch.status,
+      status: asStatus(branch.status),
       address: branch.address,
     });
   }

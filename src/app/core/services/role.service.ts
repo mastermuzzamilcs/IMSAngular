@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { collection, addDoc, getDocs, doc, deleteDoc, setDoc } from 'firebase/firestore';
 import { firestore } from '../../firebase-config';
+import { asStatus, Status } from '../enums/status.enum';
 import { Role } from '../Models/RoleModel';
 
 @Injectable({ providedIn: 'root' })
@@ -8,6 +9,23 @@ export class RoleService {
   constructor() {}
   private readonly topicName: string = 'UserRoles';
   private cachedRoles: Role[] | null = null;
+
+  async ensureRoles(): Promise<void> {
+    const names = ['SuperAdmin', 'Admin', 'Branch Manager', 'Operations Manager', 'Cashier'];
+    for (const name of names) {
+      const existing = await this.getRoles(true);
+      const owned = existing.some((role) => role.name.trim().toLowerCase() === name.toLowerCase());
+      if (owned) {
+        continue;
+      }
+      await addDoc(collection(firestore, this.topicName), {
+        name,
+        description: name,
+        status: Status.Active,
+      });
+      this.cachedRoles = null;
+    }
+  }
 
   async getRoles(forceRefresh: boolean = false): Promise<Role[]> {
     if (this.cachedRoles && !forceRefresh) {
@@ -20,7 +38,7 @@ export class RoleService {
         id: doc.id,
         name: data['name'] || '',
         description: data['description'] || '',
-        status: data['status'] || '',
+        status: asStatus(data['status']),
       };
     });
     return this.cachedRoles;

@@ -61,19 +61,25 @@ export class ItemSearchModalComponent {
 
   async loadBrands() {
     this._loadingService.show();
-    this.brands = await this.brandService.getBrands();
-    this._loadingService.hide();
+    try {
+      this.brands = await this.brandService.getBrands();
+    } finally {
+      this._loadingService.hide();
+    }
   }
 
   async searchProducts() {
     this._loadingService.show();
-    const filters = this.searchForm.value;
-    this.productList = await this.productService.searchProducts(
-      filters['brandId'],
-      filters['name'],
-      filters['description'],
-    );
-    this._loadingService.hide();
+    try {
+      const filters = this.searchForm.value;
+      this.productList = await this.productService.searchProducts(
+        filters['brandId'],
+        filters['name'],
+        filters['description'],
+      );
+    } finally {
+      this._loadingService.hide();
+    }
   }
 
   selectRow(row: any) {

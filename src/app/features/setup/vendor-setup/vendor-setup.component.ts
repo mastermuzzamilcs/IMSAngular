@@ -13,6 +13,8 @@ import { GlobalDeleteConfirmationComponent } from '../../../shared/components/gl
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { VendorService } from '../../../core/services/vendor.service';
 import { Vendor } from '../../../core/Models/VendorModel';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 
 @Component({
   selector: 'app-vendor-setup',
@@ -26,12 +28,14 @@ import { Vendor } from '../../../core/Models/VendorModel';
     MatCardModule,
     MatChipsModule,
     MatSortModule,
+    PrivilegeDirective,
   ],
   templateUrl: './vendor-setup.component.html',
   styleUrl: './vendor-setup.component.scss',
   standalone: true,
 })
 export class VendorSetupComponent implements OnInit, AfterViewInit {
+  readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'location', 'description', 'status', 'actions'];
   dataSource = new MatTableDataSource<any>();
 

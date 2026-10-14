@@ -1,7 +1,12 @@
 <div class="container">
   <div class="header-container">
     <h1 class="mat-headline-5">Brands</h1>
-    <button mat-raised-button color="primary" (click)="openAddDialog()">
+    <button
+      mat-raised-button
+      color="primary"
+      *appPrivilege="privileges.brands.create"
+      (click)="openAddDialog()"
+    >
       <mat-icon>person_add</mat-icon> Add Brand
     </button>
   </div>
@@ -45,6 +50,7 @@
               <button
                 mat-icon-button
                 color="primary"
+                *appPrivilege="privileges.brands.edit"
                 (click)="openEditDialog(role)"
                 matTooltip="Edit User Role"
               >
@@ -53,6 +59,7 @@
               <button
                 mat-icon-button
                 color="warn"
+                *appPrivilege="privileges.brands.delete"
                 (click)="openDeleteDialog(role)"
                 matTooltip="Delete Role"
               >

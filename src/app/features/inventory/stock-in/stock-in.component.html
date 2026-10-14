@@ -6,16 +6,6 @@
   <mat-card>
     <mat-card-content>
       <form [formGroup]="stockInForm">
-        <!-- Branch Dropdown -->
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Branch</mat-label>
-          <mat-select formControlName="branch">
-            <mat-option *ngFor="let branch of branches" [value]="branch.branchid">
-              {{ branch.name }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-
         <!-- Vendor Dropdown -->
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Vendor</mat-label>
@@ -35,7 +25,13 @@
         </mat-form-field>
 
         <!-- Add Product Button -->
-        <button mat-raised-button color="primary" type="button" (click)="openProductDialog()">
+        <button
+          mat-raised-button
+          color="primary"
+          type="button"
+          *appPrivilege="privileges.stockIn.create"
+          (click)="openProductDialog()"
+        >
           <mat-icon>add</mat-icon> Add Item
         </button>
       </form>
@@ -106,7 +102,12 @@
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef>Actions</th>
           <td mat-cell *matCellDef="let row">
-            <button mat-icon-button color="warn" (click)="removeProduct(row)">
+            <button
+              mat-icon-button
+              color="warn"
+              *appPrivilege="privileges.stockIn.delete"
+              (click)="removeProduct(row)"
+            >
               <mat-icon>delete</mat-icon>
             </button>
           </td>
@@ -181,6 +182,7 @@
         <button
           mat-raised-button
           color="primary"
+          *appPrivilege="privileges.stockIn.create"
           (click)="submitStockIn()"
           [disabled]="dataSource.data.length <= 0 || stockInForm.invalid || this.netTotal <= 0"
         >

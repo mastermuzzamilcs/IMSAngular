@@ -1,21 +1,20 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
 import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
 import { StockService } from '../../../core/services/stock.service';
-import { BranchService } from '../../../core/services/branchservice.service';
 import { VendorService } from '../../../core/services/vendor.service';
 import { ProductService } from '../../../core/services/product.service';
 import { Stock, StockOverview } from '../../../core/Models/StockModel';
-import { Branch } from '../../../core/Models/BranchModel';
 import { LoadingService } from '../../../core/services/Loading.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { RouterModule } from '@angular/router';
 
 @Component({
@@ -27,7 +26,6 @@ import { RouterModule } from '@angular/router';
     MatPaginatorModule,
     MatSortModule,
     MatFormFieldModule,
-    MatSelectModule,
     MatCardModule,
     MatInputModule,
     MatIconModule,
@@ -50,8 +48,7 @@ export class InventoryListComponent implements OnInit, AfterViewInit {
     'alert',
   ];
   dataSource = new MatTableDataSource<any>([]);
-  branches: Branch[] = [];
-  selectedBranchId: string = '';
+  selectedBranchId = '';
   allStock: Stock[] = [];
   stockOverviewData: StockOverview[] = [];
 
@@ -60,19 +57,22 @@ export class InventoryListComponent implements OnInit, AfterViewInit {
 
   constructor(
     private stockService: StockService,
-    private branchService: BranchService,
     private vendorService: VendorService,
     private productService: ProductService,
     private loadingService: LoadingService,
+    private auth: AuthService,
+    private destroyRef: DestroyRef,
   ) {}
 
-  async ngOnInit(): Promise<void> {
-    this.loadingService.show();
-    this.branches = await this.branchService.getBranches();
-    const loggedInBranchId = '3nMj9NbLzWPwiqDAsOWn';
-    this.selectedBranchId = loggedInBranchId;
-    await this.filterByBranch();
-    this.loadingService.hide();
+  ngOnInit(): void {
+    this.auth.session$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((session) => {
+      const next = session?.branchid || '';
+      if (next === this.selectedBranchId) {
+        return;
+      }
+      this.selectedBranchId = next;
+      void this.filterByBranch();
+    });
   }
 
   ngAfterViewInit(): void {
@@ -86,18 +86,23 @@ export class InventoryListComponent implements OnInit, AfterViewInit {
   }
 
   async filterByBranch(): Promise<void> {
+    if (!this.selectedBranchId) {
+      this.dataSource.data = [];
+      this.loadingService.hide();
+      return;
+    }
     this.loadingService.show();
-    if (!this.selectedBranchId) return;
-
-    this.stockOverviewData = await this.stockService.getStockOverviewByBranch(
-      this.selectedBranchId,
-    );
-    this.stockOverviewData.forEach((item) => {
-      const onHand = item.balanceQuantity ?? item.quantity;
-      item.alert = onHand <= 0 ? 'Empty' : onHand < 5 ? 'Low' : 'Healthy';
-    });
-
-    this.dataSource.data = this.stockOverviewData;
-    this.loadingService.hide();
+    try {
+      this.stockOverviewData = await this.stockService.getStockOverviewByBranch(
+        this.selectedBranchId,
+      );
+      this.stockOverviewData.forEach((item) => {
+        const onHand = item.balanceQuantity ?? item.quantity;
+        item.alert = onHand <= 0 ? 'Empty' : onHand < 5 ? 'Low' : 'Healthy';
+      });
+      this.dataSource.data = this.stockOverviewData;
+    } finally {
+      this.loadingService.hide();
+    }
   }
 }

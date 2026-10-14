@@ -15,6 +15,8 @@ import { MatInputModule } from '@angular/material/input';
 import { UsersService } from '../../../core/services/users.service';
 import { LoadingService } from '../../../core/services/Loading.service';
 import { ActivatedRoute } from '@angular/router';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 
 @Component({
   selector: 'app-userlist',
@@ -31,12 +33,14 @@ import { ActivatedRoute } from '@angular/router';
     MatFormFieldModule,
     MatChipsModule,
     MatSlideToggleModule,
+    PrivilegeDirective,
   ],
   templateUrl: './user-list.component.html',
   styleUrls: ['./user-list.component.scss'],
 })
 export class UserListComponent implements OnInit, AfterViewInit {
-  displayedColumns: string[] = ['name', 'email', 'role', 'branch', 'status', 'actions'];
+  readonly privileges = privilegeAccess;
+  displayedColumns: string[] = ['name', 'email', 'role', 'status', 'actions'];
   dataSource = new MatTableDataSource<any>([]);
   userRolesLookup: any[];
   userBranchesLookup: any[];
@@ -102,6 +106,7 @@ export class UserListComponent implements OnInit, AfterViewInit {
       if (result) {
         this.loadingService.show();
         result.userid = user.userid;
+        result.branch = user.branchid || user.branch || '';
         await this._userService.updateUser(result);
         this.loadingService.hide();
         this.LoadUsers();
@@ -131,11 +136,9 @@ export class UserListComponent implements OnInit, AfterViewInit {
       const Users = await this._userService.getUsers();
       const usersWithRoleNames = Users.map((user) => {
         const matchedRole = this.userRolesLookup.find((r) => r.id === user.roleid);
-        const matchedBranch = this.userBranchesLookup.find((b) => b.branchid === user.branchid);
         return {
           ...user,
           role: matchedRole ? matchedRole.name : 'Unknown',
-          branch: matchedBranch ? matchedBranch.name : 'Unknown',
         };
       });
 

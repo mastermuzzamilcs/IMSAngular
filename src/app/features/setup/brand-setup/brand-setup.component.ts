@@ -13,6 +13,8 @@ import { GlobalDeleteConfirmationComponent } from '../../../shared/components/gl
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { Brand } from '../../../core/Models/BrandModel';
 import { BrandService } from '../../../core/services/brand.service';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 
 @Component({
   selector: 'app-brand-setup',
@@ -26,12 +28,14 @@ import { BrandService } from '../../../core/services/brand.service';
     MatCardModule,
     MatChipsModule,
     MatSortModule,
+    PrivilegeDirective,
   ],
   templateUrl: './brand-setup.component.html',
   styleUrl: './brand-setup.component.scss',
   standalone: true,
 })
 export class BrandSetupComponent implements OnInit, AfterViewInit {
+  readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'description', 'status', 'actions'];
   dataSource = new MatTableDataSource<any>();
 

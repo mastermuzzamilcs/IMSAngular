@@ -16,6 +16,8 @@ import { LoadingService } from '../../../core/services/Loading.service';
 import { GlobalDeleteConfirmationComponent } from '../../../shared/components/global-delete-confirmation/global-delete-confirmation.component';
 import { WorkflowFunctionFormComponent } from './workflow-function-form.component';
 import { WorkflowFunctionLinkFormComponent } from './workflow-function-link-form.component';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 
 @Component({
   selector: 'app-workflow-functions',
@@ -30,10 +32,12 @@ import { WorkflowFunctionLinkFormComponent } from './workflow-function-link-form
     MatDialogModule,
     MatCardModule,
     MatTooltipModule,
+    PrivilegeDirective,
   ],
   templateUrl: './workflow-functions.component.html',
 })
 export class WorkflowFunctionsComponent implements OnInit, AfterViewInit {
+  readonly privileges = privilegeAccess;
   functionColumns: string[] = ['code', 'name', 'className', 'functionActions'];
   linkColumns: string[] = ['requestType', 'status', 'priority', 'functionName', 'linkActions'];
   functions = new MatTableDataSource<WorkflowFunctionRecord>([]);

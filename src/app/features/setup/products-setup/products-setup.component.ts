@@ -14,6 +14,8 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { ProductService } from '../../../core/services/product.service';
 import { Product } from '../../../core/Models/ProductModel';
 import { BrandService } from '../../../core/services/brand.service';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 
 @Component({
   selector: 'app-products-setup',
@@ -27,12 +29,14 @@ import { BrandService } from '../../../core/services/brand.service';
     MatCardModule,
     MatChipsModule,
     MatSortModule,
+    PrivilegeDirective,
   ],
   templateUrl: './products-setup.component.html',
   styleUrl: './products-setup.component.scss',
   standalone: true,
 })
 export class ProductsSetupComponent implements OnInit, AfterViewInit {
+  readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'brand', 'description', 'price', 'status', 'actions'];
   dataSource = new MatTableDataSource<any>();
 

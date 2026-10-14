@@ -4,24 +4,10 @@
   <form [formGroup]="transferForm">
     <div class="form-row two-columns">
       <mat-form-field appearance="outline">
-        <mat-label>From Branch</mat-label>
-
-        <mat-select formControlName="fromBranch" (selectionChange)="loadAvailableLaptops()">
-          <mat-option *ngFor="let branch of branches" [value]="branch.branchid">
-            {{ branch.name }}
-          </mat-option>
-        </mat-select>
-
-        <mat-error *ngIf="transferForm.get('fromBranch')?.hasError('required')">
-          Source branch is required
-        </mat-error>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
         <mat-label>To Branch</mat-label>
 
         <mat-select formControlName="toBranch">
-          <mat-option *ngFor="let branch of branches" [value]="branch.branchid">
+          <mat-option *ngFor="let branch of destinationBranches" [value]="branch.branchid">
             {{ branch.name }}
           </mat-option>
         </mat-select>

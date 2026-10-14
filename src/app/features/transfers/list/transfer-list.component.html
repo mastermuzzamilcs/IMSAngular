@@ -75,32 +75,32 @@
               <mat-menu #menu="matMenu">
                 <button
                   mat-menu-item
-                  *ngIf="transfer.status === 'Pending'"
-                  (click)="updateStatus(transfer, 'Approved')"
+                  *ngIf="transfer.status === Status.Pending"
+                  (click)="updateStatus(transfer, Status.Approved)"
                 >
                   <mat-icon>check_circle</mat-icon>
                   <span>Approve</span>
                 </button>
                 <button
                   mat-menu-item
-                  *ngIf="transfer.status === 'Approved'"
-                  (click)="updateStatus(transfer, 'In Transit')"
+                  *ngIf="transfer.status === Status.Approved"
+                  (click)="updateStatus(transfer, Status.InTransit)"
                 >
                   <mat-icon>local_shipping</mat-icon>
                   <span>Mark In Transit</span>
                 </button>
                 <button
                   mat-menu-item
-                  *ngIf="transfer.status === 'In Transit'"
-                  (click)="updateStatus(transfer, 'Completed')"
+                  *ngIf="transfer.status === Status.InTransit"
+                  (click)="updateStatus(transfer, Status.Completed)"
                 >
                   <mat-icon>done_all</mat-icon>
                   <span>Complete Transfer</span>
                 </button>
                 <button
                   mat-menu-item
-                  *ngIf="transfer.status === 'Pending'"
-                  (click)="updateStatus(transfer, 'Rejected')"
+                  *ngIf="transfer.status === Status.Pending"
+                  (click)="updateStatus(transfer, Status.Rejected)"
                 >
                   <mat-icon>cancel</mat-icon>
                   <span>Reject</span>

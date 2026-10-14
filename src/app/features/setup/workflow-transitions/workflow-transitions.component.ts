@@ -13,6 +13,8 @@ import { WorkflowTransitionService } from '../../../core/services/workflow-trans
 import { LoadingService } from '../../../core/services/Loading.service';
 import { GlobalDeleteConfirmationComponent } from '../../../shared/components/global-delete-confirmation/global-delete-confirmation.component';
 import { WorkflowTransitionFormComponent } from './workflow-transition-form.component';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 
 @Component({
   selector: 'app-workflow-transitions',
@@ -27,10 +29,12 @@ import { WorkflowTransitionFormComponent } from './workflow-transition-form.comp
     MatDialogModule,
     MatCardModule,
     MatTooltipModule,
+    PrivilegeDirective,
   ],
   templateUrl: './workflow-transitions.component.html',
 })
 export class WorkflowTransitionsComponent implements OnInit, AfterViewInit {
+  readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['requestType', 'fromStatus', 'toStatus', 'label', 'actions'];
   dataSource = new MatTableDataSource<WorkflowStatusTransition>([]);
 

@@ -149,7 +149,7 @@ export class WorkflowTransitionService {
         requestType: RequestType.Transfer,
         fromStatus: RequestStatus.Approved,
         toStatus: RequestStatus.Dispatched,
-        label: 'Dispatched',
+        label: RequestStatus.Dispatched,
       },
       {
         requestType: RequestType.Transfer,
@@ -161,7 +161,7 @@ export class WorkflowTransitionService {
         requestType: RequestType.Transfer,
         fromStatus: RequestStatus.InProcess,
         toStatus: RequestStatus.Dispatched,
-        label: 'Dispatched',
+        label: RequestStatus.Dispatched,
       },
       {
         requestType: RequestType.Transfer,
@@ -173,31 +173,31 @@ export class WorkflowTransitionService {
         requestType: RequestType.Transfer,
         fromStatus: RequestStatus.Dispatched,
         toStatus: RequestStatus.InTransit,
-        label: 'In Transit',
+        label: RequestStatus.InTransit,
       },
       {
         requestType: RequestType.Transfer,
         fromStatus: RequestStatus.Dispatched,
         toStatus: RequestStatus.CourierReturned,
-        label: 'Courier Returned',
+        label: RequestStatus.CourierReturned,
       },
       {
         requestType: RequestType.Transfer,
         fromStatus: RequestStatus.InTransit,
         toStatus: RequestStatus.ArrivedAtStation,
-        label: 'Arrived at Station',
+        label: RequestStatus.ArrivedAtStation,
       },
       {
         requestType: RequestType.Transfer,
         fromStatus: RequestStatus.InTransit,
         toStatus: RequestStatus.CourierReturned,
-        label: 'Courier Returned',
+        label: RequestStatus.CourierReturned,
       },
       {
         requestType: RequestType.Transfer,
         fromStatus: RequestStatus.ArrivedAtStation,
         toStatus: RequestStatus.Received,
-        label: 'Received',
+        label: RequestStatus.Received,
       },
     ];
     return [...generic, ...transfer];
@@ -209,13 +209,13 @@ export class WorkflowTransitionService {
         requestType: RequestType.Transfer,
         fromStatus: RequestStatus.Approved,
         toStatus: RequestStatus.InProcess,
-        label: 'In Process',
+        label: RequestStatus.InProcess,
       },
       {
         requestType: RequestType.Transfer,
         fromStatus: RequestStatus.InTransit,
         toStatus: RequestStatus.Received,
-        label: 'Received',
+        label: RequestStatus.Received,
       },
     ];
   }

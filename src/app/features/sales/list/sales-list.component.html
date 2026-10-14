@@ -68,7 +68,7 @@
           <ng-container matColumnDef="status">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
             <td mat-cell *matCellDef="let sale">
-              <mat-chip [color]="sale.status === 'Completed' ? 'primary' : 'accent'" selected>
+              <mat-chip [color]="sale.status === Status.Completed ? 'primary' : 'accent'" selected>
                 {{ sale.status }}
               </mat-chip>
             </td>
@@ -78,7 +78,12 @@
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Actions</th>
             <td mat-cell *matCellDef="let sale">
-              <button mat-icon-button color="primary" matTooltip="View Details">
+              <button
+                mat-icon-button
+                color="primary"
+                matTooltip="View Details"
+                *appPrivilege="privileges.salesOverview.details"
+              >
                 <mat-icon>visibility</mat-icon>
               </button>
               <button mat-icon-button color="accent" matTooltip="Print Receipt">

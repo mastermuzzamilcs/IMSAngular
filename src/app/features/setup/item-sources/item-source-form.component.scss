@@ -1,0 +1,60 @@
+.source-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: min(640px, 80vw);
+}
+
+.form-row,
+.param-row {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.form-row mat-form-field,
+.param-row mat-form-field,
+.full {
+  flex: 1;
+  width: 100%;
+}
+
+.hint {
+  margin: 0 0 0.75rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.token {
+  font-family: monospace;
+}
+
+.events-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.events-head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.param-row button {
+  margin-top: 0.4rem;
+}
+
+.field-error {
+  margin: -0.25rem 0 0.75rem;
+  color: #f44336;
+  font-size: 0.75rem;
+}
+
+.step {
+  margin-bottom: 0.75rem;
+  padding: 0.25rem 0.75rem 0;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+}

@@ -1,7 +1,12 @@
 <div class="container">
   <div class="header-container">
     <h1 class="mat-headline-5">Workflow Functions</h1>
-    <button mat-raised-button color="primary" (click)="openAddFunction()">
+    <button
+      mat-raised-button
+      color="primary"
+      *appPrivilege="privileges.workflowFunctions.create"
+      (click)="openAddFunction()"
+    >
       <mat-icon>add</mat-icon> Add Function
     </button>
   </div>
@@ -28,6 +33,7 @@
               <button
                 mat-icon-button
                 color="primary"
+                *appPrivilege="privileges.workflowFunctions.edit"
                 (click)="openEditFunction(row)"
                 matTooltip="Edit"
               >
@@ -36,6 +42,7 @@
               <button
                 mat-icon-button
                 color="warn"
+                *appPrivilege="privileges.workflowFunctions.delete"
                 (click)="openDeleteFunction(row)"
                 matTooltip="Delete"
               >
@@ -56,7 +63,12 @@
 
   <div class="header-container">
     <h1 class="mat-headline-5">Associations</h1>
-    <button mat-raised-button color="primary" (click)="openAddLink()">
+    <button
+      mat-raised-button
+      color="primary"
+      *appPrivilege="privileges.workflowFunctions.create"
+      (click)="openAddLink()"
+    >
       <mat-icon>add</mat-icon> Associate
     </button>
   </div>
@@ -84,12 +96,19 @@
           <ng-container matColumnDef="linkActions">
             <th mat-header-cell *matHeaderCellDef>Actions</th>
             <td mat-cell *matCellDef="let row">
-              <button mat-icon-button color="primary" (click)="openEditLink(row)" matTooltip="Edit">
+              <button
+                mat-icon-button
+                color="primary"
+                *appPrivilege="privileges.workflowFunctions.edit"
+                (click)="openEditLink(row)"
+                matTooltip="Edit"
+              >
                 <mat-icon>edit</mat-icon>
               </button>
               <button
                 mat-icon-button
                 color="warn"
+                *appPrivilege="privileges.workflowFunctions.delete"
                 (click)="openDeleteLink(row)"
                 matTooltip="Delete"
               >

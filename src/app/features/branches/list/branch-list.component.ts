@@ -11,6 +11,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
 import { BranchService } from '../../../core/services/branchservice.service';
+import { Status } from '../../../core/enums/status.enum';
 import { Branch } from '../../../core/Models/BranchModel';
 import { LoadingService } from '../../../core/services/Loading.service';
 import { GlobalDeleteConfirmationComponent } from '../../../shared/components/global-delete-confirmation/global-delete-confirmation.component';
@@ -18,6 +19,8 @@ import { ActivatedRoute } from '@angular/router';
 import jsonData from '../../../Assets/appConfig.json';
 import { UsersService } from '../../../core/services/users.service';
 import { MatButtonModule } from '@angular/material/button';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 
 @Component({
   selector: 'app-branch-list',
@@ -34,11 +37,14 @@ import { MatButtonModule } from '@angular/material/button';
     MatCardModule,
     MatInputModule,
     MatButtonModule,
+    PrivilegeDirective,
   ],
   templateUrl: './branch-list.component.html',
   styleUrls: ['./branch-list.component.scss'],
 })
 export class BranchListComponent implements OnInit, AfterViewInit {
+  readonly Status = Status;
+  readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'location', 'manager', 'contact', 'status', 'actions'];
   dataSource = new MatTableDataSource<any>([]);
   userRolesLookup: any[];

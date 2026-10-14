@@ -11,6 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { FormsModule } from '@angular/forms';
 
+import { AuthService } from '../../../core/services/auth.service';
 import { WorkflowService } from '../../../core/services/Workflow.service';
 import { StockService } from '../../../core/services/stock.service';
 import { StockDetails } from '../../../core/Models/StockModel';
@@ -21,6 +22,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ProductService } from '../../../core/services/product.service';
 import { TransferService } from '../../../core/services/transfer.service';
 import { Transfer } from '../../../core/Models/TransferModel';
+import { UsersService } from '../../../core/services/users.service';
+import { SYSTEM_USER_ID } from '../../../core/system-user';
 
 @Component({
   selector: 'app-request-detail',
@@ -52,6 +55,8 @@ export class RequestDetailComponent implements OnInit {
     private _productService: ProductService,
     private transferSvc: TransferService,
     private transitionService: WorkflowTransitionService,
+    private auth: AuthService,
+    private usersService: UsersService,
   ) {}
 
   // UI state
@@ -68,12 +73,19 @@ export class RequestDetailComponent implements OnInit {
   action: RequestStatus | '' = '';
   remarks = '';
   submitting = false;
+  canAct = false;
+  actionBlockedReason = '';
+  assignedToName = '';
 
   displayedColumns = ['product', 'qty', 'price', 'disc', 'total'];
   actions: WorkflowTransitionOption[] = [];
 
   get showApproval(): boolean {
-    return this.actions.length > 0;
+    return this.actions.length > 0 && this.canAct;
+  }
+
+  get showApprovalBlocked(): boolean {
+    return this.actions.length > 0 && !this.canAct;
   }
 
   get transferDate(): Date | null {
@@ -101,7 +113,31 @@ export class RequestDetailComponent implements OnInit {
       ? this.transfer?.status || this.request.status
       : this.request.status;
     this.actions = await this.transitionService.getNext(this.request.requestType, status);
+    this.assignedToName = await this.resolveUserName(this.request.assignedTo || '');
+    this.canAct = await this.wfSvc.canCurrentUserAct(this.request, this.auth.currentUserId());
+    if (!this.canAct && this.actions.length > 0) {
+      if (!this.request.assignedTo) {
+        this.actionBlockedReason = 'This request has no assigned user, so no action can be taken.';
+      } else if (this.request.assignedTo !== this.auth.currentUserId()) {
+        this.actionBlockedReason = `Only the assigned user (${this.assignedToName || this.request.assignedTo}) can act on this request.`;
+      } else if (!this.auth.canApproveRequests()) {
+        this.actionBlockedReason = 'Your group is not allowed to approve requests.';
+      } else {
+        this.actionBlockedReason = 'You are not authorized to act on this request.';
+      }
+    }
     this.loading = false;
+  }
+
+  private async resolveUserName(userId: string): Promise<string> {
+    if (!userId) {
+      return '';
+    }
+    if (userId === SYSTEM_USER_ID) {
+      return 'system';
+    }
+    const users = await this.usersService.getUsers();
+    return users.find((user) => user.userid === userId)?.name || userId;
   }
 
   /** Submit approve / reject */
@@ -110,7 +146,12 @@ export class RequestDetailComponent implements OnInit {
     this.submitting = true;
     try {
       const status = this.action as RequestStatus;
-      await this.wfSvc.updateStatus(this.request.requestId, status, 'admin', this.remarks);
+      await this.wfSvc.updateStatus(
+        this.request.requestId,
+        status,
+        this.auth.currentUserId(),
+        this.remarks,
+      );
       this.dialogRef.close({ updated: true });
     } catch (err) {
       console.error('Error updating workflow request:', err);
