@@ -25,9 +25,7 @@ export class NotificationAudienceResolver {
     context: WorkflowFunctionContext,
   ): Promise<string[]> {
     const users = await this.usersService.getUsers();
-    const active = users.filter(
-      (user) => user.userid && !isStatus(user.status, Status.Inactive),
-    );
+    const active = users.filter((user) => user.userid && !isStatus(user.status, Status.Inactive));
     const activeIds = new Set(active.map((user) => user.userid as string));
     const recipients = new Set<string>();
     if (template.includePublic) {

@@ -14,9 +14,11 @@ export enum Status {
 }
 
 export function isStatus(value: unknown, status: Status): boolean {
-  return String(value ?? '')
-    .trim()
-    .toLowerCase() === status.toLowerCase();
+  return (
+    String(value ?? '')
+      .trim()
+      .toLowerCase() === status.toLowerCase()
+  );
 }
 
 export function asStatus(value: unknown, fallback: Status = Status.Active): Status {

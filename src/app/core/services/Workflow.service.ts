@@ -42,8 +42,7 @@ export class WorkflowService {
     const draft: WorkflowRequest = {
       ...partial,
       assignedTo: '',
-      toBranchId:
-        partial.requestType === RequestType.Transfer ? partial.toBranchId || '' : '',
+      toBranchId: partial.requestType === RequestType.Transfer ? partial.toBranchId || '' : '',
       status: RequestStatus.Pending,
       requestedOn: new Date(),
     };

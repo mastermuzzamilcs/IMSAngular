@@ -42,11 +42,7 @@
       <mat-checkbox formControlName="includeGroups">Groups</mat-checkbox>
       <mat-checkbox formControlName="includeUsers">Custom users</mat-checkbox>
     </div>
-    <mat-form-field
-      appearance="outline"
-      class="full"
-      *ngIf="form.get('includeGroups')?.value"
-    >
+    <mat-form-field appearance="outline" class="full" *ngIf="form.get('includeGroups')?.value">
       <mat-label>Groups</mat-label>
       <mat-select formControlName="groupIds" multiple>
         <mat-option *ngFor="let group of groups" [value]="group.id">{{ group.name }}</mat-option>
@@ -79,7 +75,10 @@
           {{ source.name }} ({{ source.code }})
         </mat-option>
       </mat-select>
-      <mat-hint>Each source is resolved to users by id, email, or name when the notification is sent.</mat-hint>
+      <mat-hint
+        >Each source is resolved to users by id, email, or name when the notification is
+        sent.</mat-hint
+      >
     </mat-form-field>
     <div class="item-source" *ngIf="itemSources.length">
       <mat-form-field appearance="outline">

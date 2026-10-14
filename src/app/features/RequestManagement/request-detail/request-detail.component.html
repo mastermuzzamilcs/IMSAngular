@@ -8,7 +8,9 @@
         <div class="overview-grid">
           <mat-chip color="primary" selected>{{ request.status }}</mat-chip>
           <p><strong>Type:</strong> {{ request.requestType }}</p>
-          <p><strong>From branch:</strong> {{ transfer?.fromBranchName || transfer?.branchName }}</p>
+          <p>
+            <strong>From branch:</strong> {{ transfer?.fromBranchName || transfer?.branchName }}
+          </p>
           <p><strong>To branch:</strong> {{ transfer?.toBranchName }}</p>
           <p><strong>Assigned to:</strong> {{ assignedToName || request.assignedTo || '—' }}</p>
           <p><strong>Date:</strong> {{ transferDate | date: 'mediumDate' }}</p>

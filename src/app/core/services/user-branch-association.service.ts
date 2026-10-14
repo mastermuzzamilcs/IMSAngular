@@ -1,13 +1,5 @@
 import { Injectable } from '@angular/core';
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  getDocs,
-  query,
-  where,
-} from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDocs, query, where } from 'firebase/firestore';
 import { firestore } from '../../firebase-config';
 
 export const ALL_BRANCHES_ID = '0';

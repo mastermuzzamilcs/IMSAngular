@@ -5,7 +5,10 @@
   <mat-card>
     <mat-card-content>
       <p>Choose who a user reports to. Each user has one reporting relationship.</p>
-      <form [formGroup]="form" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center">
+      <form
+        [formGroup]="form"
+        style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center"
+      >
         <mat-form-field appearance="outline" style="flex: 1 1 240px">
           <mat-label>User</mat-label>
           <mat-select formControlName="userid">

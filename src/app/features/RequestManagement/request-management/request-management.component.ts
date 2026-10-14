@@ -119,10 +119,8 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
   }
 
   private branchLabel(request: WorkflowRequest): string {
-    const from =
-      this.branchNames.get(request.branchId || '') || request.branchId || '';
-    const to =
-      this.branchNames.get(request.toBranchId || '') || request.toBranchId || '';
+    const from = this.branchNames.get(request.branchId || '') || request.branchId || '';
+    const to = this.branchNames.get(request.toBranchId || '') || request.toBranchId || '';
     if (request.requestType === RequestType.Transfer) {
       if (from && to && from !== to) {
         return `${from} → ${to}`;

@@ -41,10 +41,7 @@ export class RequestTypesComponent implements OnInit {
   ) {}
 
   get canEdit(): boolean {
-    return this.auth.hasPrivilege(
-      PrivilegeModule.WorkflowTransitions,
-      PrivilegeFunction.Edit,
-    );
+    return this.auth.hasPrivilege(PrivilegeModule.WorkflowTransitions, PrivilegeFunction.Edit);
   }
 
   ngOnInit(): void {
@@ -86,7 +83,10 @@ export class RequestTypesComponent implements OnInit {
     setting.assignedToSource = sourceCode || '';
     this.loadingService.show();
     try {
-      await this.requestTypeService.setAssignedToSource(setting.requestType, setting.assignedToSource);
+      await this.requestTypeService.setAssignedToSource(
+        setting.requestType,
+        setting.assignedToSource,
+      );
     } catch (error) {
       setting.assignedToSource = previous;
       console.error('Error saving assigned to source', error);

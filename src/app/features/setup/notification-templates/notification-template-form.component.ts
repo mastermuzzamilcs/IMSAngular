@@ -198,7 +198,12 @@ export class NotificationTemplateFormComponent implements OnInit {
       this.form.get('userIds')?.markAsTouched();
       return;
     }
-    if (!includePublic && groupIds.length === 0 && userIds.length === 0 && audienceSources.length === 0) {
+    if (
+      !includePublic &&
+      groupIds.length === 0 &&
+      userIds.length === 0 &&
+      audienceSources.length === 0
+    ) {
       alert('Choose at least one audience: public, groups, custom users, or an item source.');
       return;
     }

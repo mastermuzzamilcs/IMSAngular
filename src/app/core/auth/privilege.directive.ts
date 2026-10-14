@@ -25,10 +25,7 @@ export class PrivilegeDirective {
 
   private render(): void {
     this.view.clear();
-    if (
-      this.required &&
-      this.auth.hasPrivilege(this.required.moduleId, this.required.functionId)
-    ) {
+    if (this.required && this.auth.hasPrivilege(this.required.moduleId, this.required.functionId)) {
       this.view.createEmbeddedView(this.template);
     }
   }
