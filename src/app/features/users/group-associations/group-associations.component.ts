@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -20,6 +20,7 @@ import { UserGroupService } from '../../../core/services/user-group.service';
 import { UsersService } from '../../../core/services/users.service';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-group-associations',
@@ -39,6 +40,8 @@ import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
   templateUrl: './group-associations.component.html',
 })
 export class GroupAssociationsComponent implements OnInit {
+  private readonly toast = inject(ToastService);
+
   readonly privileges = privilegeAccess;
   users: User[] = [];
   groups: UserGroup[] = [];
@@ -91,7 +94,7 @@ export class GroupAssociationsComponent implements OnInit {
       }));
     } catch (error) {
       console.error('Error loading group associations', error);
-      alert('Error loading group associations');
+      this.toast.error('Error loading group associations');
     }
     this.loadingService.hide();
   }
@@ -110,7 +113,7 @@ export class GroupAssociationsComponent implements OnInit {
       await this.load();
     } catch (error) {
       console.error('Error associating user', error);
-      alert('Could not associate the user');
+      this.toast.error('Could not associate the user');
       this.loadingService.hide();
     }
   }
@@ -126,7 +129,7 @@ export class GroupAssociationsComponent implements OnInit {
       await this.load();
     } catch (error) {
       console.error('Error removing association', error);
-      alert('Could not remove the association');
+      this.toast.error('Could not remove the association');
       this.loadingService.hide();
     }
   }

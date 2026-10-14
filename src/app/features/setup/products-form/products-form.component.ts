@@ -1,13 +1,12 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { MaterialModule } from '../../../shared/material/material.module'; // if you're using shared material
-import { MxButtonComponent } from '@mesix/custom-control';
+import { MxButtonComponent, MxDialogRef, MX_DIALOG_DATA } from '@mesix/custom-control';
 import { asStatus, Status } from '../../../core/enums/status.enum';
 import { BrandService } from '../../../core/services/brand.service'; // update path as needed
 
@@ -17,13 +16,12 @@ import { BrandService } from '../../../core/services/brand.service'; // update p
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
     MatOptionModule,
     MxButtonComponent,
-    MaterialModule,
+    MaterialModule
   ],
   templateUrl: './products-form.component.html',
   styleUrls: ['./products-form.component.scss'],
@@ -37,8 +35,8 @@ export class ProductsFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private brandService: BrandService,
-    public dialogRef: MatDialogRef<ProductsFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    public dialogRef: MxDialogRef<any>,
+    @Inject(MX_DIALOG_DATA) public data: any,
   ) {}
 
   async ngOnInit(): Promise<void> {

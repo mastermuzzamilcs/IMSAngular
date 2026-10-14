@@ -1,28 +1,22 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { ConfirmService } from '../../../core/services/confirm.service';
+import { Component, OnInit, ViewChild, AfterViewInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  MxBadgeComponent,
-  MxButtonComponent,
-  MxEmptyStateComponent,
-  MxGridComponent,
-  MxPageHeaderComponent,
-} from '@mesix/custom-control';
+import { MxBadgeComponent, MxButtonComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { WorkflowFunctionRecord } from '../../../core/Models/WorkflowFunctionRecord';
 import { WorkflowFunctionLink } from '../../../core/Models/WorkflowFunctionLink';
 import { WorkflowFunctionDefinitionService } from '../../../core/services/workflow-function-definition.service';
 import { WorkflowFunctionLinkService } from '../../../core/services/workflow-function-link.service';
 import { LoadingService } from '../../../core/services/Loading.service';
-import { GlobalDeleteConfirmationComponent } from '../../../shared/components/global-delete-confirmation/global-delete-confirmation.component';
 import { WorkflowFunctionFormComponent } from './workflow-function-form.component';
 import { WorkflowFunctionLinkFormComponent } from './workflow-function-link-form.component';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-workflow-functions',
@@ -33,7 +27,6 @@ import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
     MatPaginatorModule,
     MatSortModule,
     MatIconModule,
-    MatDialogModule,
     MatTooltipModule,
     MxPageHeaderComponent,
     MxButtonComponent,
@@ -45,6 +38,12 @@ import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
   templateUrl: './workflow-functions.component.html',
 })
 export class WorkflowFunctionsComponent implements OnInit, AfterViewInit {
+  tableLoading = false;
+  private readonly notice = inject(MxNoticeService);
+  private readonly confirm = inject(ConfirmService);
+
+  private readonly toast = inject(ToastService);
+
   readonly privileges = privilegeAccess;
   functionColumns: string[] = ['code', 'name', 'className', 'functionActions'];
   linkColumns: string[] = ['requestType', 'status', 'priority', 'functionName', 'linkActions'];
@@ -59,8 +58,7 @@ export class WorkflowFunctionsComponent implements OnInit, AfterViewInit {
   constructor(
     private definitionService: WorkflowFunctionDefinitionService,
     private linkService: WorkflowFunctionLinkService,
-    private loadingService: LoadingService,
-    private dialog: MatDialog,
+    private loadingService: LoadingService
   ) {}
 
   ngOnInit(): void {
@@ -87,7 +85,7 @@ export class WorkflowFunctionsComponent implements OnInit, AfterViewInit {
   }
 
   async load(): Promise<void> {
-    this.loadingService.show();
+    this.tableLoading = true;
     try {
       this.functions.data = await this.definitionService.getFunctions();
       this.links.data = (await this.linkService.getLinks()).sort((left, right) => {
@@ -103,9 +101,9 @@ export class WorkflowFunctionsComponent implements OnInit, AfterViewInit {
       });
     } catch (err) {
       console.error('Error loading workflow functions', err);
-      alert('Error loading workflow functions');
+      this.toast.error('Error loading workflow functions');
     }
-    this.loadingService.hide();
+    this.tableLoading = false;
   }
 
   openAddFunction(): void {
@@ -125,14 +123,7 @@ export class WorkflowFunctionsComponent implements OnInit, AfterViewInit {
   }
 
   openDeleteFunction(record: WorkflowFunctionRecord): void {
-    const dialogRef = this.dialog.open(GlobalDeleteConfirmationComponent, {
-      width: '300px',
-      data: {
-        title: 'Delete Workflow Function',
-        message: `Delete ${record.name}?`,
-      },
-    });
-    dialogRef.afterClosed().subscribe(async (result) => {
+    this.confirm.confirmDelete(`Delete ${record.name}?`, 'Delete Workflow Function').subscribe(async (result) => {
       if (result && record.id) {
         this.loadingService.show();
         await this.definitionService.deleteFunction(record.id);
@@ -143,14 +134,7 @@ export class WorkflowFunctionsComponent implements OnInit, AfterViewInit {
   }
 
   openDeleteLink(link: WorkflowFunctionLink): void {
-    const dialogRef = this.dialog.open(GlobalDeleteConfirmationComponent, {
-      width: '300px',
-      data: {
-        title: 'Delete Association',
-        message: `Remove ${this.functionName(link.functionKey)} from ${link.requestType} / ${link.status}?`,
-      },
-    });
-    dialogRef.afterClosed().subscribe(async (result) => {
+    this.confirm.confirmDelete(`Remove ${this.functionName(link.functionKey)}?`, 'Delete Association').subscribe(async (result) => {
       if (result && link.id) {
         this.loadingService.show();
         await this.linkService.deleteLink(link.id);
@@ -161,9 +145,8 @@ export class WorkflowFunctionsComponent implements OnInit, AfterViewInit {
   }
 
   private openFunctionDialog(mode: string, record?: WorkflowFunctionRecord): void {
-    const dialogRef = this.dialog.open(WorkflowFunctionFormComponent, {
-      width: '500px',
-      data: { mode, record },
+    const dialogRef = this.notice.open(WorkflowFunctionFormComponent, {
+      data: { mode, record }
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (!result) {
@@ -178,16 +161,15 @@ export class WorkflowFunctionsComponent implements OnInit, AfterViewInit {
         }
         await this.load();
       } catch (err) {
-        alert(err instanceof Error ? err.message : 'Failed to save workflow function');
+        this.toast.error(err instanceof Error ? err.message : 'Failed to save workflow function');
       }
       this.loadingService.hide();
     });
   }
 
   private openLinkDialog(mode: string, link?: WorkflowFunctionLink): void {
-    const dialogRef = this.dialog.open(WorkflowFunctionLinkFormComponent, {
-      width: '500px',
-      data: { mode, link, functions: this.functions.data },
+    const dialogRef = this.notice.open(WorkflowFunctionLinkFormComponent, {
+      data: { mode, link, functions: this.functions.data }
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (!result) {
@@ -202,7 +184,7 @@ export class WorkflowFunctionsComponent implements OnInit, AfterViewInit {
         }
         await this.load();
       } catch (err) {
-        alert(err instanceof Error ? err.message : 'Failed to save association');
+        this.toast.error(err instanceof Error ? err.message : 'Failed to save association');
       }
       this.loadingService.hide();
     });

@@ -18,6 +18,8 @@
   </p>
 
   <mx-grid
+    [loading]="tableLoading"
+    [skeletonColumns]="displayedColumns.length"
     [showFilter]="true"
     filterPlaceholder="Search item sources..."
     [hasFooter]="true"

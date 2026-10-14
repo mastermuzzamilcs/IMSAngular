@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -6,7 +6,6 @@ import {
   ReactiveFormsModule,
   FormsModule,
 } from '@angular/forms';
-import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { Customer } from '../../../core/Models/CustomerModel';
 import { StockService } from '../../../core/services/stock.service';
@@ -25,6 +24,7 @@ import {
   MxCardComponent,
   MxEmptyStateComponent,
   MxGridComponent,
+  MxNoticeService,
   MxPageHeaderComponent,
 } from '@mesix/custom-control';
 import { WorkflowService } from '../../../core/services/Workflow.service';
@@ -34,6 +34,7 @@ import { LoadingService } from '../../../core/services/Loading.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-sales',
@@ -60,6 +61,9 @@ import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
   styleUrls: ['./sales.component.scss'],
 })
 export class SalesComponent implements OnInit {
+  private readonly toast = inject(ToastService);
+  private readonly notice = inject(MxNoticeService);
+
   readonly privileges = privilegeAccess;
   dataSource = new MatTableDataSource<any>([]);
   displayedColumns: string[] = [
@@ -82,7 +86,6 @@ export class SalesComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private dialog: MatDialog,
     private stockService: StockService,
     private _workflowService: WorkflowService,
     private _loadingService: LoadingService,
@@ -101,11 +104,8 @@ export class SalesComponent implements OnInit {
   }
 
   openCustomerDialog(): void {
-    const dialogRef = this.dialog.open(CustomerSearchModalComponent, {
-      width: '95vw',
-      maxWidth: '960px',
-      maxHeight: '85vh',
-      data: { type: 'Customers', isMultiSelect: false },
+    const dialogRef = this.notice.open(CustomerSearchModalComponent, {
+      data: { type: 'Customers', isMultiSelect: false }
     });
 
     dialogRef.afterClosed().subscribe((customer: Customer | null) => {
@@ -124,8 +124,7 @@ export class SalesComponent implements OnInit {
   }
 
   openProductDialog(): void {
-    const dialogRef = this.dialog.open(ItemSearchModalComponent, {
-      width: '800px',
+    const dialogRef = this.notice.open(ItemSearchModalComponent, {
       data: {},
     });
 
@@ -187,7 +186,7 @@ export class SalesComponent implements OnInit {
 
     const branch = this.auth.currentBranchId();
     if (!branch) {
-      alert('Choose a branch from the top bar before continuing.');
+      this.toast.warning('Choose a branch from the top bar before continuing.');
       return;
     }
 
@@ -218,7 +217,7 @@ export class SalesComponent implements OnInit {
         remarks: 'Auto-generated from Sales screen',
       });
 
-      alert('Sale entry added successfully');
+      this.toast.success('Sale entry added successfully');
 
       this.dataSource.data = [];
       this.linkedCustomer = null;
@@ -237,7 +236,7 @@ export class SalesComponent implements OnInit {
       this.netTotal = 0;
     } catch (err) {
       console.error('Error submitting sale:', err);
-      alert('Failed to submit sale');
+      this.toast.error('Failed to submit sale');
     }
 
     this._loadingService.hide();

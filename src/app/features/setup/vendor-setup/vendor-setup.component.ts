@@ -1,24 +1,18 @@
-import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { ConfirmService } from '../../../core/services/confirm.service';
+import { Component, OnInit, AfterViewInit, ViewChild, inject } from '@angular/core';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { VendorFormComponent } from '../vendor-form/vendor-form.component';
 import { CommonModule } from '@angular/common';
-import {
-  MxBadgeComponent,
-  MxButtonComponent,
-  MxEmptyStateComponent,
-  MxGridComponent,
-  MxPageHeaderComponent,
-} from '@mesix/custom-control';
+import { MxBadgeComponent, MxButtonComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
 import { MatIconModule } from '@angular/material/icon';
 import { LoadingService } from '../../../core/services/Loading.service';
-import { GlobalDeleteConfirmationComponent } from '../../../shared/components/global-delete-confirmation/global-delete-confirmation.component';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { VendorService } from '../../../core/services/vendor.service';
 import { Vendor } from '../../../core/Models/VendorModel';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-vendor-setup',
@@ -27,7 +21,6 @@ import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
     MatTableModule,
     MatPaginatorModule,
     MatIconModule,
-    MatDialogModule,
     MatSortModule,
     MxPageHeaderComponent,
     MxButtonComponent,
@@ -41,17 +34,22 @@ import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
   standalone: true,
 })
 export class VendorSetupComponent implements OnInit, AfterViewInit {
+  private readonly notice = inject(MxNoticeService);
+  private readonly confirm = inject(ConfirmService);
+
+  private readonly toast = inject(ToastService);
+
   readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'location', 'description', 'status', 'actions'];
   dataSource = new MatTableDataSource<any>();
+  tableLoading = false;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor(
     private _vendorService: VendorService,
-    private _loadingService: LoadingService,
-    private dialog: MatDialog,
+    private _loadingService: LoadingService
   ) {}
 
   ngOnInit() {
@@ -72,21 +70,20 @@ export class VendorSetupComponent implements OnInit, AfterViewInit {
   }
 
   async loadVendors() {
-    this._loadingService.show();
+    this.tableLoading = true;
     try {
       const Vendors = await this._vendorService.getVendors();
       this.dataSource.data = Vendors;
     } catch (err) {
       console.error('Error loading Vendors', err);
-      alert('Error loading Vendors');
+      this.toast.error('Error loading Vendors');
     }
-    this._loadingService.hide();
+    this.tableLoading = false;
   }
 
   openAddDialog() {
-    const dialogRef = this.dialog.open(VendorFormComponent, {
-      width: '500px',
-      data: { mode: 'add' },
+    const dialogRef = this.notice.open(VendorFormComponent, {
+      data: { mode: 'add' }
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
@@ -99,9 +96,8 @@ export class VendorSetupComponent implements OnInit, AfterViewInit {
   }
 
   openEditDialog(_vendor: Vendor) {
-    const dialogRef = this.dialog.open(VendorFormComponent, {
-      width: '500px',
-      data: { mode: 'edit', _vendor },
+    const dialogRef = this.notice.open(VendorFormComponent, {
+      data: { mode: 'edit', _vendor }
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
@@ -114,14 +110,7 @@ export class VendorSetupComponent implements OnInit, AfterViewInit {
     });
   }
   openDeleteDialog(_vendor: Vendor) {
-    const dialogRef = this.dialog.open(GlobalDeleteConfirmationComponent, {
-      width: '300px',
-      data: {
-        title: 'Delete Vendor',
-        message: `Are you sure you want to delete "${_vendor.name}"?`,
-      },
-    });
-    dialogRef.afterClosed().subscribe(async (result) => {
+    this.confirm.confirmDelete(`Are you sure you want to delete "${_vendor.name}"?`, 'Delete Vendor').subscribe(async (result) => {
       if (result) {
         if (_vendor.id) {
           this._loadingService.show();

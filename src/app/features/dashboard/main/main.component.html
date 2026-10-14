@@ -9,7 +9,7 @@
         </div>
         <div class="kpi-info">
           <h3>Total Inventory</h3>
-          <p class="kpi-value">128</p>
+          <p class="kpi-value">{{ totalInventory | number: '1.0-0' }}</p>
         </div>
       </div>
     </mx-card>
@@ -21,7 +21,7 @@
         </div>
         <div class="kpi-info">
           <h3>Low Stock Items</h3>
-          <p class="kpi-value">12</p>
+          <p class="kpi-value">{{ lowStockItems | number: '1.0-0' }}</p>
         </div>
       </div>
     </mx-card>
@@ -33,7 +33,7 @@
         </div>
         <div class="kpi-info">
           <h3>Pending Transfers</h3>
-          <p class="kpi-value">5</p>
+          <p class="kpi-value">{{ pendingTransfers | number: '1.0-0' }}</p>
         </div>
       </div>
     </mx-card>
@@ -45,7 +45,7 @@
         </div>
         <div class="kpi-info">
           <h3>Today's Sales</h3>
-          <p class="kpi-value">$4,520</p>
+          <p class="kpi-value">{{ todaysSales | currency: 'PKR' : 'symbol' : '1.0-0' }}</p>
         </div>
       </div>
     </mx-card>
@@ -62,14 +62,19 @@
   </div>
 
   <mx-card title="Recent Activity" padding="md" elevation="elevated" class="activity-card">
-    <mat-list>
-      <mat-list-item>
-        <mat-icon matListItemIcon>swap_horiz</mat-icon>
-        <div matListItemTitle>Transfer #1082 created</div>
-        <div matListItemLine>From Branch A to Branch B</div>
-        <div matListItemMeta>10 minutes ago</div>
-      </mat-list-item>
-      <mat-divider></mat-divider>
+    <mat-list *ngIf="recentActivity.length; else noActivity">
+      <ng-container *ngFor="let item of recentActivity; let last = last">
+        <mat-list-item>
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          <div matListItemTitle>{{ item.title }}</div>
+          <div matListItemLine>{{ item.detail }}</div>
+          <div matListItemMeta>{{ item.when }}</div>
+        </mat-list-item>
+        <mat-divider *ngIf="!last"></mat-divider>
+      </ng-container>
     </mat-list>
+    <ng-template #noActivity>
+      <p class="empty-activity">No recent activity for this branch.</p>
+    </ng-template>
   </mx-card>
 </div>

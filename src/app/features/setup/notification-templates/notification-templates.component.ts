@@ -1,16 +1,11 @@
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { ConfirmService } from '../../../core/services/confirm.service';
+import { AfterViewInit, Component, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import {
-  MxButtonComponent,
-  MxEmptyStateComponent,
-  MxGridComponent,
-  MxPageHeaderComponent,
-} from '@mesix/custom-control';
+import { MxButtonComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 import {
@@ -23,8 +18,8 @@ import { LoadingService } from '../../../core/services/Loading.service';
 import { BranchService } from '../../../core/services/branchservice.service';
 import { NotificationTemplateService } from '../../../core/services/notification-template.service';
 import { ALL_BRANCHES_ID } from '../../../core/services/user-branch-association.service';
-import { GlobalDeleteConfirmationComponent } from '../../../shared/components/global-delete-confirmation/global-delete-confirmation.component';
 import { NotificationTemplateFormComponent } from './notification-template-form.component';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-notification-templates',
@@ -34,7 +29,6 @@ import { NotificationTemplateFormComponent } from './notification-template-form.
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
-    MatDialogModule,
     MatIconModule,
     MxPageHeaderComponent,
     MxButtonComponent,
@@ -46,11 +40,17 @@ import { NotificationTemplateFormComponent } from './notification-template-form.
   styleUrl: './notification-templates.component.scss',
 })
 export class NotificationTemplatesComponent implements OnInit, AfterViewInit {
+  private readonly notice = inject(MxNoticeService);
+  private readonly confirm = inject(ConfirmService);
+
+  private readonly toast = inject(ToastService);
+
   readonly privileges = privilegeAccess;
   readonly channelLabel = notificationChannelLabel;
   displayedColumns = ['branch', 'name', 'type', 'audience', 'events', 'enabled', 'actions'];
   private branchNames = new Map<string, string>();
   dataSource = new MatTableDataSource<NotificationTemplate>([]);
+  tableLoading = false;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -59,8 +59,7 @@ export class NotificationTemplatesComponent implements OnInit, AfterViewInit {
     private templateService: NotificationTemplateService,
     private branchService: BranchService,
     private auth: AuthService,
-    private loadingService: LoadingService,
-    private dialog: MatDialog,
+    private loadingService: LoadingService
   ) {}
 
   ngOnInit(): void {
@@ -99,7 +98,7 @@ export class NotificationTemplatesComponent implements OnInit, AfterViewInit {
   }
 
   async loadTemplates(): Promise<void> {
-    this.loadingService.show();
+    this.tableLoading = true;
     try {
       const [templates, branches] = await Promise.all([
         this.templateService.getTemplates(),
@@ -115,14 +114,14 @@ export class NotificationTemplatesComponent implements OnInit, AfterViewInit {
       );
     } catch (error) {
       console.error('Error loading notification templates', error);
-      alert('Error loading notification templates');
+      this.toast.error('Error loading notification templates');
     }
-    this.loadingService.hide();
+    this.tableLoading = false;
   }
 
   openAddDialog(): void {
-    this.dialog
-      .open(NotificationTemplateFormComponent, { width: '760px', data: { mode: 'add' } })
+    this.notice
+      .open(NotificationTemplateFormComponent, { data: { mode: 'add' } })
       .afterClosed()
       .subscribe(async (result: NotificationTemplate | undefined) => {
         if (!result) {
@@ -134,16 +133,15 @@ export class NotificationTemplatesComponent implements OnInit, AfterViewInit {
           await this.loadTemplates();
         } catch (error) {
           console.error('Error adding notification template', error);
-          alert(error instanceof Error ? error.message : 'Could not save the template');
+          this.toast.error(error instanceof Error ? error.message : 'Could not save the template');
           this.loadingService.hide();
         }
       });
   }
 
   openEditDialog(template: NotificationTemplate): void {
-    this.dialog
+    this.notice
       .open(NotificationTemplateFormComponent, {
-        width: '760px',
         data: { mode: 'edit', template },
       })
       .afterClosed()
@@ -157,22 +155,15 @@ export class NotificationTemplatesComponent implements OnInit, AfterViewInit {
           await this.loadTemplates();
         } catch (error) {
           console.error('Error updating notification template', error);
-          alert(error instanceof Error ? error.message : 'Could not save the template');
+          this.toast.error(error instanceof Error ? error.message : 'Could not save the template');
           this.loadingService.hide();
         }
       });
   }
 
   openDeleteDialog(template: NotificationTemplate): void {
-    this.dialog
-      .open(GlobalDeleteConfirmationComponent, {
-        width: '360px',
-        data: {
-          title: 'Delete Notification Template',
-          message: `Are you sure you want to delete "${template.name}"?`,
-        },
-      })
-      .afterClosed()
+    this.confirm
+      .confirmDelete(`Are you sure you want to delete "${template.name}"?`, 'Delete Notification Template')
       .subscribe(async (confirmed: boolean) => {
         if (!confirmed || !template.id) {
           return;
@@ -183,7 +174,7 @@ export class NotificationTemplatesComponent implements OnInit, AfterViewInit {
           await this.loadTemplates();
         } catch (error) {
           console.error('Error deleting notification template', error);
-          alert('Could not delete the template');
+          this.toast.error('Could not delete the template');
           this.loadingService.hide();
         }
       });

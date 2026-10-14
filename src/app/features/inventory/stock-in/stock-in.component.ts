@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -6,7 +6,6 @@ import {
   ReactiveFormsModule,
   FormsModule,
 } from '@angular/forms';
-import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { StockService } from '../../../core/services/stock.service';
 import { VendorService } from '../../../core/services/vendor.service';
@@ -24,6 +23,7 @@ import {
   MxCardComponent,
   MxEmptyStateComponent,
   MxGridComponent,
+  MxNoticeService,
   MxPageHeaderComponent,
 } from '@mesix/custom-control';
 import { WorkflowService } from '../../../core/services/Workflow.service';
@@ -33,6 +33,7 @@ import { LoadingService } from '../../../core/services/Loading.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-stock-in',
@@ -59,6 +60,9 @@ import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
   styleUrls: ['./stock-in.component.scss'],
 })
 export class StockInComponent implements OnInit {
+  private readonly toast = inject(ToastService);
+  private readonly notice = inject(MxNoticeService);
+
   readonly privileges = privilegeAccess;
   dataSource = new MatTableDataSource<any>([]);
   displayedColumns: string[] = [
@@ -81,7 +85,6 @@ export class StockInComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private dialog: MatDialog,
     private stockService: StockService,
     private vendorService: VendorService,
     private _workflowService: WorkflowService,
@@ -99,8 +102,7 @@ export class StockInComponent implements OnInit {
   }
 
   openProductDialog(): void {
-    const dialogRef = this.dialog.open(ItemSearchModalComponent, {
-      width: '800px',
+    const dialogRef = this.notice.open(ItemSearchModalComponent, {
       data: {},
     });
 
@@ -154,7 +156,7 @@ export class StockInComponent implements OnInit {
   async submitStockIn(): Promise<void> {
     const branch = this.auth.currentBranchId();
     if (!branch) {
-      alert('Choose a branch from the top bar before continuing.');
+      this.toast.warning('Choose a branch from the top bar before continuing.');
       return;
     }
     this._loadingService.show();
@@ -182,7 +184,7 @@ export class StockInComponent implements OnInit {
         branchId: this.auth.currentBranchId(),
         remarks: 'Auto‑generated from Stock‑In screen',
       });
-      alert('Stock-in entry added successfully');
+      this.toast.success('Stock-in entry added successfully');
       this.dataSource.data = [];
       this.stockInForm.reset({ date: new Date() });
       this.subTotal = 0;
@@ -191,7 +193,7 @@ export class StockInComponent implements OnInit {
       this.netTotal = 0;
     } catch (err) {
       console.error('Error submitting stock in:', err);
-      alert('Failed to submit stock-in');
+      this.toast.error('Failed to submit stock-in');
     }
     this._loadingService.hide();
   }

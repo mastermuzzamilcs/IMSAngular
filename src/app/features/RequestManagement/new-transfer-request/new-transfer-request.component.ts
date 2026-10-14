@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -6,7 +6,6 @@ import {
   ReactiveFormsModule,
   FormsModule,
 } from '@angular/forms';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -19,8 +18,10 @@ import { MatNativeDateModule } from '@angular/material/core';
 import {
   MxButtonComponent,
   MxCardComponent,
+  MxDialogRef,
   MxEmptyStateComponent,
   MxGridComponent,
+  MxNoticeService,
   MxPageHeaderComponent,
 } from '@mesix/custom-control';
 import { ItemSearchModalComponent } from '../../inventory/item-search-modal/item-search-modal.component';
@@ -41,6 +42,7 @@ import {
   UserBranchAssociationService,
 } from '../../../core/services/user-branch-association.service';
 import { CustomerSearchModalComponent } from '../../../shared/components/customer-search-modal/customer-search-modal.component';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-new-transfer-request',
@@ -67,6 +69,9 @@ import { CustomerSearchModalComponent } from '../../../shared/components/custome
   styleUrls: ['./new-transfer-request.component.scss'],
 })
 export class NewTransferRequestComponent implements OnInit {
+  private readonly toast = inject(ToastService);
+  private readonly notice = inject(MxNoticeService);
+
   readonly privileges = privilegeAccess;
   dataSource = new MatTableDataSource<any>([]);
   displayedColumns: string[] = ['product', 'description', 'quantity', 'actions'];
@@ -75,12 +80,11 @@ export class NewTransferRequestComponent implements OnInit {
   users: User[] = [];
   private linksByUser = new Map<string, string[]>();
   searchedUser: User | null = null;
-  private itemDialogRef: MatDialogRef<ItemSearchModalComponent> | null = null;
+  private itemDialogRef: MxDialogRef<any> | null = null;
   private addItemOpen = false;
 
   constructor(
     private fb: FormBuilder,
-    private dialog: MatDialog,
     private usersService: UsersService,
     private branchAssociationService: UserBranchAssociationService,
     private branchService: BranchService,
@@ -141,11 +145,8 @@ export class NewTransferRequestComponent implements OnInit {
   }
 
   openUserSearch(): void {
-    this.dialog
+    this.notice
       .open(CustomerSearchModalComponent, {
-        width: '95vw',
-        maxWidth: '960px',
-        maxHeight: '85vh',
         data: { type: 'all', isMultiSelect: false },
       })
       .afterClosed()
@@ -190,8 +191,7 @@ export class NewTransferRequestComponent implements OnInit {
           .forEach((item) => allowedIds.add(item.productid));
       }
 
-      this.itemDialogRef = this.dialog.open(ItemSearchModalComponent, {
-        width: '800px',
+      this.itemDialogRef = this.notice.open(ItemSearchModalComponent, {
         data: {},
       });
 
@@ -230,7 +230,7 @@ export class NewTransferRequestComponent implements OnInit {
   async submitTransfer(): Promise<void> {
     const fromBranchId = this.auth.currentBranchId();
     if (!fromBranchId) {
-      alert('Choose a branch from the top bar before continuing.');
+      this.toast.warning('Choose a branch from the top bar before continuing.');
       return;
     }
     if (this.transferForm.invalid || this.dataSource.data.length === 0) {
@@ -273,12 +273,12 @@ export class NewTransferRequestComponent implements OnInit {
         toBranchId: formValue.toBranch,
         remarks: 'Auto-generated from New Transfer Request',
       });
-      alert('Transfer request added successfully');
+      this.toast.success('Transfer request added successfully');
       this.dataSource.data = [];
       this.transferForm.reset({ date: new Date() });
     } catch (err) {
       console.error('Error submitting transfer request:', err);
-      alert(err instanceof Error ? err.message : 'Failed to submit transfer request');
+      this.toast.error(err instanceof Error ? err.message : 'Failed to submit transfer request');
     }
     this.loadingService.hide();
   }

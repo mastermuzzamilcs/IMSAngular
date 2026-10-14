@@ -21,15 +21,15 @@
         </mat-select>
       </mat-form-field>
 
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Date</mat-label>
+        <input matInput [matDatepicker]="picker" formControlName="date" />
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+
       <div class="form-section-header">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>User</mat-label>
-          <mat-select formControlName="user">
-            <mat-option *ngFor="let user of userChoices" [value]="user.userid">
-              {{ user.name }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
+        <h3>User</h3>
         <mx-button
           variant="outline"
           tone="primary"
@@ -38,13 +38,16 @@
           >Search User</mx-button
         >
       </div>
-
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Date</mat-label>
-        <input matInput [matDatepicker]="picker" formControlName="date" />
-        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-        <mat-datepicker #picker></mat-datepicker>
-      </mat-form-field>
+      <div class="form-fields-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>User</mat-label>
+          <mat-select formControlName="user">
+            <mat-option *ngFor="let user of userChoices" [value]="user.userid">
+              {{ user.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
     </form>
 
     <mx-grid [showFilter]="false" [elevated]="false">

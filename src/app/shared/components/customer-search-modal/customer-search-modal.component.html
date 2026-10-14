@@ -1,5 +1,5 @@
-<h2 mat-dialog-title>{{ title }}</h2>
-<mat-dialog-content>
+<h2 class="mx-dialog-title">{{ title }}</h2>
+<div class="mx-dialog-body">
   <form [formGroup]="searchForm">
     <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 0.5rem">
       <mat-form-field appearance="outline" subscriptSizing="dynamic" style="flex: 1 1 180px">
@@ -66,8 +66,8 @@
       </tr>
     </table>
   </div>
-</mat-dialog-content>
-<mat-dialog-actions align="end">
+</div>
+<div class="mx-dialog-actions">
   <button mat-button type="button" (click)="onCancel()">Close</button>
   <button mat-raised-button color="primary" type="button" (click)="search()">
     <mat-icon>search</mat-icon>
@@ -76,4 +76,4 @@
   <button mat-raised-button color="primary" type="button" *ngIf="isMultiSelect" (click)="confirm()">
     Select
   </button>
-</mat-dialog-actions>
+</div>

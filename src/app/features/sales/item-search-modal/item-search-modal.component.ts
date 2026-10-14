@@ -1,6 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { MX_DIALOG_DATA, MxDialogRef } from '@mesix/custom-control';
 import { ProductService } from '../../../core/services/product.service';
 import { BrandService } from '../../../core/services/brand.service';
 import { MatIconModule } from '@angular/material/icon';
@@ -21,7 +21,6 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
   imports: [
     MatIconModule,
     CommonModule,
-    MatDialogModule,
     MatTableModule,
     MatInputModule,
     MatSelectModule,
@@ -29,7 +28,6 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
     ReactiveFormsModule,
     MatButtonModule,
     MatFormFieldModule,
-    MatIconModule,
     MatCheckboxModule,
   ],
 })
@@ -47,8 +45,8 @@ export class ItemSearchModalComponent {
     private productService: ProductService,
     private brandService: BrandService,
     private _loadingService: LoadingService,
-    public dialogRef: MatDialogRef<ItemSearchModalComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    public dialogRef: MxDialogRef<any>,
+    @Inject(MX_DIALOG_DATA) public data: any,
   ) {
     this.searchForm = this.fb.group({
       brandId: [''],

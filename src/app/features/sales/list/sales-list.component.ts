@@ -1,19 +1,12 @@
-import { Component, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, AfterViewInit, ViewChild, inject } from '@angular/core';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatDialog } from '@angular/material/dialog';
 import { SalesFormComponent } from '../form/sales-form.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { CommonModule } from '@angular/common';
-import {
-  MxBadgeComponent,
-  MxButtonComponent,
-  MxEmptyStateComponent,
-  MxGridComponent,
-  MxPageHeaderComponent,
-} from '@mesix/custom-control';
+import { MxBadgeComponent, MxButtonComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
 import { Status } from '../../../core/enums/status.enum';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
@@ -39,6 +32,8 @@ import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
   styleUrls: ['./sales-list.component.scss'],
 })
 export class SalesListComponent implements AfterViewInit {
+  private readonly notice = inject(MxNoticeService);
+
   readonly Status = Status;
   readonly privileges = privilegeAccess;
   displayedColumns: string[] = [
@@ -57,7 +52,7 @@ export class SalesListComponent implements AfterViewInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private dialog: MatDialog) {}
+  constructor() {}
 
   ngAfterViewInit() {
     this.dataSource.paginator = this.paginator;
@@ -74,9 +69,8 @@ export class SalesListComponent implements AfterViewInit {
   }
 
   openNewSaleDialog() {
-    const dialogRef = this.dialog.open(SalesFormComponent, {
-      width: '800px',
-      data: { mode: 'new' },
+    const dialogRef = this.notice.open(SalesFormComponent, {
+      data: { mode: 'new' }
     });
 
     dialogRef.afterClosed().subscribe((result) => {

@@ -52,6 +52,7 @@ export class InventoryListComponent implements OnInit, AfterViewInit {
     'alert',
   ];
   dataSource = new MatTableDataSource<any>([]);
+  tableLoading = false;
   selectedBranchId = '';
   allStock: Stock[] = [];
   stockOverviewData: StockOverview[] = [];
@@ -118,10 +119,10 @@ export class InventoryListComponent implements OnInit, AfterViewInit {
   async filterByBranch(): Promise<void> {
     if (!this.selectedBranchId) {
       this.dataSource.data = [];
-      this.loadingService.hide();
+      this.tableLoading = false;
       return;
     }
-    this.loadingService.show();
+    this.tableLoading = true;
     try {
       this.stockOverviewData = await this.stockService.getStockOverviewByBranch(
         this.selectedBranchId,
@@ -132,7 +133,7 @@ export class InventoryListComponent implements OnInit, AfterViewInit {
       });
       this.dataSource.data = this.stockOverviewData;
     } finally {
-      this.loadingService.hide();
+      this.tableLoading = false;
     }
   }
 }

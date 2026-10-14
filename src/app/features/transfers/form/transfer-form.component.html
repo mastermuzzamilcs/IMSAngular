@@ -1,6 +1,6 @@
-<h2 mat-dialog-title>New Transfer Request</h2>
+<h2 class="mx-dialog-title">New Transfer Request</h2>
 
-<mat-dialog-content>
+<div class="mx-dialog-body">
   <form [formGroup]="transferForm">
     <div class="form-row two-columns">
       <mat-form-field appearance="outline">
@@ -120,9 +120,9 @@
       </div>
     </div>
   </form>
-</mat-dialog-content>
+</div>
 
-<mat-dialog-actions align="end" class="form-actions">
+<div class="mx-dialog-actions" class="form-actions">
   <mx-button variant="outline" tone="neutral" (pressed)="onCancel()">Cancel</mx-button>
   <mx-button
     tone="primary"
@@ -131,4 +131,4 @@
   >
     Create Transfer
   </mx-button>
-</mat-dialog-actions>
+</div>

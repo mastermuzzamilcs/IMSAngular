@@ -1,34 +1,27 @@
-import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { ConfirmService } from '../../../core/services/confirm.service';
+import { Component, OnInit, AfterViewInit, ViewChild, inject } from '@angular/core';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BranchFormComponent } from '../form/branch-form.component';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import {
-  MxBadgeComponent,
-  MxButtonComponent,
-  MxEmptyStateComponent,
-  MxGridComponent,
-  MxPageHeaderComponent,
-} from '@mesix/custom-control';
+import { MxBadgeComponent, MxButtonComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
 import { BranchService } from '../../../core/services/branchservice.service';
 import { Status } from '../../../core/enums/status.enum';
 import { Branch } from '../../../core/Models/BranchModel';
 import { LoadingService } from '../../../core/services/Loading.service';
-import { GlobalDeleteConfirmationComponent } from '../../../shared/components/global-delete-confirmation/global-delete-confirmation.component';
 import { ActivatedRoute } from '@angular/router';
 import jsonData from '../../../Assets/appConfig.json';
 import { UsersService } from '../../../core/services/users.service';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-branch-list',
   standalone: true,
   imports: [
-    MatDialogModule,
     MatSortModule,
     MatTableModule,
     MatPaginatorModule,
@@ -45,10 +38,16 @@ import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
   styleUrls: ['./branch-list.component.scss'],
 })
 export class BranchListComponent implements OnInit, AfterViewInit {
+  private readonly notice = inject(MxNoticeService);
+  private readonly confirm = inject(ConfirmService);
+
+  private readonly toast = inject(ToastService);
+
   readonly Status = Status;
   readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'location', 'manager', 'contact', 'status', 'actions'];
   dataSource = new MatTableDataSource<any>([]);
+  tableLoading = false;
   userRolesLookup: any[];
   managerUsersLookup: any[] | null = null;
   managerRoleName: string = jsonData.managerRoleName;
@@ -60,7 +59,6 @@ export class BranchListComponent implements OnInit, AfterViewInit {
     private branchService: BranchService,
     private _userService: UsersService,
     private loadingService: LoadingService,
-    private dialog: MatDialog,
     private route: ActivatedRoute,
   ) {
     this.userRolesLookup = this.route.snapshot.data['roles'];
@@ -95,9 +93,8 @@ export class BranchListComponent implements OnInit, AfterViewInit {
   }
 
   openAddDialog() {
-    const dialogRef = this.dialog.open(BranchFormComponent, {
-      width: '600px',
-      data: { mode: 'add', managerUsersLookup: this.managerUsersLookup },
+    const dialogRef = this.notice.open(BranchFormComponent, {
+      data: { mode: 'add', managerUsersLookup: this.managerUsersLookup }
     });
 
     dialogRef.afterClosed().subscribe(async (result) => {
@@ -110,9 +107,8 @@ export class BranchListComponent implements OnInit, AfterViewInit {
     });
   }
   openEditDialog(branch: any) {
-    const dialogRef = this.dialog.open(BranchFormComponent, {
-      width: '600px',
-      data: { mode: 'edit', branch, managerUsersLookup: this.managerUsersLookup },
+    const dialogRef = this.notice.open(BranchFormComponent, {
+      data: { mode: 'edit', branch, managerUsersLookup: this.managerUsersLookup }
     });
 
     dialogRef.afterClosed().subscribe(async (result) => {
@@ -127,7 +123,7 @@ export class BranchListComponent implements OnInit, AfterViewInit {
   }
 
   async loadBranches(): Promise<void> {
-    this.loadingService.show();
+    this.tableLoading = true;
     try {
       const branches = await this.branchService.getBranches();
       const branchesWithManagerNames = branches.map((branch) => {
@@ -140,19 +136,12 @@ export class BranchListComponent implements OnInit, AfterViewInit {
       this.dataSource.data = branchesWithManagerNames;
     } catch (err) {
       console.error('Error loading branches', err);
-      alert('Error loading branches');
+      this.toast.error('Error loading branches');
     }
-    this.loadingService.hide();
+    this.tableLoading = false;
   }
   openDeleteDialog(branch: Branch) {
-    const dialogRef = this.dialog.open(GlobalDeleteConfirmationComponent, {
-      width: '300px',
-      data: {
-        title: 'Delete Role',
-        message: `Are you sure you want to delete "${branch.name}"?`,
-      },
-    });
-    dialogRef.afterClosed().subscribe(async (result) => {
+    this.confirm.confirmDelete(`Are you sure you want to delete "${branch.name}"?`, 'Delete Branch').subscribe(async (result) => {
       if (result) {
         if (branch.branchid) {
           this.loadingService.show();

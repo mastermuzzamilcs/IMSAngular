@@ -36,6 +36,12 @@
   color: var(--mx-text, #202124);
 }
 
+.empty-activity {
+  margin: 0;
+  color: var(--mx-text-muted, #5f6368);
+  font-size: 0.875rem;
+}
+
 .chart-card,
 .activity-card {
   display: block;

@@ -1,5 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { Component, Inject, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTableModule } from '@angular/material/table';
@@ -9,7 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { FormsModule } from '@angular/forms';
-import { MxBadgeComponent, MxButtonComponent } from '@mesix/custom-control';
+import { MxBadgeComponent, MxButtonComponent, MxDialogRef, MX_DIALOG_DATA } from '@mesix/custom-control';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { WorkflowService } from '../../../core/services/Workflow.service';
@@ -24,6 +23,7 @@ import { TransferService } from '../../../core/services/transfer.service';
 import { Transfer } from '../../../core/Models/TransferModel';
 import { UsersService } from '../../../core/services/users.service';
 import { SYSTEM_USER_ID } from '../../../core/system-user';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-request-detail',
@@ -32,7 +32,6 @@ import { SYSTEM_USER_ID } from '../../../core/system-user';
   styleUrls: ['./request-detail.component.scss'],
   imports: [
     CommonModule,
-    MatDialogModule,
     MatTabsModule,
     MatTableModule,
     MatFormFieldModule,
@@ -43,14 +42,16 @@ import { SYSTEM_USER_ID } from '../../../core/system-user';
     FormsModule,
     MatProgressSpinnerModule,
     MxButtonComponent,
-    MxBadgeComponent,
+    MxBadgeComponent
   ],
 })
 export class RequestDetailComponent implements OnInit {
+  private readonly toast = inject(ToastService);
+
   /** ---- Data coming from parent ---- */
   constructor(
-    private dialogRef: MatDialogRef<RequestDetailComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { requestId: string },
+    private dialogRef: MxDialogRef<any>,
+    @Inject(MX_DIALOG_DATA) public data: { requestId: string },
     private wfSvc: WorkflowService,
     private stockSvc: StockService,
     private _productService: ProductService,
@@ -156,7 +157,7 @@ export class RequestDetailComponent implements OnInit {
       this.dialogRef.close({ updated: true });
     } catch (err) {
       console.error('Error updating workflow request:', err);
-      alert(err instanceof Error ? err.message : 'Failed to update request');
+      this.toast.error(err instanceof Error ? err.message : 'Failed to update request');
     }
     this.submitting = false;
   }

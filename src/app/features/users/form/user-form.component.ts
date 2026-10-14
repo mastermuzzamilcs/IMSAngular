@@ -1,22 +1,20 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MaterialModule } from '../../../shared/material/material.module';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { MxButtonComponent } from '@mesix/custom-control';
+import { MxButtonComponent, MxDialogRef, MX_DIALOG_DATA } from '@mesix/custom-control';
 import { Role } from '../../../core/Models/RoleModel';
 import { asStatus, Status } from '../../../core/enums/status.enum';
 @Component({
   selector: 'app-user-form',
   standalone: true,
   imports: [
-    MatDialogModule,
     MatFormFieldModule,
     MaterialModule,
     ReactiveFormsModule,
     CommonModule,
-    MxButtonComponent,
+    MxButtonComponent
   ],
   templateUrl: './user-form.component.html',
   styleUrls: ['./user-form.component.scss'],
@@ -29,8 +27,8 @@ export class UserFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    public dialogRef: MatDialogRef<UserFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    public dialogRef: MxDialogRef<any>,
+    @Inject(MX_DIALOG_DATA) public data: any,
   ) {}
 
   ngOnInit(): void {

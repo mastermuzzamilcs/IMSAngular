@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -20,6 +20,7 @@ import {
   UsersTeamHirearchyService,
 } from '../../../core/services/users-team-hirearchy.service';
 import { UsersService } from '../../../core/services/users.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-team-hierarchy',
@@ -39,6 +40,8 @@ import { UsersService } from '../../../core/services/users.service';
   templateUrl: './team-hierarchy.component.html',
 })
 export class TeamHierarchyComponent implements OnInit {
+  private readonly toast = inject(ToastService);
+
   readonly privileges = privilegeAccess;
   users: User[] = [];
   rows: Users_team_hirearchy[] = [];
@@ -82,7 +85,7 @@ export class TeamHierarchyComponent implements OnInit {
       }));
     } catch (error) {
       console.error('Error loading team hierarchy', error);
-      alert('Error loading team hierarchy');
+      this.toast.error('Error loading team hierarchy');
     }
     this.loadingService.hide();
   }
@@ -95,7 +98,7 @@ export class TeamHierarchyComponent implements OnInit {
     const userid = this.form.value.userid || '';
     const reportingTo = this.form.value.reportingTo || '';
     if (userid === reportingTo) {
-      alert('A user cannot report to themselves');
+      this.toast.warning('A user cannot report to themselves');
       return;
     }
     this.loadingService.show();
@@ -105,7 +108,7 @@ export class TeamHierarchyComponent implements OnInit {
       await this.load();
     } catch (error) {
       console.error('Error saving team hierarchy', error);
-      alert('Could not save the reporting relationship');
+      this.toast.error('Could not save the reporting relationship');
       this.loadingService.hide();
     }
   }
@@ -120,7 +123,7 @@ export class TeamHierarchyComponent implements OnInit {
       await this.load();
     } catch (error) {
       console.error('Error removing team hierarchy', error);
-      alert('Could not remove the reporting relationship');
+      this.toast.error('Could not remove the reporting relationship');
       this.loadingService.hide();
     }
   }

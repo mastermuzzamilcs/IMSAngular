@@ -1,10 +1,9 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MaterialModule } from '../../../shared/material/material.module';
 import { CommonModule } from '@angular/common';
-import { MxButtonComponent } from '@mesix/custom-control';
+import { MxButtonComponent, MxDialogRef, MX_DIALOG_DATA } from '@mesix/custom-control';
 import jsonData from '../../../Assets/appConfig.json';
 import { asStatus, Status } from '../../../core/enums/status.enum';
 import { User } from '../../../core/Models/UsersModel';
@@ -14,12 +13,11 @@ import { Role } from '../../../core/Models/RoleModel';
   selector: 'app-branch-form',
   standalone: true,
   imports: [
-    MatDialogModule,
     MatFormFieldModule,
     MaterialModule,
     ReactiveFormsModule,
     CommonModule,
-    MxButtonComponent,
+    MxButtonComponent
   ],
   templateUrl: './branch-form.component.html',
   styleUrls: ['./branch-form.component.scss'],
@@ -34,8 +32,8 @@ export class BranchFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private dialogRef: MatDialogRef<BranchFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    private dialogRef: MxDialogRef<any>,
+    @Inject(MX_DIALOG_DATA) public data: any,
   ) {}
 
   ngOnInit(): void {

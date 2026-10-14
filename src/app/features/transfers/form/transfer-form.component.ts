@@ -1,6 +1,5 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -9,8 +8,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
-import { MatDialogModule } from '@angular/material/dialog';
-import { MxButtonComponent } from '@mesix/custom-control';
+import { MxButtonComponent, MxDialogRef, MX_DIALOG_DATA } from '@mesix/custom-control';
 
 import { StockService } from '../../../core/services/stock.service';
 import { BranchService } from '../../../core/services/branchservice.service';
@@ -28,10 +26,9 @@ import { Branch } from '../../../core/Models/BranchModel';
     MatSelectModule,
     MatDatepickerModule,
     ReactiveFormsModule,
-    MatDialogModule,
     MatIconModule,
     MatCardModule,
-    MxButtonComponent,
+    MxButtonComponent
   ],
   templateUrl: './transfer-form.component.html',
   styleUrls: ['./transfer-form.component.scss'],
@@ -51,8 +48,8 @@ export class TransferFormComponent implements OnInit {
     private stockService: StockService,
     private branchService: BranchService,
     private auth: AuthService,
-    private dialogRef: MatDialogRef<TransferFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    private dialogRef: MxDialogRef<any>,
+    @Inject(MX_DIALOG_DATA) public data: any,
   ) {}
 
   async ngOnInit(): Promise<void> {

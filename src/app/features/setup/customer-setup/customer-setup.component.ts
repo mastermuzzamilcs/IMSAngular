@@ -1,24 +1,18 @@
-import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { ConfirmService } from '../../../core/services/confirm.service';
+import { Component, OnInit, AfterViewInit, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  MxBadgeComponent,
-  MxButtonComponent,
-  MxEmptyStateComponent,
-  MxGridComponent,
-  MxPageHeaderComponent,
-} from '@mesix/custom-control';
+import { MxBadgeComponent, MxButtonComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { Customer } from '../../../core/Models/CustomerModel';
 import { CustomerService } from '../../../core/services/customer.service';
 import { LoadingService } from '../../../core/services/Loading.service';
-import { GlobalDeleteConfirmationComponent } from '../../../shared/components/global-delete-confirmation/global-delete-confirmation.component';
 import { CustomerFormComponent } from '../customer-form/customer-form.component';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-customer-setup',
@@ -28,7 +22,6 @@ import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
-    MatDialogModule,
     MatIconModule,
     MxPageHeaderComponent,
     MxButtonComponent,
@@ -40,17 +33,22 @@ import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
   templateUrl: './customer-setup.component.html',
 })
 export class CustomerSetupComponent implements OnInit, AfterViewInit {
+  private readonly notice = inject(MxNoticeService);
+  private readonly confirm = inject(ConfirmService);
+
+  private readonly toast = inject(ToastService);
+
   readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'phone', 'email', 'address', 'status', 'actions'];
   dataSource = new MatTableDataSource<Customer>([]);
+  tableLoading = false;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor(
     private customerService: CustomerService,
-    private loadingService: LoadingService,
-    private dialog: MatDialog,
+    private loadingService: LoadingService
   ) {}
 
   ngOnInit(): void {
@@ -67,20 +65,19 @@ export class CustomerSetupComponent implements OnInit, AfterViewInit {
   }
 
   async loadCustomers(): Promise<void> {
-    this.loadingService.show();
+    this.tableLoading = true;
     try {
       this.dataSource.data = await this.customerService.getCustomers(true);
     } catch (err) {
       console.error('Error loading customers', err);
-      alert('Error loading customers');
+      this.toast.error('Error loading customers');
     }
-    this.loadingService.hide();
+    this.tableLoading = false;
   }
 
   openAddDialog(): void {
-    const dialogRef = this.dialog.open(CustomerFormComponent, {
-      width: '520px',
-      data: { mode: 'add' },
+    const dialogRef = this.notice.open(CustomerFormComponent, {
+      data: { mode: 'add' }
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (!result) {
@@ -94,9 +91,8 @@ export class CustomerSetupComponent implements OnInit, AfterViewInit {
   }
 
   openEditDialog(customer: Customer): void {
-    const dialogRef = this.dialog.open(CustomerFormComponent, {
-      width: '520px',
-      data: { mode: 'edit', customer },
+    const dialogRef = this.notice.open(CustomerFormComponent, {
+      data: { mode: 'edit', customer }
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (!result || !customer.id) {
@@ -110,14 +106,7 @@ export class CustomerSetupComponent implements OnInit, AfterViewInit {
   }
 
   openDeleteDialog(customer: Customer): void {
-    const dialogRef = this.dialog.open(GlobalDeleteConfirmationComponent, {
-      width: '320px',
-      data: {
-        title: 'Delete Customer',
-        message: `Are you sure you want to delete "${customer.name}"?`,
-      },
-    });
-    dialogRef.afterClosed().subscribe(async (result) => {
+    this.confirm.confirmDelete(`Are you sure you want to delete "${customer.name}"?`, 'Delete Customer').subscribe(async (result) => {
       if (result && customer.id) {
         this.loadingService.show();
         await this.customerService.deleteCustomer(customer.id);

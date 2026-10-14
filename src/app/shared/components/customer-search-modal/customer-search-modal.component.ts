@@ -1,6 +1,6 @@
+import { MX_DIALOG_DATA, MxDialogRef } from '@mesix/custom-control';
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -37,13 +37,12 @@ interface DirectoryRow {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     MatIconModule,
     MatCheckboxModule,
-    MatTableModule,
+    MatTableModule
   ],
   templateUrl: './customer-search-modal.component.html',
 })
@@ -60,8 +59,8 @@ export class CustomerSearchModalComponent implements OnInit {
     private customerService: CustomerService,
     private usersService: UsersService,
     private loadingService: LoadingService,
-    public dialogRef: MatDialogRef<CustomerSearchModalComponent>,
-    @Inject(MAT_DIALOG_DATA) data: DirectorySearchData | null,
+    public dialogRef: MxDialogRef<any>,
+    @Inject(MX_DIALOG_DATA) data: DirectorySearchData | null,
   ) {
     this.type = data?.type || 'Customers';
     this.isMultiSelect = data?.isMultiSelect === true;

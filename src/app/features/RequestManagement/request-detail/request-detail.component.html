@@ -1,6 +1,6 @@
-<h2 mat-dialog-title>Request #{{ request?.requestId }}</h2>
+<h2 class="mx-dialog-title">Request #{{ request?.requestId }}</h2>
 
-<div mat-dialog-content class="content" *ngIf="!loading; else spn">
+<div class="mx-dialog-body content" *ngIf="!loading; else spn">
   <mat-tab-group>
     <!-- ========== Overview TAB ========== -->
     <mat-tab label="Overview">

@@ -1,24 +1,18 @@
-import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, inject } from '@angular/core';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { UserFormComponent } from '../form/user-form.component';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
-import {
-  MxBadgeComponent,
-  MxButtonComponent,
-  MxEmptyStateComponent,
-  MxGridComponent,
-  MxPageHeaderComponent,
-} from '@mesix/custom-control';
+import { MxBadgeComponent, MxButtonComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
 import type { MxTone } from '@mesix/custom-control';
 import { UsersService } from '../../../core/services/users.service';
 import { LoadingService } from '../../../core/services/Loading.service';
 import { ActivatedRoute } from '@angular/router';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-userlist',
@@ -29,7 +23,6 @@ import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
     MatPaginatorModule,
     MatSortModule,
     MatIconModule,
-    MatDialogModule,
     MxPageHeaderComponent,
     MxButtonComponent,
     MxGridComponent,
@@ -41,9 +34,14 @@ import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
   styleUrls: ['./user-list.component.scss'],
 })
 export class UserListComponent implements OnInit, AfterViewInit {
+  private readonly notice = inject(MxNoticeService);
+
+  private readonly toast = inject(ToastService);
+
   readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'email', 'role', 'status', 'actions'];
   dataSource = new MatTableDataSource<any>([]);
+  tableLoading = false;
   userRolesLookup: any[];
   userBranchesLookup: any[];
 
@@ -53,7 +51,6 @@ export class UserListComponent implements OnInit, AfterViewInit {
   constructor(
     private _userService: UsersService,
     private loadingService: LoadingService,
-    private dialog: MatDialog,
     private route: ActivatedRoute,
   ) {
     this.userRolesLookup = this.route.snapshot.data['roles'];
@@ -73,13 +70,12 @@ export class UserListComponent implements OnInit, AfterViewInit {
   }
 
   openAddUserDialog() {
-    const dialogRef = this.dialog.open(UserFormComponent, {
-      width: '600px',
+    const dialogRef = this.notice.open(UserFormComponent, {
       data: {
         mode: 'add',
         rolesLookup: this.userRolesLookup,
         branchesLookup: this.userBranchesLookup,
-      },
+      }
     });
 
     dialogRef.afterClosed().subscribe(async (result) => {
@@ -93,14 +89,13 @@ export class UserListComponent implements OnInit, AfterViewInit {
   }
 
   openEditUserDialog(user: any) {
-    const dialogRef = this.dialog.open(UserFormComponent, {
-      width: '600px',
+    const dialogRef = this.notice.open(UserFormComponent, {
       data: {
         mode: 'edit',
         user,
         rolesLookup: this.userRolesLookup,
         branchesLookup: this.userBranchesLookup,
-      },
+      }
     });
 
     dialogRef.afterClosed().subscribe(async (result) => {
@@ -133,7 +128,7 @@ export class UserListComponent implements OnInit, AfterViewInit {
   }
 
   async LoadUsers() {
-    this.loadingService.show();
+    this.tableLoading = true;
     try {
       const Users = await this._userService.getUsers();
       const usersWithRoleNames = Users.map((user) => {
@@ -147,9 +142,9 @@ export class UserListComponent implements OnInit, AfterViewInit {
       this.dataSource.data = usersWithRoleNames;
     } catch (err) {
       console.error('Error loading Users', err);
-      alert('Error loading Users ');
+      this.toast.error('Error loading Users ');
     }
-    this.loadingService.hide();
+    this.tableLoading = false;
   }
 
   ResetPasswordAction(_user: any) {

@@ -1,17 +1,10 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import {
-  MxBadgeComponent,
-  MxButtonComponent,
-  MxEmptyStateComponent,
-  MxGridComponent,
-  MxPageHeaderComponent,
-} from '@mesix/custom-control';
+import { MxBadgeComponent, MxButtonComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
 import type { MxTone } from '@mesix/custom-control';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
@@ -31,7 +24,6 @@ import { Transfer } from '../../../core/Models/TransferModel';
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
-    MatDialogModule,
     MatButtonModule,
     MatIconModule,
     MatMenuModule,
@@ -46,6 +38,8 @@ import { Transfer } from '../../../core/Models/TransferModel';
   styleUrls: ['./transfer-list.component.scss'],
 })
 export class TransferListComponent implements OnInit, AfterViewInit {
+  private readonly notice = inject(MxNoticeService);
+
   readonly Status = Status;
   displayedColumns: string[] = [
     'transferId',
@@ -58,12 +52,12 @@ export class TransferListComponent implements OnInit, AfterViewInit {
   ];
 
   dataSource = new MatTableDataSource<Transfer>([]);
+  tableLoading = false;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor(
-    private dialog: MatDialog,
     private transferService: TransferService,
   ) {}
 
@@ -77,12 +71,14 @@ export class TransferListComponent implements OnInit, AfterViewInit {
   }
 
   async loadTransfers() {
+    this.tableLoading = true;
     try {
       const transfers = await this.transferService.getTransfers();
-
       this.dataSource.data = transfers;
     } catch (error) {
       console.error('Error loading transfers', error);
+    } finally {
+      this.tableLoading = false;
     }
   }
 
@@ -99,11 +95,10 @@ export class TransferListComponent implements OnInit, AfterViewInit {
   openNewTransferDialog() {
     console.log('New Transfer clicked');
 
-    const dialogRef = this.dialog.open(TransferFormComponent, {
-      width: '800px',
+    const dialogRef = this.notice.open(TransferFormComponent, {
       data: {
         mode: 'new',
-      },
+      }
     });
 
     dialogRef.afterClosed().subscribe(async (result) => {
@@ -124,11 +119,10 @@ export class TransferListComponent implements OnInit, AfterViewInit {
   }
 
   viewTransferDetail(transfer: any) {
-    this.dialog.open(TransferDetailComponent, {
-      width: '800px',
+    this.notice.open(TransferDetailComponent, {
       data: {
         transfer,
-      },
+      }
     });
   }
 

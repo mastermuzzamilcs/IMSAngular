@@ -1,25 +1,19 @@
-import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { ConfirmService } from '../../../core/services/confirm.service';
+import { Component, OnInit, AfterViewInit, ViewChild, inject } from '@angular/core';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ProductsFormComponent } from '../products-form/products-form.component';
 import { CommonModule } from '@angular/common';
-import {
-  MxBadgeComponent,
-  MxButtonComponent,
-  MxEmptyStateComponent,
-  MxGridComponent,
-  MxPageHeaderComponent,
-} from '@mesix/custom-control';
+import { MxBadgeComponent, MxButtonComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
 import { MatIconModule } from '@angular/material/icon';
 import { LoadingService } from '../../../core/services/Loading.service';
-import { GlobalDeleteConfirmationComponent } from '../../../shared/components/global-delete-confirmation/global-delete-confirmation.component';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { ProductService } from '../../../core/services/product.service';
 import { Product } from '../../../core/Models/ProductModel';
 import { BrandService } from '../../../core/services/brand.service';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-products-setup',
@@ -28,7 +22,6 @@ import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
     MatTableModule,
     MatPaginatorModule,
     MatIconModule,
-    MatDialogModule,
     MatSortModule,
     MxPageHeaderComponent,
     MxButtonComponent,
@@ -42,9 +35,15 @@ import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
   standalone: true,
 })
 export class ProductsSetupComponent implements OnInit, AfterViewInit {
+  private readonly notice = inject(MxNoticeService);
+  private readonly confirm = inject(ConfirmService);
+
+  private readonly toast = inject(ToastService);
+
   readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'brand', 'description', 'price', 'status', 'actions'];
   dataSource = new MatTableDataSource<any>();
+  tableLoading = false;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -52,8 +51,7 @@ export class ProductsSetupComponent implements OnInit, AfterViewInit {
   constructor(
     private _productService: ProductService,
     private _brandService: BrandService,
-    private _loadingService: LoadingService,
-    private dialog: MatDialog,
+    private _loadingService: LoadingService
   ) {}
 
   ngOnInit() {
@@ -74,7 +72,7 @@ export class ProductsSetupComponent implements OnInit, AfterViewInit {
   }
 
   async loadProducts() {
-    this._loadingService.show();
+    this.tableLoading = true;
     try {
       const Products = await this._productService.getProducts();
       const ProductsWithBrandNames = await Promise.all(
@@ -89,15 +87,14 @@ export class ProductsSetupComponent implements OnInit, AfterViewInit {
       this.dataSource.data = ProductsWithBrandNames;
     } catch (err) {
       console.error('Error loading Products', err);
-      alert('Error loading Products');
+      this.toast.error('Error loading Products');
     }
-    this._loadingService.hide();
+    this.tableLoading = false;
   }
 
   openAddDialog() {
-    const dialogRef = this.dialog.open(ProductsFormComponent, {
-      width: '500px',
-      data: { mode: 'add' },
+    const dialogRef = this.notice.open(ProductsFormComponent, {
+      data: { mode: 'add' }
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
@@ -110,9 +107,8 @@ export class ProductsSetupComponent implements OnInit, AfterViewInit {
   }
 
   openEditDialog(_product: Product) {
-    const dialogRef = this.dialog.open(ProductsFormComponent, {
-      width: '500px',
-      data: { mode: 'edit', _product },
+    const dialogRef = this.notice.open(ProductsFormComponent, {
+      data: { mode: 'edit', _product }
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
@@ -125,14 +121,7 @@ export class ProductsSetupComponent implements OnInit, AfterViewInit {
     });
   }
   openDeleteDialog(_product: Product) {
-    const dialogRef = this.dialog.open(GlobalDeleteConfirmationComponent, {
-      width: '300px',
-      data: {
-        title: 'Delete Product',
-        message: `Are you sure you want to Product "${_product.name}"?`,
-      },
-    });
-    dialogRef.afterClosed().subscribe(async (result) => {
+    this.confirm.confirmDelete(`Are you sure you want to delete Product "${_product.name}"?`, 'Delete Product').subscribe(async (result) => {
       if (result) {
         if (_product.id) {
           this._loadingService.show();

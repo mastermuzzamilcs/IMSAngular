@@ -1,6 +1,6 @@
-<h2 mat-dialog-title>{{ dialogTitle }}</h2>
+<h2 class="mx-dialog-title">{{ dialogTitle }}</h2>
 
-<mat-dialog-content>
+<div class="mx-dialog-body">
   <form [formGroup]="brandForm">
     <div class="form-row">
       <mat-form-field appearance="outline" class="full-width">
@@ -52,11 +52,11 @@
       </mat-form-field>
     </div>
   </form>
-</mat-dialog-content>
+</div>
 
-<mat-dialog-actions align="end" class="form-actions">
+<div class="mx-dialog-actions" class="form-actions">
   <mx-button variant="outline" tone="neutral" (pressed)="onCancel()">Cancel</mx-button>
   <mx-button tone="primary" (pressed)="onSubmit()" [disabled]="brandForm.invalid">
     {{ data.mode === 'add' ? 'Add' : 'Update' }}
   </mx-button>
-</mat-dialog-actions>
+</div>

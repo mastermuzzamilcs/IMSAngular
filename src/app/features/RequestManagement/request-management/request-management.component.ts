@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, DestroyRef, OnInit, AfterViewInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { WorkflowService } from '../../../core/services/Workflow.service';
@@ -6,22 +6,16 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Status } from '../../../core/enums/status.enum';
 import { RequestType, WorkflowRequest } from '../../../core/Models/WorkflowModel';
 import { Router } from '@angular/router';
-import {
-  MxBadgeComponent,
-  MxEmptyStateComponent,
-  MxGridComponent,
-  MxPageHeaderComponent,
-} from '@mesix/custom-control';
+import { MxBadgeComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
 import { RequestDetailComponent } from '../request-detail/request-detail.component';
 import { LoadingService } from '../../../core/services/Loading.service';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { AuthService } from '../../../core/services/auth.service';
 import { BranchService } from '../../../core/services/branchservice.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 interface WorkflowRequestRow extends WorkflowRequest {
   branchName: string;
@@ -38,8 +32,6 @@ interface WorkflowRequestRow extends WorkflowRequest {
     MatPaginatorModule,
     MatSortModule,
     MatIconModule,
-    MatDialogModule,
-    MatSnackBarModule,
     MxPageHeaderComponent,
     MxGridComponent,
     MxBadgeComponent,
@@ -47,6 +39,9 @@ interface WorkflowRequestRow extends WorkflowRequest {
   ],
 })
 export class RequestManagementComponent implements OnInit, AfterViewInit {
+  private readonly notice = inject(MxNoticeService);
+
+  private readonly toast = inject(ToastService);
   readonly Status = Status;
   readonly privileges = privilegeAccess;
   displayedColumns: string[] = [
@@ -59,6 +54,7 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
     'status',
   ];
   dataSource = new MatTableDataSource<WorkflowRequestRow>([]);
+  tableLoading = false;
   private watchedBranch: string | null = null;
   private branchNames = new Map<string, string>();
 
@@ -70,8 +66,6 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
     private workflowService: WorkflowService,
     private branchService: BranchService,
     private _loadingService: LoadingService,
-    private dialog: MatDialog,
-    private snack: MatSnackBar,
     private auth: AuthService,
     private destroyRef: DestroyRef,
   ) {}
@@ -96,10 +90,10 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
     const branchId = this.auth.currentBranchId();
     if (!branchId) {
       this.dataSource.data = [];
-      this._loadingService.hide();
+      this.tableLoading = false;
       return;
     }
-    this._loadingService.show();
+    this.tableLoading = true;
     try {
       const [requests, branches] = await Promise.all([
         this.workflowService.getForBranch(branchId),
@@ -114,9 +108,9 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
       }));
     } catch (error) {
       console.error('Error loading workflow requests', error);
-      this.snack.open('Could not load workflow requests', 'Dismiss', { duration: 3000 });
+      this.toast.error('Could not load workflow requests', 3000);
     } finally {
-      this._loadingService.hide();
+      this.tableLoading = false;
     }
   }
 
@@ -144,9 +138,8 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
     ) {
       return;
     }
-    this.dialog
+    this.notice
       .open(RequestDetailComponent, {
-        width: '750px',
         data: { requestId: req.requestId },
       })
       .afterClosed()

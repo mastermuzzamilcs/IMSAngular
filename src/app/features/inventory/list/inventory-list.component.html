@@ -13,6 +13,8 @@
   </mx-page-header>
 
   <mx-grid
+    [loading]="tableLoading"
+    [skeletonColumns]="displayedColumns.length"
     [showFilter]="true"
     filterPlaceholder="Search by product name..."
     [hasFooter]="true"

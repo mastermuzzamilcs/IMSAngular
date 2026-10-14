@@ -1,7 +1,7 @@
+import { MX_DIALOG_DATA, MxDialogRef } from '@mesix/custom-control';
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -16,12 +16,11 @@ import { UserGroup } from '../../../core/Models/UserGroupModel';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
     MatCheckboxModule,
-    MatButtonModule,
+    MatButtonModule
   ],
   templateUrl: './user-group-form.component.html',
 })
@@ -32,8 +31,8 @@ export class UserGroupFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    public dialogRef: MatDialogRef<UserGroupFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { mode: string; group?: UserGroup },
+    public dialogRef: MxDialogRef<any>,
+    @Inject(MX_DIALOG_DATA) public data: { mode: string; group?: UserGroup },
   ) {}
 
   ngOnInit(): void {
