@@ -1,3 +1,4 @@
+import { NOTIFY_FUNCTION_CODE } from '../notifications/notification.model';
 import { RequestStatus, RequestType } from '../Models/WorkflowModel';
 import { WorkflowFunctionRecord } from '../Models/WorkflowFunctionRecord';
 import { WorkflowFunctionLink } from '../Models/WorkflowFunctionLink';
@@ -62,6 +63,7 @@ export const businessFunctions: WorkflowFunctionRecord[] = [
     name: 'Courier returned transfer',
     className: 'TransferCourierReturnFunction',
   },
+  { code: NOTIFY_FUNCTION_CODE, name: 'Send notifications', className: 'NotifyFunction' },
 ];
 
 export const retiredFunctionCodes = [

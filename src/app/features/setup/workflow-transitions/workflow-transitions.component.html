@@ -1,6 +1,11 @@
 <div class="container">
   <mx-page-header title="Status Transitions" subtitle="Configure allowed workflow status changes">
-    <mx-button variant="outline" tone="primary" icon="add" (pressed)="openAddDialog()"
+    <mx-button
+      variant="outline"
+      tone="primary"
+      icon="add"
+      *appPrivilege="privileges.workflowTransitions.create"
+      (pressed)="openAddDialog()"
       >Add Transition</mx-button
     >
   </mx-page-header>
@@ -40,6 +45,7 @@
             tone="primary"
             icon="edit"
             [iconOnly]="true"
+            *appPrivilege="privileges.workflowTransitions.edit"
             (pressed)="openEditDialog(row)"
           ></mx-button>
           <mx-button
@@ -47,6 +53,7 @@
             tone="danger"
             icon="delete"
             [iconOnly]="true"
+            *appPrivilege="privileges.workflowTransitions.delete"
             (pressed)="openDeleteDialog(row)"
           ></mx-button>
         </td>

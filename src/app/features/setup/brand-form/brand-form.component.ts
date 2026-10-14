@@ -4,15 +4,25 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MaterialModule } from '../../../shared/material/material.module';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { MxButtonComponent } from '@mesix/custom-control';
+import { asStatus, Status } from '../../../core/enums/status.enum';
 
 @Component({
   selector: 'app-brand-form',
   standalone: true,
-  imports: [MatDialogModule, MatFormFieldModule, MaterialModule, ReactiveFormsModule, CommonModule],
+  imports: [
+    MatDialogModule,
+    MatFormFieldModule,
+    MaterialModule,
+    ReactiveFormsModule,
+    CommonModule,
+    MxButtonComponent,
+  ],
   templateUrl: './brand-form.component.html',
   styleUrl: './brand-form.component.scss',
 })
 export class BrandFormComponent implements OnInit {
+  readonly Status = Status;
   brandForm!: FormGroup;
   dialogTitle: string = 'Add Brand';
 
@@ -35,11 +45,14 @@ export class BrandFormComponent implements OnInit {
       alias: [''],
       description: [''],
       country: [''],
-      status: ['Active', [Validators.required]],
+      status: [Status.Active, [Validators.required]],
     });
   }
   patchFormValues(): void {
-    this.brandForm.patchValue(this.data._brand);
+    this.brandForm.patchValue({
+      ...this.data._brand,
+      status: asStatus(this.data._brand?.status),
+    });
   }
   onSubmit() {
     if (this.brandForm.valid) {

@@ -1,0 +1,167 @@
+<h2 mat-dialog-title>{{ dialogTitle }}</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="source-form">
+    <p class="hint">
+      Parameters read the current request. Each step reads one field and saves it. A later step uses
+      that saved value. The step saved as Result is the value placed in the notification.
+    </p>
+    <div class="form-row">
+      <mat-form-field appearance="outline">
+        <mat-label>Code</mat-label>
+        <input matInput formControlName="code" placeholder="IS_RequestManagerName" />
+        <mat-error *ngIf="form.get('code')?.hasError('pattern')">
+          Use letters, numbers, and underscores
+        </mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Name</mat-label>
+        <input matInput formControlName="name" placeholder="Request manager name" />
+      </mat-form-field>
+    </div>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Output</mat-label>
+      <input matInput formControlName="output" placeholder="manager name" />
+    </mat-form-field>
+    <div class="events-head">
+      <h3>Input parameters</h3>
+      <button mat-stroked-button type="button" (click)="addParameter()">
+        <mat-icon>add</mat-icon>
+        Add parameter
+      </button>
+    </div>
+    <div
+      class="param-row"
+      *ngFor="let parameter of parameters.controls; let index = index"
+      [formGroup]="$any(parameter)"
+    >
+      <mat-form-field appearance="outline">
+        <mat-label>Variable name</mat-label>
+        <input matInput formControlName="variableName" placeholder="#requestId" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Table</mat-label>
+        <mat-select formControlName="table" (selectionChange)="onTableChange(index)">
+          <mat-option *ngFor="let table of parameterTables" [value]="table.table">{{
+            table.label
+          }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Field</mat-label>
+        <mat-select formControlName="field">
+          <mat-option
+            *ngFor="let field of fieldsFor(parameter.get('table')?.value)"
+            [value]="field.field"
+            >{{ field.label }}</mat-option
+          >
+        </mat-select>
+      </mat-form-field>
+      <button
+        mat-icon-button
+        type="button"
+        color="warn"
+        aria-label="Remove parameter"
+        [disabled]="parameters.length === 1"
+        (click)="removeParameter(index)"
+      >
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+    <p class="field-error" *ngIf="parameterError">{{ parameterError }}</p>
+    <div class="events-head">
+      <h3>Steps</h3>
+      <button mat-stroked-button type="button" (click)="addStep()">
+        <mat-icon>add</mat-icon>
+        Add step
+      </button>
+    </div>
+    <div
+      class="step"
+      *ngFor="let step of steps.controls; let index = index"
+      [formGroup]="$any(step)"
+    >
+      <div class="events-head">
+        <h3>Step {{ index + 1 }}</h3>
+        <button
+          mat-icon-button
+          type="button"
+          color="warn"
+          aria-label="Remove step"
+          [disabled]="steps.length === 1"
+          (click)="removeStep(index)"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+      <div class="param-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Table</mat-label>
+          <mat-select formControlName="table" (selectionChange)="onStepTableChange(index)">
+            <mat-option *ngFor="let table of sourceTables" [value]="table.table">{{
+              table.label
+            }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Select field</mat-label>
+          <mat-select formControlName="selectField">
+            <mat-option
+              *ngFor="let field of sourceFieldsFor(step.get('table')?.value)"
+              [value]="field.field"
+              >{{ field.label }}</mat-option
+            >
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Save into</mat-label>
+          <input matInput formControlName="into" placeholder="branchid or Result" />
+        </mat-form-field>
+      </div>
+      <div class="param-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Where field</mat-label>
+          <mat-select formControlName="whereField">
+            <mat-option
+              *ngFor="let field of sourceFieldsFor(step.get('table')?.value)"
+              [value]="field.field"
+              >{{ field.label }}</mat-option
+            >
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Operator</mat-label>
+          <mat-select formControlName="operator">
+            <mat-option *ngFor="let operator of operators" [value]="operator">{{
+              operator
+            }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Value</mat-label>
+          <mat-select formControlName="whereValue">
+            <mat-option *ngFor="let option of stepValueOptions[index]" [value]="option.value">{{
+              option.label
+            }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+    <p class="field-error" *ngIf="stepError">{{ stepError }}</p>
+    <p class="hint">
+      Example for the branch manager's name: parameter #requestId from Request / Request id. Step 1,
+      Requests, select Requested by, save into userid, where Request id == #requestId. Step 2,
+      Users, select Branch, save into branchid, where User id == context.userid. Step 3, Branches,
+      select Manager, save into managerid, where Branch id == context.branchid. Step 4, Users,
+      select Name, save into Result, where User id == context.managerid.
+    </p>
+    <mat-form-field *ngIf="showLegacyLogic" appearance="outline" class="full">
+      <mat-label>Existing logic</mat-label>
+      <textarea matInput rows="3" formControlName="logic"></textarea>
+    </mat-form-field>
+    <p class="field-error" *ngIf="logicError">{{ logicError }}</p>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="onCancel()">Cancel</button>
+  <button mat-raised-button color="primary" type="button" (click)="onSubmit()">Save</button>
+</mat-dialog-actions>

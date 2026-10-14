@@ -4,19 +4,21 @@ import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { VendorFormComponent } from '../vendor-form/vendor-form.component';
 import { CommonModule } from '@angular/common';
-import { MatIconModule } from '@angular/material/icon';
-import { LoadingService } from '../../../core/services/Loading.service';
-import { ConfirmService } from '../../../core/services/confirm.service';
-import { MatSort, MatSortModule } from '@angular/material/sort';
-import { VendorService } from '../../../core/services/vendor.service';
-import { Vendor } from '../../../core/Models/VendorModel';
 import {
   MxBadgeComponent,
   MxButtonComponent,
-  MxGridComponent,
   MxEmptyStateComponent,
+  MxGridComponent,
   MxPageHeaderComponent,
 } from '@mesix/custom-control';
+import { MatIconModule } from '@angular/material/icon';
+import { LoadingService } from '../../../core/services/Loading.service';
+import { GlobalDeleteConfirmationComponent } from '../../../shared/components/global-delete-confirmation/global-delete-confirmation.component';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { VendorService } from '../../../core/services/vendor.service';
+import { Vendor } from '../../../core/Models/VendorModel';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 
 @Component({
   selector: 'app-vendor-setup',
@@ -32,12 +34,14 @@ import {
     MxGridComponent,
     MxBadgeComponent,
     MxEmptyStateComponent,
+    PrivilegeDirective,
   ],
   templateUrl: './vendor-setup.component.html',
   styleUrl: './vendor-setup.component.scss',
   standalone: true,
 })
 export class VendorSetupComponent implements OnInit, AfterViewInit {
+  readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'location', 'description', 'status', 'actions'];
   dataSource = new MatTableDataSource<any>();
 
@@ -48,7 +52,6 @@ export class VendorSetupComponent implements OnInit, AfterViewInit {
     private _vendorService: VendorService,
     private _loadingService: LoadingService,
     private dialog: MatDialog,
-    private confirm: ConfirmService,
   ) {}
 
   ngOnInit() {
@@ -61,7 +64,11 @@ export class VendorSetupComponent implements OnInit, AfterViewInit {
 
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+    this.onGridFilter((event.target as HTMLInputElement).value);
+  }
+
+  onGridFilter(value: string) {
+    this.dataSource.filter = value.trim().toLowerCase();
   }
 
   async loadVendors() {
@@ -106,21 +113,24 @@ export class VendorSetupComponent implements OnInit, AfterViewInit {
       }
     });
   }
-
   openDeleteDialog(_vendor: Vendor) {
-    this.confirm
-      .confirmDelete(`Are you sure you want to delete "${_vendor.name}"?`, 'Delete Vendor')
-      .subscribe(async (confirmed) => {
-        if (confirmed && _vendor.id) {
+    const dialogRef = this.dialog.open(GlobalDeleteConfirmationComponent, {
+      width: '300px',
+      data: {
+        title: 'Delete Vendor',
+        message: `Are you sure you want to delete "${_vendor.name}"?`,
+      },
+    });
+    dialogRef.afterClosed().subscribe(async (result) => {
+      if (result) {
+        if (_vendor.id) {
           this._loadingService.show();
           await this._vendorService.deleteVendor(_vendor.id);
           this._loadingService.hide();
           this.loadVendors();
         }
-      });
-  }
-
-  onGridFilter(value: string) {
-    this.dataSource.filter = value.trim().toLowerCase();
+      }
+    });
   }
 }
+

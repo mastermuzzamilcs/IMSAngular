@@ -13,6 +13,7 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import { firestore } from '../../firebase-config';
+import { asStatus, Status } from '../enums/status.enum';
 import { Stock, StockDetails, StockOverview } from '../Models/StockModel';
 import { BranchService } from './branchservice.service';
 import { VendorService } from './vendor.service';
@@ -61,7 +62,7 @@ export class StockService {
         lastUpdated: toJsDate(data['lastUpdated']) || '',
         entrydate: toJsDate(data['entrydate']) || '',
         NetTotal: data['NetTotal'] || 0,
-        status: data['status'] || '',
+        status: asStatus(data['status'], Status.Pending),
         stocktype: data['stocktype'] || '',
       };
     });
@@ -98,8 +99,13 @@ export class StockService {
       discountvalue: _payload['DiscountValue'] || 0,
       subtotal: _payload['SubTotal'] || 0,
       NetTotal: _payload['NetTotal'] || 0,
-      status: _payload['status'] || '',
+      status: asStatus(_payload['status'], Status.Pending),
       stocktype: _payload['stocktype'] || '',
+      customerid: _payload['customerId'] || '',
+      customerName: _payload['customerName'] || '',
+      customerPhone: _payload['customerPhone'] || '',
+      customerEmail: _payload['customerEmail'] || '',
+      customerAddress: _payload['customerAddress'] || '',
       ...(_payload['remarks'] ? { remarks: _payload['remarks'] } : {}),
     };
 
@@ -153,8 +159,12 @@ export class StockService {
     if (docSnap.exists()) {
       const data = docSnap.data();
       const [branch, vendor] = await Promise.all([
-        this._branchService.getBranchById(data['branchid']),
-        this._vendorService.getVendorById(data['vendorid']),
+        data['branchid']
+          ? this._branchService.getBranchById(data['branchid'])
+          : Promise.resolve(null),
+        data['vendorid']
+          ? this._vendorService.getVendorById(data['vendorid'])
+          : Promise.resolve(null),
       ]);
       return {
         stockid: docSnap.id,
@@ -169,7 +179,13 @@ export class StockService {
         lastUpdated: toJsDate(data['lastUpdated']) || '',
         entrydate: toJsDate(data['entrydate']) || '',
         NetTotal: data['NetTotal'] || 0,
-        status: data['status'] || '',
+        status: asStatus(data['status'], Status.Pending),
+        stocktype: data['stocktype'] || '',
+        customerid: data['customerid'] || '',
+        customerName: data['customerName'] || '',
+        customerPhone: data['customerPhone'] || '',
+        customerEmail: data['customerEmail'] || '',
+        customerAddress: data['customerAddress'] || '',
       } as Stock;
     } else {
       return null;
@@ -328,7 +344,7 @@ export class StockService {
     const q = query(
       collection(firestore, this.topicName),
       where('branchid', '==', branchid),
-      where('status', '==', 'Approved'),
+      where('status', '==', Status.Approved),
     );
     const stockSnap = await getDocs(q);
     const stocks = stockSnap.docs.map((d) => ({ stockid: d.id, ...d.data() }) as Stock);

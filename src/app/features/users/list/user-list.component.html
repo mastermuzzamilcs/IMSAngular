@@ -1,6 +1,11 @@
 <div class="container">
   <mx-page-header title="User Management" subtitle="Manage users, roles, and branches">
-    <mx-button variant="outline" tone="primary" icon="person_add" (pressed)="openAddUserDialog()"
+    <mx-button
+      variant="outline"
+      tone="primary"
+      icon="person_add"
+      *appPrivilege="privileges.users.create"
+      (pressed)="openAddUserDialog()"
       >Add User</mx-button
     >
   </mx-page-header>
@@ -29,11 +34,6 @@
         </td>
       </ng-container>
 
-      <ng-container matColumnDef="branch">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Branch</th>
-        <td mat-cell *matCellDef="let user">{{ user.branch }}</td>
-      </ng-container>
-
       <ng-container matColumnDef="status">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
         <td mat-cell *matCellDef="let user">
@@ -51,6 +51,7 @@
             tone="primary"
             icon="edit"
             [iconOnly]="true"
+            *appPrivilege="privileges.users.edit"
             (pressed)="openEditUserDialog(user)"
           ></mx-button>
           <mx-button
@@ -67,7 +68,7 @@
       <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 
       <tr class="mat-row" *matNoDataRow>
-        <td class="mat-cell" colspan="6">
+        <td class="mat-cell" colspan="5">
           <mx-empty-state
             title="No users found"
             description="Try another filter or add a new user."

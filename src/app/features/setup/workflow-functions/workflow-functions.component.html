@@ -1,6 +1,11 @@
 <div class="container">
   <mx-page-header title="Workflow Functions" subtitle="Define reusable workflow functions">
-    <mx-button variant="outline" tone="primary" icon="add" (pressed)="openAddFunction()"
+    <mx-button
+      variant="outline"
+      tone="primary"
+      icon="add"
+      *appPrivilege="privileges.workflowFunctions.create"
+      (pressed)="openAddFunction()"
       >Add Function</mx-button
     >
   </mx-page-header>
@@ -32,6 +37,7 @@
             tone="primary"
             icon="edit"
             [iconOnly]="true"
+            *appPrivilege="privileges.workflowFunctions.edit"
             (pressed)="openEditFunction(row)"
           ></mx-button>
           <mx-button
@@ -39,6 +45,7 @@
             tone="danger"
             icon="delete"
             [iconOnly]="true"
+            *appPrivilege="privileges.workflowFunctions.delete"
             (pressed)="openDeleteFunction(row)"
           ></mx-button>
         </td>
@@ -64,7 +71,12 @@
   </mx-grid>
 
   <mx-page-header title="Associations" subtitle="Link functions to request types and statuses">
-    <mx-button variant="outline" tone="primary" icon="add" (pressed)="openAddLink()"
+    <mx-button
+      variant="outline"
+      tone="primary"
+      icon="add"
+      *appPrivilege="privileges.workflowFunctions.create"
+      (pressed)="openAddLink()"
       >Associate</mx-button
     >
   </mx-page-header>
@@ -100,6 +112,7 @@
             tone="primary"
             icon="edit"
             [iconOnly]="true"
+            *appPrivilege="privileges.workflowFunctions.edit"
             (pressed)="openEditLink(row)"
           ></mx-button>
           <mx-button
@@ -107,6 +120,7 @@
             tone="danger"
             icon="delete"
             [iconOnly]="true"
+            *appPrivilege="privileges.workflowFunctions.delete"
             (pressed)="openDeleteLink(row)"
           ></mx-button>
         </td>

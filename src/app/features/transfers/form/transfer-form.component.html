@@ -4,24 +4,10 @@
   <form [formGroup]="transferForm">
     <div class="form-row two-columns">
       <mat-form-field appearance="outline">
-        <mat-label>From Branch</mat-label>
-
-        <mat-select formControlName="fromBranch" (selectionChange)="loadAvailableLaptops()">
-          <mat-option *ngFor="let branch of branches" [value]="branch.branchid">
-            {{ branch.name }}
-          </mat-option>
-        </mat-select>
-
-        <mat-error *ngIf="transferForm.get('fromBranch')?.hasError('required')">
-          Source branch is required
-        </mat-error>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
         <mat-label>To Branch</mat-label>
 
         <mat-select formControlName="toBranch">
-          <mat-option *ngFor="let branch of branches" [value]="branch.branchid">
+          <mat-option *ngFor="let branch of destinationBranches" [value]="branch.branchid">
             {{ branch.name }}
           </mat-option>
         </mat-select>
@@ -91,9 +77,13 @@
                   <p>{{ laptop.description }}</p>
                 </div>
 
-                <button mat-icon-button color="primary" type="button" (click)="addLaptop(laptop)">
-                  <mat-icon>add_circle</mat-icon>
-                </button>
+                <mx-button
+                  variant="ghost"
+                  tone="primary"
+                  icon="add_circle"
+                  [iconOnly]="true"
+                  (pressed)="addLaptop(laptop)"
+                ></mx-button>
               </mat-card-content>
             </mat-card>
           </div>
@@ -116,9 +106,13 @@
                   </p>
                 </div>
 
-                <button mat-icon-button color="warn" (click)="removeLaptop(laptop)">
-                  <mat-icon> remove_circle </mat-icon>
-                </button>
+                <mx-button
+                  variant="ghost"
+                  tone="danger"
+                  icon="remove_circle"
+                  [iconOnly]="true"
+                  (pressed)="removeLaptop(laptop)"
+                ></mx-button>
               </mat-card-content>
             </mat-card>
           </div>
@@ -128,15 +122,13 @@
   </form>
 </mat-dialog-content>
 
-<mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()">Cancel</button>
-
-  <button
-    mat-raised-button
-    color="primary"
-    (click)="onSubmit()"
+<mat-dialog-actions align="end" class="form-actions">
+  <mx-button variant="outline" tone="neutral" (pressed)="onCancel()">Cancel</mx-button>
+  <mx-button
+    tone="primary"
+    (pressed)="onSubmit()"
     [disabled]="transferForm.invalid || selectedLaptops.length === 0"
   >
     Create Transfer
-  </button>
+  </mx-button>
 </mat-dialog-actions>

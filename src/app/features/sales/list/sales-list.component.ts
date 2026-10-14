@@ -5,17 +5,18 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatDialog } from '@angular/material/dialog';
 import { SalesFormComponent } from '../form/sales-form.component';
 import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { CommonModule } from '@angular/common';
-import { MatInputModule } from '@angular/material/input';
 import {
   MxBadgeComponent,
   MxButtonComponent,
-  MxGridComponent,
   MxEmptyStateComponent,
+  MxGridComponent,
   MxPageHeaderComponent,
 } from '@mesix/custom-control';
+import { Status } from '../../../core/enums/status.enum';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 
 @Component({
   selector: 'app-sales-list',
@@ -25,8 +26,6 @@ import {
     MatIconModule,
     MatTableModule,
     MatSortModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatButtonToggleModule,
     CommonModule,
     MxPageHeaderComponent,
@@ -34,11 +33,14 @@ import {
     MxGridComponent,
     MxBadgeComponent,
     MxEmptyStateComponent,
+    PrivilegeDirective,
   ],
   templateUrl: './sales-list.component.html',
   styleUrls: ['./sales-list.component.scss'],
 })
 export class SalesListComponent implements AfterViewInit {
+  readonly Status = Status;
+  readonly privileges = privilegeAccess;
   displayedColumns: string[] = [
     'saleId',
     'date',
@@ -64,7 +66,11 @@ export class SalesListComponent implements AfterViewInit {
 
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+    this.onGridFilter((event.target as HTMLInputElement).value);
+  }
+
+  onGridFilter(value: string) {
+    this.dataSource.filter = value.trim().toLowerCase();
   }
 
   openNewSaleDialog() {
@@ -88,8 +94,5 @@ export class SalesListComponent implements AfterViewInit {
   exportSales() {
     // Export sales data to CSV/Excel
   }
-
-  onGridFilter(value: string) {
-    this.dataSource.filter = value.trim().toLowerCase();
-  }
 }
+

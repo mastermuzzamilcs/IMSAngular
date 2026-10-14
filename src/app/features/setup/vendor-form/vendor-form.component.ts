@@ -4,16 +4,26 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MaterialModule } from '../../../shared/material/material.module';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { MxButtonComponent } from '@mesix/custom-control';
+import { asStatus, Status } from '../../../core/enums/status.enum';
 import { UsersService } from '../../../core/services/users.service';
 
 @Component({
   selector: 'app-vendor-form',
   standalone: true,
-  imports: [MatDialogModule, MatFormFieldModule, MaterialModule, ReactiveFormsModule, CommonModule],
+  imports: [
+    MatDialogModule,
+    MatFormFieldModule,
+    MaterialModule,
+    ReactiveFormsModule,
+    CommonModule,
+    MxButtonComponent,
+  ],
   templateUrl: './vendor-form.component.html',
   styleUrls: ['./vendor-form.component.scss'],
 })
 export class VendorFormComponent implements OnInit {
+  readonly Status = Status;
   VendorForm!: FormGroup;
   dialogTitle: string = 'Add Vendor';
 
@@ -46,7 +56,7 @@ export class VendorFormComponent implements OnInit {
       name: ['', [Validators.required]],
       location: [''],
       description: [''],
-      status: ['Active'],
+      status: [Status.Active],
     });
   }
   patchFormValues(): void {
@@ -55,7 +65,7 @@ export class VendorFormComponent implements OnInit {
       name: vendor.name,
       location: vendor.location,
       description: vendor.description,
-      status: vendor.status,
+      status: asStatus(vendor.status),
     });
   }
   onSubmit(): void {

@@ -58,9 +58,9 @@
   </form>
 </mat-dialog-content>
 
-<mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()">Cancel</button>
-  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="productForm.invalid">
+<mat-dialog-actions align="end" class="form-actions">
+  <mx-button variant="outline" tone="neutral" (pressed)="onCancel()">Cancel</mx-button>
+  <mx-button tone="primary" (pressed)="onSubmit()" [disabled]="productForm.invalid">
     {{ data?.mode === 'edit' ? 'Update' : 'Add' }}
-  </button>
+  </mx-button>
 </mat-dialog-actions>

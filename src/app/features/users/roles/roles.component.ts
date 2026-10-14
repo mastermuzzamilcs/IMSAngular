@@ -6,17 +6,19 @@ import { Role } from '../../../core/Models/RoleModel';
 import { RoleService } from '../../../core/services/role.service';
 import { RolesFormComponent } from '../roles-form/roles-form.component';
 import { CommonModule } from '@angular/common';
-import { MatIconModule } from '@angular/material/icon';
-import { LoadingService } from '../../../core/services/Loading.service';
-import { ConfirmService } from '../../../core/services/confirm.service';
-import { MatSort, MatSortModule } from '@angular/material/sort';
 import {
   MxBadgeComponent,
   MxButtonComponent,
-  MxGridComponent,
   MxEmptyStateComponent,
+  MxGridComponent,
   MxPageHeaderComponent,
 } from '@mesix/custom-control';
+import { MatIconModule } from '@angular/material/icon';
+import { LoadingService } from '../../../core/services/Loading.service';
+import { GlobalDeleteConfirmationComponent } from '../../../shared/components/global-delete-confirmation/global-delete-confirmation.component';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 
 @Component({
   selector: 'app-roles',
@@ -32,12 +34,14 @@ import {
     MxGridComponent,
     MxBadgeComponent,
     MxEmptyStateComponent,
+    PrivilegeDirective,
   ],
   templateUrl: './roles.component.html',
   styleUrl: './roles.component.scss',
   standalone: true,
 })
 export class RolesComponent implements OnInit, AfterViewInit {
+  readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'description', 'status', 'actions'];
   dataSource = new MatTableDataSource<any>();
 
@@ -48,7 +52,6 @@ export class RolesComponent implements OnInit, AfterViewInit {
     private roleService: RoleService,
     private _loadingService: LoadingService,
     private dialog: MatDialog,
-    private confirm: ConfirmService,
   ) {}
 
   ngOnInit() {
@@ -61,7 +64,11 @@ export class RolesComponent implements OnInit, AfterViewInit {
 
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+    this.onGridFilter((event.target as HTMLInputElement).value);
+  }
+
+  onGridFilter(value: string) {
+    this.dataSource.filter = value.trim().toLowerCase();
   }
 
   async loadRoles() {
@@ -106,21 +113,24 @@ export class RolesComponent implements OnInit, AfterViewInit {
       }
     });
   }
-
   openDeleteDialog(role: Role) {
-    this.confirm
-      .confirmDelete(`Are you sure you want to delete "${role.name}"?`, 'Delete Role')
-      .subscribe(async (confirmed) => {
-        if (confirmed && role.id) {
+    const dialogRef = this.dialog.open(GlobalDeleteConfirmationComponent, {
+      width: '300px',
+      data: {
+        title: 'Delete Role',
+        message: `Are you sure you want to delete "${role.name}"?`,
+      },
+    });
+    dialogRef.afterClosed().subscribe(async (result) => {
+      if (result) {
+        if (role.id) {
           this._loadingService.show();
           await this.roleService.deleteRole(role.id);
           this._loadingService.hide();
           this.loadRoles();
         }
-      });
-  }
-
-  onGridFilter(value: string) {
-    this.dataSource.filter = value.trim().toLowerCase();
+      }
+    });
   }
 }
+

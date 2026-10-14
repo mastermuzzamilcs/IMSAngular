@@ -1,3 +1,5 @@
+import { Status } from '../enums/status.enum';
+
 export interface User {
   userid?: string;
   name: string;
@@ -7,5 +9,6 @@ export interface User {
   manager: string;
   branch: string;
   branchid: string;
-  status: 'Active' | 'Inactive';
+  status: Status;
+  password?: string;
 }

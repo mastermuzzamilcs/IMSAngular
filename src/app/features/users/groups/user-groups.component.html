@@ -1,0 +1,78 @@
+<div class="container">
+  <mx-page-header title="User Groups" subtitle="App-level groups such as Admin and Operations">
+    <mx-button
+      variant="outline"
+      tone="primary"
+      icon="group_add"
+      *appPrivilege="privileges.userGroups.create"
+      (pressed)="openAddDialog()"
+      >Add Group</mx-button
+    >
+  </mx-page-header>
+
+  <mx-grid
+    [showFilter]="true"
+    filterPlaceholder="Search groups..."
+    [hasFooter]="true"
+    (filterChange)="onGridFilter($event)"
+  >
+    <table mat-table [dataSource]="dataSource" matSort>
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+        <td mat-cell *matCellDef="let group">{{ group.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="description">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Description</th>
+        <td mat-cell *matCellDef="let group">{{ group.description }}</td>
+      </ng-container>
+      <ng-container matColumnDef="canApprove">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Can approve</th>
+        <td mat-cell *matCellDef="let group">{{ group.canApprove ? 'Yes' : 'No' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+        <td mat-cell *matCellDef="let group">
+          <mx-badge [tone]="group.status ? 'success' : 'neutral'">{{ group.status }}</mx-badge>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let group">
+          <mx-button
+            variant="ghost"
+            tone="primary"
+            icon="edit"
+            [iconOnly]="true"
+            *appPrivilege="privileges.userGroups.edit"
+            (pressed)="openEditDialog(group)"
+          ></mx-button>
+          <mx-button
+            variant="ghost"
+            tone="danger"
+            icon="delete"
+            [iconOnly]="true"
+            *appPrivilege="privileges.userGroups.delete"
+            (pressed)="openDeleteDialog(group)"
+          ></mx-button>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" colspan="5">
+          <mx-empty-state
+            title="No user groups found"
+            description="Add a group to get started."
+            icon="groups"
+            [compact]="true"
+          ></mx-empty-state>
+        </td>
+      </tr>
+    </table>
+    <mat-paginator
+      mxGridFooter
+      [pageSizeOptions]="[5, 10, 25]"
+      aria-label="Select page of user groups"
+    ></mat-paginator>
+  </mx-grid>
+</div>

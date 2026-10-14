@@ -1,6 +1,11 @@
 <div class="container">
   <mx-page-header title="New Transfer Request" subtitle="Move stock between branches">
-    <mx-button variant="outline" tone="primary" icon="add" (pressed)="openProductDialog()"
+    <mx-button
+      variant="outline"
+      tone="primary"
+      icon="add"
+      *appPrivilege="privileges.newTransfer.create"
+      (pressed)="openProductDialog()"
       >Add Item</mx-button
     >
   </mx-page-header>
@@ -8,22 +13,31 @@
   <mx-card padding="md" elevation="elevated" class="form-surface">
     <form [formGroup]="transferForm" class="form-fields">
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Branch</mat-label>
-        <mat-select formControlName="branch" (selectionChange)="onBranchChange()">
-          <mat-option *ngFor="let branch of branches" [value]="branch.branchid">
+        <mat-label>To branch</mat-label>
+        <mat-select formControlName="toBranch" (selectionChange)="onToBranchChange()">
+          <mat-option *ngFor="let branch of destinationBranches" [value]="branch.branchid">
             {{ branch.name }}
           </mat-option>
         </mat-select>
       </mat-form-field>
 
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>User</mat-label>
-        <mat-select formControlName="user">
-          <mat-option *ngFor="let user of usersForBranch" [value]="user.userid">
-            {{ user.name }} ({{ user.branchName }})
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+      <div class="form-section-header">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>User</mat-label>
+          <mat-select formControlName="user">
+            <mat-option *ngFor="let user of userChoices" [value]="user.userid">
+              {{ user.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mx-button
+          variant="outline"
+          tone="primary"
+          icon="person_search"
+          (pressed)="openUserSearch()"
+          >Search User</mx-button
+        >
+      </div>
 
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Date</mat-label>
@@ -60,6 +74,7 @@
               tone="danger"
               icon="delete"
               [iconOnly]="true"
+              *appPrivilege="privileges.newTransfer.delete"
               (pressed)="removeProduct(row)"
             ></mx-button>
           </td>
@@ -71,7 +86,7 @@
           <td class="mat-cell" colspan="4">
             <mx-empty-state
               title="No items added"
-              description="Use Add Item to build this transfer."
+              description="Use Add Item to build this transfer request."
               icon="swap_horiz"
               [compact]="true"
             ></mx-empty-state>
@@ -83,6 +98,7 @@
     <div class="form-actions">
       <mx-button
         tone="primary"
+        *appPrivilege="privileges.newTransfer.create"
         (pressed)="submitTransfer()"
         [disabled]="dataSource.data.length <= 0 || transferForm.invalid"
       >

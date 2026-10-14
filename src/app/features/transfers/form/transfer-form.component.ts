@@ -6,14 +6,16 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatButtonModule } from '@angular/material/button';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MxButtonComponent } from '@mesix/custom-control';
 
 import { StockService } from '../../../core/services/stock.service';
 import { BranchService } from '../../../core/services/branchservice.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { Status } from '../../../core/enums/status.enum';
 import { Branch } from '../../../core/Models/BranchModel';
 
 @Component({
@@ -25,11 +27,11 @@ import { Branch } from '../../../core/Models/BranchModel';
     MatInputModule,
     MatSelectModule,
     MatDatepickerModule,
-    MatButtonModule,
     ReactiveFormsModule,
     MatDialogModule,
     MatIconModule,
     MatCardModule,
+    MxButtonComponent,
   ],
   templateUrl: './transfer-form.component.html',
   styleUrls: ['./transfer-form.component.scss'],
@@ -48,6 +50,7 @@ export class TransferFormComponent implements OnInit {
     private fb: FormBuilder,
     private stockService: StockService,
     private branchService: BranchService,
+    private auth: AuthService,
     private dialogRef: MatDialogRef<TransferFormComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
   ) {}
@@ -56,6 +59,13 @@ export class TransferFormComponent implements OnInit {
     this.initForm();
 
     this.branches = await this.branchService.getBranches();
+    this.transferForm.patchValue({ fromBranch: this.auth.currentBranchId() });
+    await this.loadAvailableLaptops();
+  }
+
+  get destinationBranches(): Branch[] {
+    const fromBranch = this.transferForm?.get('fromBranch')?.value;
+    return this.branches.filter((branch) => branch.branchid !== fromBranch);
   }
 
   initForm() {
@@ -156,7 +166,7 @@ export class TransferFormComponent implements OnInit {
 
         items: this.selectedLaptops,
 
-        status: 'Pending',
+        status: Status.Pending,
 
         requestDate: new Date(),
       };

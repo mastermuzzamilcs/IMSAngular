@@ -1,6 +1,11 @@
 <div class="container">
   <mx-page-header title="Brands" subtitle="Manage product brands">
-    <mx-button variant="outline" tone="primary" icon="add" (pressed)="openAddDialog()"
+    <mx-button
+      variant="outline"
+      tone="primary"
+      icon="add"
+      *appPrivilege="privileges.brands.create"
+      (pressed)="openAddDialog()"
       >Add Brand</mx-button
     >
   </mx-page-header>
@@ -37,6 +42,7 @@
             tone="primary"
             icon="edit"
             [iconOnly]="true"
+            *appPrivilege="privileges.brands.edit"
             (pressed)="openEditDialog(role)"
           ></mx-button>
           <mx-button
@@ -44,6 +50,7 @@
             tone="danger"
             icon="delete"
             [iconOnly]="true"
+            *appPrivilege="privileges.brands.delete"
             (pressed)="openDeleteDialog(role)"
           ></mx-button>
         </td>

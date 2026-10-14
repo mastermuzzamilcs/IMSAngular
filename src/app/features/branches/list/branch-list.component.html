@@ -1,6 +1,11 @@
 <div class="container">
   <mx-page-header title="Branch Management" subtitle="Manage store and warehouse branches">
-    <mx-button variant="outline" tone="primary" icon="add" (pressed)="openAddDialog()"
+    <mx-button
+      variant="outline"
+      tone="primary"
+      icon="add"
+      *appPrivilege="privileges.branches.create"
+      (pressed)="openAddDialog()"
       >Add Branch</mx-button
     >
   </mx-page-header>
@@ -49,6 +54,7 @@
             tone="primary"
             icon="edit"
             [iconOnly]="true"
+            *appPrivilege="privileges.branches.edit"
             (pressed)="openEditDialog(branch)"
           ></mx-button>
           <mx-button
@@ -56,6 +62,7 @@
             tone="danger"
             icon="delete"
             [iconOnly]="true"
+            *appPrivilege="privileges.branches.delete"
             (pressed)="openDeleteDialog(branch)"
           ></mx-button>
         </td>

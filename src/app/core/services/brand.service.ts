@@ -11,6 +11,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { firestore } from '../../firebase-config';
+import { asStatus } from '../enums/status.enum';
 import { Brand } from '../Models/BrandModel';
 
 @Injectable({ providedIn: 'root' })
@@ -41,7 +42,7 @@ export class BrandService {
         alias: data['alias'] || '',
         description: data['description'] || '',
         country: data['country'] || '',
-        status: data['status'] || '',
+        status: asStatus(data['status']),
       };
       this.setBrandInCache(brand);
     });
@@ -85,7 +86,7 @@ export class BrandService {
       alias: data['alias'] || '',
       description: data['description'] || '',
       country: data['country'] || '',
-      status: data['status'] || '',
+      status: asStatus(data['status']),
     };
     this.setBrandInCache(brand);
     return brand;

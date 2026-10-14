@@ -5,9 +5,10 @@ import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/materia
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
 import { MatOptionModule } from '@angular/material/core';
 import { MaterialModule } from '../../../shared/material/material.module'; // if you're using shared material
+import { MxButtonComponent } from '@mesix/custom-control';
+import { asStatus, Status } from '../../../core/enums/status.enum';
 import { BrandService } from '../../../core/services/brand.service'; // update path as needed
 
 @Component({
@@ -20,14 +21,15 @@ import { BrandService } from '../../../core/services/brand.service'; // update p
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatButtonModule,
     MatOptionModule,
+    MxButtonComponent,
     MaterialModule,
   ],
   templateUrl: './products-form.component.html',
   styleUrls: ['./products-form.component.scss'],
 })
 export class ProductsFormComponent implements OnInit {
+  readonly Status = Status;
   productForm!: FormGroup;
   dialogTitle: string = 'Add Product';
   brands: any[] = [];
@@ -56,7 +58,7 @@ export class ProductsFormComponent implements OnInit {
       description: _product.description,
       brandId: _product.brandid || _product.brand,
       price: _product.price,
-      status: _product.status,
+      status: asStatus(_product.status),
     });
   }
 
@@ -66,7 +68,7 @@ export class ProductsFormComponent implements OnInit {
       description: [''],
       brandId: ['', Validators.required],
       price: [null, [Validators.required, Validators.min(0)]],
-      status: ['Active'],
+      status: [Status.Active],
     });
   }
 

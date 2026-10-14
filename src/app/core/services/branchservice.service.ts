@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { collection, getDocs, addDoc, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import { firestore } from '../../firebase-config'; // Import Firestore config
+import { asStatus } from '../enums/status.enum';
 import { Branch } from '../Models/BranchModel'; // Define Branch model
 
 @Injectable({
@@ -27,7 +28,7 @@ export class BranchService {
         managerid: data.manager,
         manager: '',
         contact: data.contact,
-        status: data.status,
+        status: asStatus(data.status),
       };
     });
 
@@ -57,6 +58,9 @@ export class BranchService {
     this.cachedBranches = null;
   }
   async getBranchById(id: string): Promise<Branch | null> {
+    if (!id) {
+      return null;
+    }
     const snap = await getDoc(doc(firestore, this.topicName, id));
     return snap.exists() ? ({ branchid: snap.id, ...snap.data() } as Branch) : null;
   }

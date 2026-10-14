@@ -1,6 +1,11 @@
 <div class="container">
   <mx-page-header title="Vendors" subtitle="Manage suppliers and vendors">
-    <mx-button variant="outline" tone="primary" icon="add" (pressed)="openAddDialog()"
+    <mx-button
+      variant="outline"
+      tone="primary"
+      icon="add"
+      *appPrivilege="privileges.vendors.create"
+      (pressed)="openAddDialog()"
       >Add Vendor</mx-button
     >
   </mx-page-header>
@@ -42,6 +47,7 @@
             tone="primary"
             icon="edit"
             [iconOnly]="true"
+            *appPrivilege="privileges.vendors.edit"
             (pressed)="openEditDialog(vendor)"
           ></mx-button>
           <mx-button
@@ -49,6 +55,7 @@
             tone="danger"
             icon="delete"
             [iconOnly]="true"
+            *appPrivilege="privileges.vendors.delete"
             (pressed)="openDeleteDialog(vendor)"
           ></mx-button>
         </td>

@@ -1,32 +1,55 @@
 <div class="container">
-  <mx-page-header title="Sale Out" subtitle="Record a customer return">
-    <mx-button variant="outline" tone="primary" icon="add" (pressed)="openProductDialog()"
+  <mx-page-header title="Sales Return" subtitle="Record a customer return">
+    <mx-button
+      variant="outline"
+      tone="primary"
+      icon="add"
+      *appPrivilege="privileges.salesReturn.create"
+      (pressed)="openProductDialog()"
       >Add Item</mx-button
     >
   </mx-page-header>
 
   <mx-card padding="md" elevation="elevated" class="form-surface">
     <form [formGroup]="salesReturnForm" class="form-fields">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Branch</mat-label>
-        <mat-select formControlName="branch">
-          <mat-option *ngFor="let branch of branches" [value]="branch.branchid">
-            {{ branch.name }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+      <div class="form-section-header">
+        <h3>Customer</h3>
+        <mx-button
+          variant="outline"
+          tone="primary"
+          icon="search"
+          (pressed)="openCustomerDialog()"
+          >Search Customer</mx-button
+        >
+      </div>
+      <input type="hidden" formControlName="customerId" />
+      <div class="form-fields-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="customerName" />
+          <mat-error *ngIf="salesReturnForm.get('customerName')?.hasError('required')">
+            Name is required
+          </mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Phone</mat-label>
+          <input matInput formControlName="customerPhone" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="customerEmail" />
+          <mat-error *ngIf="salesReturnForm.get('customerEmail')?.hasError('email')">
+            Enter a valid email
+          </mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Address</mat-label>
+          <input matInput formControlName="customerAddress" />
+        </mat-form-field>
+      </div>
 
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Customer</mat-label>
-        <mat-select formControlName="customer">
-          <mat-option *ngFor="let customer of customers" [value]="customer.id">
-            {{ customer.name }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Sale Out Date</mat-label>
+        <mat-label>Sale Return Date</mat-label>
         <input matInput [matDatepicker]="picker" formControlName="date" />
         <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
         <mat-datepicker #picker></mat-datepicker>
@@ -117,6 +140,7 @@
               tone="danger"
               icon="delete"
               [iconOnly]="true"
+              *appPrivilege="privileges.salesReturn.delete"
               (pressed)="removeProduct(row)"
             ></mx-button>
           </td>
@@ -173,6 +197,7 @@
     <div class="form-actions">
       <mx-button
         tone="primary"
+        *appPrivilege="privileges.salesReturn.create"
         (pressed)="submitSalesReturn()"
         [disabled]="dataSource.data.length <= 0 || salesReturnForm.invalid || netTotal <= 0"
       >

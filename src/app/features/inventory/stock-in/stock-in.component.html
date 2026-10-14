@@ -1,21 +1,17 @@
 <div class="container">
   <mx-page-header title="Stock In" subtitle="Receive inventory into a branch">
-    <mx-button variant="outline" tone="primary" icon="add" (pressed)="openProductDialog()"
+    <mx-button
+      variant="outline"
+      tone="primary"
+      icon="add"
+      *appPrivilege="privileges.stockIn.create"
+      (pressed)="openProductDialog()"
       >Add Item</mx-button
     >
   </mx-page-header>
 
   <mx-card padding="md" elevation="elevated" class="form-surface">
     <form [formGroup]="stockInForm" class="form-fields">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Branch</mat-label>
-        <mat-select formControlName="branch">
-          <mat-option *ngFor="let branch of branches" [value]="branch.branchid">
-            {{ branch.name }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Vendor</mat-label>
         <mat-select formControlName="vendor">
@@ -96,6 +92,7 @@
               tone="danger"
               icon="delete"
               [iconOnly]="true"
+              *appPrivilege="privileges.stockIn.delete"
               (pressed)="removeProduct(row)"
             ></mx-button>
           </td>
@@ -152,6 +149,7 @@
     <div class="form-actions">
       <mx-button
         tone="primary"
+        *appPrivilege="privileges.stockIn.create"
         (pressed)="submitStockIn()"
         [disabled]="dataSource.data.length <= 0 || stockInForm.invalid || netTotal <= 0"
       >

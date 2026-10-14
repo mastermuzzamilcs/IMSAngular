@@ -4,19 +4,21 @@ import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BrandFormComponent } from '../brand-form/brand-form.component';
 import { CommonModule } from '@angular/common';
-import { MatIconModule } from '@angular/material/icon';
-import { LoadingService } from '../../../core/services/Loading.service';
-import { ConfirmService } from '../../../core/services/confirm.service';
-import { MatSort, MatSortModule } from '@angular/material/sort';
-import { Brand } from '../../../core/Models/BrandModel';
-import { BrandService } from '../../../core/services/brand.service';
 import {
   MxBadgeComponent,
   MxButtonComponent,
-  MxGridComponent,
   MxEmptyStateComponent,
+  MxGridComponent,
   MxPageHeaderComponent,
 } from '@mesix/custom-control';
+import { MatIconModule } from '@angular/material/icon';
+import { LoadingService } from '../../../core/services/Loading.service';
+import { GlobalDeleteConfirmationComponent } from '../../../shared/components/global-delete-confirmation/global-delete-confirmation.component';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { Brand } from '../../../core/Models/BrandModel';
+import { BrandService } from '../../../core/services/brand.service';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 
 @Component({
   selector: 'app-brand-setup',
@@ -32,12 +34,14 @@ import {
     MxGridComponent,
     MxBadgeComponent,
     MxEmptyStateComponent,
+    PrivilegeDirective,
   ],
   templateUrl: './brand-setup.component.html',
   styleUrl: './brand-setup.component.scss',
   standalone: true,
 })
 export class BrandSetupComponent implements OnInit, AfterViewInit {
+  readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'description', 'status', 'actions'];
   dataSource = new MatTableDataSource<any>();
 
@@ -48,7 +52,6 @@ export class BrandSetupComponent implements OnInit, AfterViewInit {
     private _brandService: BrandService,
     private _loadingService: LoadingService,
     private dialog: MatDialog,
-    private confirm: ConfirmService,
   ) {}
 
   ngOnInit() {
@@ -61,7 +64,11 @@ export class BrandSetupComponent implements OnInit, AfterViewInit {
 
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+    this.onGridFilter((event.target as HTMLInputElement).value);
+  }
+
+  onGridFilter(value: string) {
+    this.dataSource.filter = value.trim().toLowerCase();
   }
 
   async loadBrands() {
@@ -106,21 +113,24 @@ export class BrandSetupComponent implements OnInit, AfterViewInit {
       }
     });
   }
-
   openDeleteDialog(_brand: Brand) {
-    this.confirm
-      .confirmDelete(`Are you sure you want to delete "${_brand.name}"?`, 'Delete Brand')
-      .subscribe(async (confirmed) => {
-        if (confirmed && _brand.id) {
+    const dialogRef = this.dialog.open(GlobalDeleteConfirmationComponent, {
+      width: '300px',
+      data: {
+        title: 'Delete Brand',
+        message: `Are you sure you want to delete "${_brand.name}"?`,
+      },
+    });
+    dialogRef.afterClosed().subscribe(async (result) => {
+      if (result) {
+        if (_brand.id) {
           this._loadingService.show();
           await this._brandService.deleteBrand(_brand.id);
           this._loadingService.hide();
           this.loadBrands();
         }
-      });
-  }
-
-  onGridFilter(value: string) {
-    this.dataSource.filter = value.trim().toLowerCase();
+      }
+    });
   }
 }
+

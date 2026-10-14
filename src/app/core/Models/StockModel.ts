@@ -1,3 +1,5 @@
+import { Status } from '../enums/status.enum';
+
 export interface Stock {
   stockid?: string;
   branchid: string;
@@ -11,9 +13,14 @@ export interface Stock {
   NetTotal: number;
   lastUpdated?: Date;
   entrydate?: Date;
-  status: string;
+  status: Status;
   stocktype: string;
   remarks?: string;
+  customerid?: string;
+  customerName?: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  customerAddress?: string;
 }
 
 export interface StockDetails {

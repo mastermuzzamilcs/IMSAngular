@@ -44,9 +44,9 @@
   </form>
 </mat-dialog-content>
 
-<mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()">Cancel</button>
-  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="VendorForm.invalid">
+<mat-dialog-actions align="end" class="form-actions">
+  <mx-button variant="outline" tone="neutral" (pressed)="onCancel()">Cancel</mx-button>
+  <mx-button tone="primary" (pressed)="onSubmit()" [disabled]="VendorForm.invalid">
     {{ data.mode === 'add' ? 'Add' : 'Update' }}
-  </button>
+  </mx-button>
 </mat-dialog-actions>

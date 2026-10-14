@@ -5,9 +5,7 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BranchFormComponent } from '../form/branch-form.component';
 import { CommonModule } from '@angular/common';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
 import {
   MxBadgeComponent,
   MxButtonComponent,
@@ -16,12 +14,15 @@ import {
   MxPageHeaderComponent,
 } from '@mesix/custom-control';
 import { BranchService } from '../../../core/services/branchservice.service';
+import { Status } from '../../../core/enums/status.enum';
 import { Branch } from '../../../core/Models/BranchModel';
 import { LoadingService } from '../../../core/services/Loading.service';
-import { ConfirmService } from '../../../core/services/confirm.service';
+import { GlobalDeleteConfirmationComponent } from '../../../shared/components/global-delete-confirmation/global-delete-confirmation.component';
 import { ActivatedRoute } from '@angular/router';
 import jsonData from '../../../Assets/appConfig.json';
 import { UsersService } from '../../../core/services/users.service';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 
 @Component({
   selector: 'app-branch-list',
@@ -32,19 +33,20 @@ import { UsersService } from '../../../core/services/users.service';
     MatTableModule,
     MatPaginatorModule,
     CommonModule,
-    MatFormFieldModule,
     MatIconModule,
-    MatInputModule,
     MxPageHeaderComponent,
     MxButtonComponent,
     MxGridComponent,
     MxBadgeComponent,
     MxEmptyStateComponent,
+    PrivilegeDirective,
   ],
   templateUrl: './branch-list.component.html',
   styleUrls: ['./branch-list.component.scss'],
 })
 export class BranchListComponent implements OnInit, AfterViewInit {
+  readonly Status = Status;
+  readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'location', 'manager', 'contact', 'status', 'actions'];
   dataSource = new MatTableDataSource<any>([]);
   userRolesLookup: any[];
@@ -59,7 +61,6 @@ export class BranchListComponent implements OnInit, AfterViewInit {
     private _userService: UsersService,
     private loadingService: LoadingService,
     private dialog: MatDialog,
-    private confirm: ConfirmService,
     private route: ActivatedRoute,
   ) {
     this.userRolesLookup = this.route.snapshot.data['roles'];
@@ -144,15 +145,22 @@ export class BranchListComponent implements OnInit, AfterViewInit {
     this.loadingService.hide();
   }
   openDeleteDialog(branch: Branch) {
-    this.confirm
-      .confirmDelete(`Are you sure you want to delete "${branch.name}"?`, 'Delete Branch')
-      .subscribe(async (confirmed) => {
-        if (confirmed && branch.branchid) {
+    const dialogRef = this.dialog.open(GlobalDeleteConfirmationComponent, {
+      width: '300px',
+      data: {
+        title: 'Delete Role',
+        message: `Are you sure you want to delete "${branch.name}"?`,
+      },
+    });
+    dialogRef.afterClosed().subscribe(async (result) => {
+      if (result) {
+        if (branch.branchid) {
           this.loadingService.show();
           await this.branchService.deleteBranch(branch.branchid);
           this.loadingService.hide();
           this.loadBranches();
         }
-      });
+      }
+    });
   }
 }

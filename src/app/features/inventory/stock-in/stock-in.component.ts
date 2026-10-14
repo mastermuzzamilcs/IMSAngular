@@ -10,7 +10,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { StockService } from '../../../core/services/stock.service';
 import { VendorService } from '../../../core/services/vendor.service';
-import { BranchService } from '../../../core/services/branchservice.service';
 import { ItemSearchModalComponent } from '../item-search-modal/item-search-modal.component';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -28,8 +27,12 @@ import {
   MxPageHeaderComponent,
 } from '@mesix/custom-control';
 import { WorkflowService } from '../../../core/services/Workflow.service';
+import { Status } from '../../../core/enums/status.enum';
 import { RequestType } from '../../../core/Models/WorkflowModel';
 import { LoadingService } from '../../../core/services/Loading.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 
 @Component({
   selector: 'app-stock-in',
@@ -50,11 +53,13 @@ import { LoadingService } from '../../../core/services/Loading.service';
     MxCardComponent,
     MxGridComponent,
     MxEmptyStateComponent,
+    PrivilegeDirective,
   ],
   templateUrl: './stock-in.component.html',
   styleUrls: ['./stock-in.component.scss'],
 })
 export class StockInComponent implements OnInit {
+  readonly privileges = privilegeAccess;
   dataSource = new MatTableDataSource<any>([]);
   displayedColumns: string[] = [
     'product',
@@ -66,7 +71,6 @@ export class StockInComponent implements OnInit {
     'actions',
   ];
   stockInForm!: FormGroup;
-  branches: any[] = [];
   vendors: any[] = [];
   stockDetails: any[] = [];
 
@@ -80,19 +84,17 @@ export class StockInComponent implements OnInit {
     private dialog: MatDialog,
     private stockService: StockService,
     private vendorService: VendorService,
-    private branchService: BranchService,
     private _workflowService: WorkflowService,
     private _loadingService: LoadingService,
+    private auth: AuthService,
   ) {}
 
   async ngOnInit(): Promise<void> {
     this.stockInForm = this.fb.group({
-      branch: ['', Validators.required],
       vendor: ['', Validators.required],
       date: [new Date(), Validators.required],
     });
 
-    this.branches = await this.branchService.getBranches();
     this.vendors = await this.vendorService.getVendors();
   }
 
@@ -150,17 +152,23 @@ export class StockInComponent implements OnInit {
   }
 
   async submitStockIn(): Promise<void> {
+    const branch = this.auth.currentBranchId();
+    if (!branch) {
+      alert('Choose a branch from the top bar before continuing.');
+      return;
+    }
     this._loadingService.show();
     if (this.stockInForm.invalid || this.dataSource.data.length === 0) return;
     const payload = {
       ...this.stockInForm.value,
+      branch,
       stockItems: this.dataSource.data,
       TotalItems: this.dataSource.data.length,
       SubTotal: this.subTotal,
       DiscountType: this.discountType,
       DiscountValue: this.discountValue,
       NetTotal: this.netTotal,
-      status: 'Pending',
+      status: Status.Pending,
       stocktype: 'in',
     };
 
@@ -170,7 +178,8 @@ export class StockInComponent implements OnInit {
       await this._workflowService.createRequest({
         moduleId: stock_id,
         requestType: RequestType.StockIn,
-        requestedBy: 'currentUserUid', // replace with auth‑service value
+        requestedBy: this.auth.currentUserId(),
+        branchId: this.auth.currentBranchId(),
         remarks: 'Auto‑generated from Stock‑In screen',
       });
       alert('Stock-in entry added successfully');

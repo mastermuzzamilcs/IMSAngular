@@ -1,4 +1,5 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -11,17 +12,14 @@ import {
   MxEmptyStateComponent,
   MxGridComponent,
   MxPageHeaderComponent,
-  MxSelectComponent,
-  MxSelectOption,
 } from '@mesix/custom-control';
 import type { MxTone } from '@mesix/custom-control';
 import { StockService } from '../../../core/services/stock.service';
-import { BranchService } from '../../../core/services/branchservice.service';
 import { VendorService } from '../../../core/services/vendor.service';
 import { ProductService } from '../../../core/services/product.service';
 import { Stock, StockOverview } from '../../../core/Models/StockModel';
-import { Branch } from '../../../core/Models/BranchModel';
 import { LoadingService } from '../../../core/services/Loading.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   standalone: true,
@@ -38,7 +36,6 @@ import { LoadingService } from '../../../core/services/Loading.service';
     MxGridComponent,
     MxBadgeComponent,
     MxEmptyStateComponent,
-    MxSelectComponent,
   ],
   styleUrls: ['./inventory-list.component.scss'],
 })
@@ -55,9 +52,7 @@ export class InventoryListComponent implements OnInit, AfterViewInit {
     'alert',
   ];
   dataSource = new MatTableDataSource<any>([]);
-  branches: Branch[] = [];
-  branchOptions: MxSelectOption[] = [];
-  selectedBranchId: string = '';
+  selectedBranchId = '';
   allStock: Stock[] = [];
   stockOverviewData: StockOverview[] = [];
 
@@ -66,32 +61,23 @@ export class InventoryListComponent implements OnInit, AfterViewInit {
 
   constructor(
     private stockService: StockService,
-    private branchService: BranchService,
     private vendorService: VendorService,
     private productService: ProductService,
     private loadingService: LoadingService,
+    private auth: AuthService,
+    private destroyRef: DestroyRef,
     private router: Router,
   ) {}
 
-  goStockIn(): void {
-    this.router.navigate(['/inventory/stock-in']);
-  }
-
-  goStockOut(): void {
-    this.router.navigate(['/inventory/stock-out']);
-  }
-
-  async ngOnInit(): Promise<void> {
-    this.loadingService.show();
-    this.branches = await this.branchService.getBranches();
-    this.branchOptions = this.branches.map((b) => ({
-      value: b.branchid || '',
-      label: b.name,
-    }));
-    const loggedInBranchId = '3nMj9NbLzWPwiqDAsOWn';
-    this.selectedBranchId = loggedInBranchId;
-    await this.filterByBranch();
-    this.loadingService.hide();
+  ngOnInit(): void {
+    this.auth.session$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((session) => {
+      const next = session?.branchid || '';
+      if (next === this.selectedBranchId) {
+        return;
+      }
+      this.selectedBranchId = next;
+      void this.filterByBranch();
+    });
   }
 
   ngAfterViewInit(): void {
@@ -108,9 +94,12 @@ export class InventoryListComponent implements OnInit, AfterViewInit {
     this.dataSource.filter = value.trim().toLowerCase();
   }
 
-  onBranchChange(branchId: string): void {
-    this.selectedBranchId = branchId;
-    void this.filterByBranch();
+  goStockIn(): void {
+    void this.router.navigate(['/inventory/stock-in']);
+  }
+
+  goStockOut(): void {
+    void this.router.navigate(['/inventory/stock-out']);
   }
 
   getAlertTone(alert: string): MxTone {
@@ -127,18 +116,23 @@ export class InventoryListComponent implements OnInit, AfterViewInit {
   }
 
   async filterByBranch(): Promise<void> {
+    if (!this.selectedBranchId) {
+      this.dataSource.data = [];
+      this.loadingService.hide();
+      return;
+    }
     this.loadingService.show();
-    if (!this.selectedBranchId) return;
-
-    this.stockOverviewData = await this.stockService.getStockOverviewByBranch(
-      this.selectedBranchId,
-    );
-    this.stockOverviewData.forEach((item) => {
-      const onHand = item.balanceQuantity ?? item.quantity;
-      item.alert = onHand <= 0 ? 'Empty' : onHand < 5 ? 'Low' : 'Healthy';
-    });
-
-    this.dataSource.data = this.stockOverviewData;
-    this.loadingService.hide();
+    try {
+      this.stockOverviewData = await this.stockService.getStockOverviewByBranch(
+        this.selectedBranchId,
+      );
+      this.stockOverviewData.forEach((item) => {
+        const onHand = item.balanceQuantity ?? item.quantity;
+        item.alert = onHand <= 0 ? 'Empty' : onHand < 5 ? 'Low' : 'Healthy';
+      });
+      this.dataSource.data = this.stockOverviewData;
+    } finally {
+      this.loadingService.hide();
+    }
   }
 }

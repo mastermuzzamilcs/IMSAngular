@@ -1,11 +1,5 @@
 <div class="container">
   <mx-page-header title="Inventory Overview" subtitle="Stock levels by branch">
-    <mx-select
-      label="Branch"
-      [options]="branchOptions"
-      [value]="selectedBranchId"
-      (valueChange)="onBranchChange($event)"
-    ></mx-select>
     <mx-button variant="outline" tone="primary" icon="add_box" (pressed)="goStockIn()"
       >Stock In</mx-button
     >
@@ -66,7 +60,7 @@
       </ng-container>
 
       <ng-container matColumnDef="alert">
-        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <th mat-header-cell *matHeaderCellDef>status</th>
         <td mat-cell *matCellDef="let stock">
           <mx-badge [tone]="getAlertTone(stock.alert)">{{ stock.alert }}</mx-badge>
         </td>
@@ -78,7 +72,7 @@
         <td class="mat-cell" colspan="9">
           <mx-empty-state
             title="No stock data found"
-            description="Select a branch or add stock to get started."
+            description="No stock for the current branch."
             icon="inventory"
             [compact]="true"
           ></mx-empty-state>

@@ -1,27 +1,26 @@
 import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+} from '@mesix/custom-control';
+import type { MxTone } from '@mesix/custom-control';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
-import {
-  MxBadgeComponent,
-  MxButtonComponent,
-  MxGridComponent,
-  MxEmptyStateComponent,
-  MxPageHeaderComponent,
-} from '@mesix/custom-control';
-import type { MxTone } from '@mesix/custom-control';
 
 import { TransferFormComponent } from '../form/transfer-form.component';
 import { TransferDetailComponent } from '../detail/transfer-detail.component';
 
 import { TransferService } from '../../../core/services/transfer.service';
+import { Status } from '../../../core/enums/status.enum';
 import { Transfer } from '../../../core/Models/TransferModel';
 
 @Component({
@@ -35,8 +34,6 @@ import { Transfer } from '../../../core/Models/TransferModel';
     MatDialogModule,
     MatButtonModule,
     MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatMenuModule,
     DatePipe,
     MxPageHeaderComponent,
@@ -49,6 +46,7 @@ import { Transfer } from '../../../core/Models/TransferModel';
   styleUrls: ['./transfer-list.component.scss'],
 })
 export class TransferListComponent implements OnInit, AfterViewInit {
+  readonly Status = Status;
   displayedColumns: string[] = [
     'transferId',
     'fromBranch',
@@ -91,7 +89,11 @@ export class TransferListComponent implements OnInit, AfterViewInit {
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
 
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+    this.onGridFilter((event.target as HTMLInputElement).value);
+  }
+
+  onGridFilter(value: string) {
+    this.dataSource.filter = value.trim().toLowerCase();
   }
 
   openNewTransferDialog() {
@@ -130,7 +132,7 @@ export class TransferListComponent implements OnInit, AfterViewInit {
     });
   }
 
-  async updateStatus(transfer: any, newStatus: string) {
+  async updateStatus(transfer: any, newStatus: Status) {
     try {
       await this.transferService.updateTransfer({
         ...transfer,
@@ -146,24 +148,43 @@ export class TransferListComponent implements OnInit, AfterViewInit {
     }
   }
 
+  getStatusColor(status: string): string {
+    switch (status) {
+      case Status.Pending:
+        return 'accent';
+
+      case Status.Approved:
+        return 'primary';
+
+      case Status.InTransit:
+        return 'accent';
+
+      case Status.Completed:
+        return 'primary';
+
+      case Status.Rejected:
+        return 'warn';
+
+      default:
+        return '';
+    }
+  }
+
   getStatusTone(status: string): MxTone {
     switch (status) {
-      case 'Pending':
+      case Status.Pending:
         return 'warning';
-      case 'Approved':
+      case Status.Approved:
         return 'primary';
-      case 'In Transit':
+      case Status.InTransit:
         return 'info';
-      case 'Completed':
+      case Status.Completed:
         return 'success';
-      case 'Rejected':
+      case Status.Rejected:
         return 'danger';
       default:
         return 'neutral';
     }
   }
-
-  onGridFilter(value: string) {
-    this.dataSource.filter = value.trim().toLowerCase();
-  }
 }
+
