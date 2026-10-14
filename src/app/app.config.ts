@@ -5,10 +5,7 @@ import { MAT_PAGINATOR_DEFAULT_OPTIONS } from '@angular/material/paginator';
 
 import { routes } from './app.routes';
 import { NotificationChannelBootstrap } from './core/notifications/notification-channel.bootstrap';
-import {
-  AppSettingsService,
-  PAGE_SIZE_OPTIONS,
-} from './core/services/app-settings.service';
+import { AppSettingsService, PAGE_SIZE_OPTIONS } from './core/services/app-settings.service';
 import { RequestTypeService } from './core/services/request-type.service';
 import { RoleService } from './core/services/role.service';
 import { UsersService } from './core/services/users.service';
