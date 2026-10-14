@@ -1,9 +1,14 @@
 import { ApplicationConfig, APP_INITIALIZER, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideNativeDateAdapter } from '@angular/material/core';
+import { MAT_PAGINATOR_DEFAULT_OPTIONS } from '@angular/material/paginator';
 
 import { routes } from './app.routes';
 import { NotificationChannelBootstrap } from './core/notifications/notification-channel.bootstrap';
+import {
+  AppSettingsService,
+  PAGE_SIZE_OPTIONS,
+} from './core/services/app-settings.service';
 import { RequestTypeService } from './core/services/request-type.service';
 import { RoleService } from './core/services/role.service';
 import { UsersService } from './core/services/users.service';
@@ -42,6 +47,16 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideNativeDateAdapter(),
+    {
+      provide: MAT_PAGINATOR_DEFAULT_OPTIONS,
+      useFactory: (settings: AppSettingsService) => ({
+        get pageSize() {
+          return settings.pageSize;
+        },
+        pageSizeOptions: [...PAGE_SIZE_OPTIONS],
+      }),
+      deps: [AppSettingsService],
+    },
     {
       provide: APP_INITIALIZER,
       useFactory: registerWorkflowActions,

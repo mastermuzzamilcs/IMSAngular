@@ -48,6 +48,8 @@ export const parameterTables: ParameterTable[] = [
       { field: 'status', label: 'Status' },
       { field: 'remarks', label: 'Remarks' },
       { field: 'assignedTo', label: 'Assigned to' },
+      { field: 'branchId', label: 'Branch id' },
+      { field: 'toBranchId', label: 'To branch id' },
       { field: 'approvedBy', label: 'Approved by' },
       { field: 'requestedOn', label: 'Requested on' },
       { field: 'approvedOn', label: 'Approved on' },
@@ -87,6 +89,8 @@ export const sourceTables: ParameterTable[] = [
       { field: 'status', label: 'Status' },
       { field: 'remarks', label: 'Remarks' },
       { field: 'assignedto', label: 'Assigned to' },
+      { field: 'branchid', label: 'Branch id' },
+      { field: 'tobranchid', label: 'To branch id' },
       { field: 'approvedby', label: 'Approved by' },
     ],
   },
@@ -100,6 +104,14 @@ export const sourceTables: ParameterTable[] = [
       { field: 'manager', label: 'Manager' },
       { field: 'branch', label: 'Branch' },
       { field: 'status', label: 'Status' },
+    ],
+  },
+  {
+    table: 'teamhierarchy',
+    label: 'Team hierarchy',
+    fields: [
+      { field: 'userid', label: 'User id' },
+      { field: 'reportingto', label: 'Reporting to' },
     ],
   },
   {
@@ -224,6 +236,10 @@ export function resolveWorkflowValue(
       return request.remarks || '';
     case 'request.assignedTo':
       return request.assignedTo || '';
+    case 'request.branchId':
+      return request.branchId || '';
+    case 'request.toBranchId':
+      return request.toBranchId || '';
     case 'request.approvedBy':
       return request.approvedBy || '';
     case 'request.requestedOn':

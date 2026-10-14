@@ -24,18 +24,15 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatBadgeModule } from '@angular/material/badge';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { LoadingService } from './core/services/Loading.service';
 import { NotificationInboxService } from './core/notifications/notification-inbox.service';
-import {
-  notificationSounds,
-  NotificationSoundId,
-  NotificationSoundService,
-} from './core/notifications/notification-sound.service';
+import { NotificationSoundService } from './core/notifications/notification-sound.service';
 import { InboxNotification } from './core/notifications/notification.model';
 import { PrivilegeRef, privileges as privilegeAccess } from './core/auth/privilege-catalog';
 import { PrivilegeDirective } from './core/auth/privilege.directive';
 import { AuthService } from './core/services/auth.service';
+import { AppSettingsService } from './core/services/app-settings.service';
 
 @Component({
   selector: 'app-root',
@@ -55,7 +52,7 @@ import { AuthService } from './core/services/auth.service';
     GlobalSpinnerComponent,
     MatExpansionModule,
     MatBadgeModule,
-    MatSlideToggleModule,
+    MatTooltipModule,
     PrivilegeDirective,
   ],
   templateUrl: './app.component.html',
@@ -69,9 +66,8 @@ export class AppComponent {
   session$;
   notifications$;
   unreadCount$;
-  readonly sounds = notificationSounds;
-  soundEnabled$;
-  soundId$;
+  appTitle$;
+  appLogo$;
 
   constructor(
     private breakpointObserver: BreakpointObserver,
@@ -80,12 +76,13 @@ export class AppComponent {
     private auth: AuthService,
     private inbox: NotificationInboxService,
     private sound: NotificationSoundService,
+    private appSettings: AppSettingsService,
   ) {
     this.session$ = this.auth.session$;
     this.notifications$ = this.inbox.items$;
     this.unreadCount$ = this.inbox.unreadCount$;
-    this.soundEnabled$ = this.sound.enabled$;
-    this.soundId$ = this.sound.soundId$;
+    this.appTitle$ = this.appSettings.title$;
+    this.appLogo$ = this.appSettings.logo$;
     this.auth.session$.subscribe((session) => {
       if (session?.userid) {
         this.inbox.watch(session.userid);
@@ -131,14 +128,6 @@ export class AppComponent {
 
   switchBranch(branchid: string): void {
     this.auth.selectBranch(branchid);
-  }
-
-  setNotificationSound(enabled: boolean): void {
-    this.sound.setEnabled(enabled);
-  }
-
-  chooseNotificationSound(id: NotificationSoundId): void {
-    this.sound.setSound(id, true);
   }
 
   openNotification(item: InboxNotification): void {
