@@ -1,0 +1,355 @@
+@use './tokens';
+@use '@angular/material' as mat;
+
+html {
+  color-scheme: light;
+  @include mat.theme(
+    (
+      color: (
+        theme-type: light,
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}
+
+html[data-mx-mode='dark'],
+html[data-mx-theme='dark'] {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--mx-font);
+  background: var(--mx-bg);
+  color: var(--mx-text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition:
+    background-color var(--mx-motion, 200ms) var(--mx-ease, ease),
+    color var(--mx-motion, 200ms) var(--mx-ease, ease);
+}
+
+:root {
+  --mat-sys-primary: var(--mx-primary);
+  --mat-sys-on-primary: var(--mx-primary-contrast);
+  --mat-sys-secondary: var(--mx-accent);
+  --mat-sys-error: var(--mx-warn);
+  --mat-sys-surface: var(--mx-surface);
+  --mat-sys-surface-container: var(--mx-surface);
+  --mat-sys-surface-container-low: var(--mx-bg);
+  --mat-sys-surface-container-high: var(--mx-surface-elevated);
+  --mat-sys-surface-container-highest: var(--mx-surface-elevated);
+  --mat-sys-on-surface: var(--mx-text);
+  --mat-sys-on-surface-variant: var(--mx-text-muted);
+  --mat-sys-background: var(--mx-bg);
+  --mat-sys-outline: var(--mx-border);
+  --mat-sys-outline-variant: var(--mx-border);
+}
+
+/* Keep focus rings for non-field controls (buttons, links, etc.) */
+*:focus-visible:not(input):not(textarea):not(select) {
+  outline: 2px solid var(--mx-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--mx-focus-ring);
+}
+
+/*
+ * Form fields / search inputs: only the outer wrapper ring
+ * (mat-form-field.mat-focused / mx-grid .filter:focus-within).
+ * Suppress the inner rectangular ring on the control itself.
+ */
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible,
+.mat-mdc-input-element:focus,
+.mat-mdc-input-element:focus-visible,
+input[type='search']:focus,
+input[type='search']:focus-visible,
+mx-grid .filter input:focus,
+mx-grid .filter input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* ── Drive-style Material form fields / selects / options ── */
+.mat-mdc-form-field {
+  --mdc-outlined-text-field-container-shape: 8px;
+  --mdc-outlined-text-field-outline-color: #9aa0a6;
+  --mdc-outlined-text-field-hover-outline-color: #5f6368;
+  --mdc-outlined-text-field-focus-outline-color: var(--mx-primary);
+  --mdc-outlined-text-field-outline-width: 1px;
+  --mdc-outlined-text-field-focus-outline-width: 1px;
+  --mdc-outlined-text-field-label-text-color: var(--mx-text-muted);
+  --mdc-outlined-text-field-hover-label-text-color: var(--mx-text);
+  --mdc-outlined-text-field-focus-label-text-color: var(--mx-primary);
+  --mdc-outlined-text-field-input-text-color: var(--mx-text);
+  --mdc-outlined-text-field-caret-color: var(--mx-primary);
+  --mdc-outlined-text-field-disabled-outline-color: var(--mx-border);
+  --mdc-outlined-text-field-disabled-input-text-color: var(--mx-text-muted);
+  --mdc-outlined-text-field-disabled-label-text-color: var(--mx-text-muted);
+  --mat-form-field-container-text-color: var(--mx-text);
+  --mat-form-field-container-text-size: 0.875rem;
+  --mat-select-enabled-arrow-color: var(--mx-text-muted);
+  --mat-select-focused-arrow-color: var(--mx-primary);
+  --mat-select-disabled-arrow-color: var(--mx-border);
+  font-family: var(--mx-font, inherit);
+  width: 100%;
+}
+
+.mat-mdc-form-field .mat-mdc-text-field-wrapper {
+  background: color-mix(in srgb, var(--mx-text) 4%, var(--mx-surface));
+  border: 1px solid #9aa0a6;
+  border-radius: 8px;
+  transition:
+    background var(--mx-motion-fast, 100ms) var(--mx-ease, ease),
+    border-color var(--mx-motion-fast, 100ms) var(--mx-ease, ease),
+    box-shadow var(--mx-motion-fast, 100ms) var(--mx-ease, ease);
+}
+
+/*
+ * Material's notched outline is three flex pieces; their seams draw the
+ * vertical divider inside fields. Keep the structure for label positioning,
+ * but draw no outline borders — the wrapper border is the only stroke.
+ */
+.mat-mdc-form-field .mdc-notched-outline__leading,
+.mat-mdc-form-field .mdc-notched-outline__notch,
+.mat-mdc-form-field .mdc-notched-outline__trailing {
+  border-color: transparent !important;
+  border-width: 0 !important;
+}
+
+.mat-mdc-form-field:hover:not(.mat-form-field-disabled) .mat-mdc-text-field-wrapper {
+  background: color-mix(in srgb, var(--mx-text) 7%, var(--mx-surface));
+  border-color: #5f6368;
+}
+
+.mat-mdc-form-field.mat-focused .mat-mdc-text-field-wrapper {
+  background: var(--mx-surface);
+  border-color: var(--mx-primary);
+  box-shadow: 0 0 0 3px var(--mx-focus-ring);
+}
+
+/* Floating label sits cleanly over the top border */
+.mat-mdc-form-field .mdc-floating-label--float-above {
+  background: color-mix(in srgb, var(--mx-text) 4%, var(--mx-surface));
+  padding: 0 4px;
+}
+
+.mat-mdc-form-field.mat-focused .mdc-floating-label--float-above {
+  background: var(--mx-surface);
+}
+
+.mat-mdc-form-field .mat-mdc-form-field-infix {
+  min-height: 40px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.mat-mdc-form-field .mat-mdc-floating-label,
+.mat-mdc-form-field .mdc-floating-label {
+  font-size: 0.875rem !important;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.mat-mdc-form-field .mat-mdc-input-element,
+.mat-mdc-form-field input.mat-mdc-input-element,
+.mat-mdc-form-field textarea.mat-mdc-input-element {
+  font-size: 0.875rem !important;
+  font-weight: 500;
+  color: var(--mx-text) !important;
+  caret-color: var(--mx-primary);
+}
+
+/*
+ * Placeholder only while focused (label has floated to the border).
+ * Idle/empty: label sits inside the field; placeholder stays hidden.
+ */
+.mat-mdc-form-field:not(.mat-focused) .mat-mdc-input-element::placeholder {
+  color: transparent !important;
+  opacity: 0 !important;
+}
+
+.mat-mdc-form-field.mat-focused .mat-mdc-input-element::placeholder {
+  color: var(--mx-text-muted);
+  opacity: 1;
+}
+
+.mat-mdc-form-field .mat-mdc-select {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--mx-text);
+}
+
+.mat-mdc-form-field .mat-mdc-select-placeholder {
+  color: var(--mx-text-muted) !important;
+}
+
+.mat-mdc-form-field .mat-mdc-select-value-text {
+  color: var(--mx-text);
+  font-weight: 500;
+}
+
+.mat-mdc-form-field .mat-mdc-select-arrow svg {
+  fill: currentColor;
+}
+
+.mat-mdc-form-field .mat-datepicker-toggle .mat-mdc-icon-button {
+  color: var(--mx-text-muted);
+}
+
+.mat-mdc-form-field.mat-focused .mat-datepicker-toggle .mat-mdc-icon-button {
+  color: var(--mx-primary);
+}
+
+.mat-mdc-form-field .mat-mdc-form-field-hint-wrapper,
+.mat-mdc-form-field .mat-mdc-form-field-error-wrapper {
+  padding: 0 4px;
+  font-size: 0.75rem;
+}
+
+/* Dropdown panel + items */
+.mat-mdc-select-panel,
+.cdk-overlay-pane .mat-mdc-select-panel {
+  background: var(--mx-surface) !important;
+  border: 1px solid #9aa0a6 !important;
+  border-radius: 10px !important;
+  box-shadow: var(--mx-shadow-lg) !important;
+  padding: 6px !important;
+  min-width: 168px;
+}
+
+.mat-mdc-option {
+  min-height: 40px !important;
+  height: auto !important;
+  border-radius: 8px !important;
+  margin: 2px 0 !important;
+  padding: 0 12px !important;
+  font-family: var(--mx-font, inherit) !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  color: var(--mx-text) !important;
+  letter-spacing: 0.01em;
+  transition: background var(--mx-motion-fast, 100ms) var(--mx-ease, ease);
+}
+
+.mat-mdc-option .mdc-list-item__primary-text {
+  color: inherit !important;
+  font: inherit !important;
+}
+
+.mat-mdc-option:hover:not(.mdc-list-item--disabled),
+.mat-mdc-option.mat-mdc-option-active:not(.mdc-list-item--disabled) {
+  background: color-mix(in srgb, var(--mx-primary) 10%, transparent) !important;
+}
+
+.mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+  background: color-mix(in srgb, var(--mx-primary) 14%, transparent) !important;
+  color: var(--mx-primary) !important;
+}
+
+.mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled):hover,
+.mat-mdc-option.mdc-list-item--selected.mat-mdc-option-active:not(.mdc-list-item--disabled) {
+  background: color-mix(in srgb, var(--mx-primary) 18%, transparent) !important;
+}
+
+.mat-mdc-option.mdc-list-item--disabled {
+  color: var(--mx-text-muted) !important;
+  opacity: 0.55;
+}
+
+.mat-mdc-option .mat-pseudo-checkbox-checked.mat-pseudo-checkbox-minimal::after,
+.mat-mdc-option .mat-pseudo-checkbox-checked {
+  color: var(--mx-primary) !important;
+}
+
+/* Autocomplete / menu panels share option look */
+.mat-mdc-autocomplete-panel {
+  background: var(--mx-surface) !important;
+  border: 1px solid #9aa0a6 !important;
+  border-radius: 10px !important;
+  box-shadow: var(--mx-shadow-lg) !important;
+  padding: 6px !important;
+}
+
+/* Bare inputs in grids (no form-field wrapper) */
+table input.mat-mdc-input-element,
+.mat-mdc-cell input[matInput],
+.mat-mdc-cell input.mat-input-element {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #9aa0a6;
+  border-radius: 8px;
+  background: var(--mx-surface);
+  color: var(--mx-text);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 140px;
+  transition:
+    border-color var(--mx-motion-fast, 100ms) var(--mx-ease, ease),
+    box-shadow var(--mx-motion-fast, 100ms) var(--mx-ease, ease);
+}
+
+table input.mat-mdc-input-element:hover,
+.mat-mdc-cell input[matInput]:hover {
+  border-color: #5f6368;
+}
+
+table input.mat-mdc-input-element:focus,
+.mat-mdc-cell input[matInput]:focus {
+  outline: none;
+  border-color: var(--mx-primary);
+  box-shadow: 0 0 0 3px var(--mx-focus-ring);
+}
+
+/* Dense selects inside grid cells */
+.dense-field.mat-mdc-form-field {
+  width: 100%;
+  max-width: 180px;
+}
+
+.dense-field.mat-mdc-form-field .mat-mdc-form-field-infix {
+  min-height: 36px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+/*
+ * Material dialogs: grow with content (no horizontal scroll).
+ * Vertical scroll only when taller than the viewport.
+ */
+.cdk-overlay-pane.mat-mdc-dialog-panel {
+  max-width: min(96vw, 1200px) !important;
+  width: fit-content !important;
+}
+
+.mat-mdc-dialog-container,
+.mat-mdc-dialog-surface {
+  max-width: min(96vw, 1200px) !important;
+  width: fit-content !important;
+  max-height: 90vh;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  box-sizing: border-box;
+}
+
+.mat-mdc-dialog-content {
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
