@@ -68,7 +68,6 @@ export class BrandSetupComponent implements OnInit, AfterViewInit {
   }
 
   applyFilter(event: Event) {
-    const filterValue = (event.target as HTMLInputElement).value;
     this.onGridFilter((event.target as HTMLInputElement).value);
   }
 
