@@ -1,14 +1,18 @@
 import { RequestStatus } from './WorkflowModel';
 
+export type TransferDate = Date | string | number | { toDate: () => Date };
+
 export interface TransferItem {
   productId: string;
   productName?: string;
+  brand?: string;
   description?: string;
   quantity: number;
 }
 
 export interface Transfer {
   id?: string; // Firestore document ID
+  transferId?: string;
 
   fromBranch?: string;
   fromBranchName?: string; // Added for display
@@ -23,9 +27,9 @@ export interface Transfer {
   branchId?: string;
   branchName?: string;
 
-  expectedDate: any;
+  expectedDate: TransferDate;
 
-  requestDate: any;
+  requestDate: TransferDate;
 
   status: RequestStatus;
 

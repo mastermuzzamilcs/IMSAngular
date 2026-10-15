@@ -19,18 +19,18 @@ Load theme styles once, then mount hosts:
 
 ## Controls
 
-| Selector / API | Purpose |
-| --- | --- |
-| `MxNoticeService` + `mx-toast-host` / `mx-dialog-host` | Toasts & dialogs (success/warning/error/info, optional input) |
-| `MxLoadingService` + `mx-spinner` | Global or local loading overlay |
-| `mx-button` | Solid / soft / outline / ghost / link, tones & sizes |
-| `mx-card` | Content card with optional title/actions/footer slots |
-| `mx-badge` | Status pills |
-| `mx-alert` | Inline banners |
-| `mx-empty-state` | Empty list / no-data panels |
-| `mx-table-skeleton` | Shimmer placeholder rows for table loading |
-| `mx-grid` | Data grid shell (filter, footer, optional `[loading]` skeleton) |
-| `mx-page-header` | Page title row with action slot |
+| Selector / API                                         | Purpose                                                         |
+| ------------------------------------------------------ | --------------------------------------------------------------- |
+| `MxNoticeService` + `mx-toast-host` / `mx-dialog-host` | Toasts & dialogs (success/warning/error/info, optional input)   |
+| `MxLoadingService` + `mx-spinner`                      | Global or local loading overlay                                 |
+| `mx-button`                                            | Solid / soft / outline / ghost / link, tones & sizes            |
+| `mx-card`                                              | Content card with optional title/actions/footer slots           |
+| `mx-badge`                                             | Status pills                                                    |
+| `mx-alert`                                             | Inline banners                                                  |
+| `mx-empty-state`                                       | Empty list / no-data panels                                     |
+| `mx-table-skeleton`                                    | Shimmer placeholder rows for table loading                      |
+| `mx-grid`                                              | Data grid shell (filter, footer, optional `[loading]` skeleton) |
+| `mx-page-header`                                       | Page title row with action slot                                 |
 
 ## Flexibility
 

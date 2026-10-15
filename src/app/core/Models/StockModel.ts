@@ -1,4 +1,15 @@
 import { Status } from '../enums/status.enum';
+import { Product } from './ProductModel';
+
+export interface StockLineItem extends Product {
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+  total: number;
+  reason?: string;
+  comments?: string;
+  Comments?: string;
+}
 
 export interface Stock {
   stockid?: string;

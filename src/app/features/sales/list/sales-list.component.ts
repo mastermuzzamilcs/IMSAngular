@@ -18,6 +18,16 @@ import { Status } from '../../../core/enums/status.enum';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 
+interface SalesListRow {
+  saleId: string;
+  date: Date | string;
+  customer: string;
+  items: unknown[];
+  total: number;
+  paymentMethod: string;
+  status: Status;
+}
+
 @Component({
   selector: 'app-sales-list',
   standalone: true,
@@ -53,7 +63,7 @@ export class SalesListComponent implements AfterViewInit {
     'status',
     'actions',
   ];
-  dataSource = new MatTableDataSource<any>([]);
+  dataSource = new MatTableDataSource<SalesListRow>([]);
   dateRange: 'day' | 'week' | 'month' = 'day';
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;

@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { MxButtonComponent, MxDialogRef, MX_DIALOG_DATA } from '@mesix/custom-control';
 import { asStatus, Status } from '../../../core/enums/status.enum';
 import { UsersService } from '../../../core/services/users.service';
+import { Vendor } from '../../../core/Models/VendorModel';
 
 @Component({
   selector: 'app-vendor-form',
@@ -27,8 +28,8 @@ export class VendorFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    public dialogRef: MxDialogRef<any>,
-    @Inject(MX_DIALOG_DATA) public data: any,
+    public dialogRef: MxDialogRef<unknown>,
+    @Inject(MX_DIALOG_DATA) public data: { mode: string; _vendor?: Vendor },
     private userService: UsersService,
   ) {}
 
@@ -58,7 +59,7 @@ export class VendorFormComponent implements OnInit {
     });
   }
   patchFormValues(): void {
-    const vendor = this.data._vendor;
+    const vendor = this.data._vendor!;
     this.VendorForm.patchValue({
       name: vendor.name,
       location: vendor.location,

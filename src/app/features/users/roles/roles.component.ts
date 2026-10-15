@@ -48,7 +48,7 @@ export class RolesComponent implements OnInit, AfterViewInit {
 
   readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'description', 'status', 'actions'];
-  dataSource = new MatTableDataSource<any>();
+  dataSource = new MatTableDataSource<Role>();
   tableLoading = false;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;

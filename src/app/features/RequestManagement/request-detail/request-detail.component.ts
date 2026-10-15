@@ -18,14 +18,14 @@ import {
 import { AuthService } from '../../../core/services/auth.service';
 import { WorkflowService } from '../../../core/services/Workflow.service';
 import { StockService } from '../../../core/services/stock.service';
-import { StockDetails } from '../../../core/Models/StockModel';
+import { Stock, StockDetails } from '../../../core/Models/StockModel';
 import { RequestStatus, RequestType, WorkflowRequest } from '../../../core/Models/WorkflowModel';
 import { WorkflowTransitionOption } from '../../../core/Models/WorkflowStatusTransition';
 import { WorkflowTransitionService } from '../../../core/services/workflow-transition.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ProductService } from '../../../core/services/product.service';
 import { TransferService } from '../../../core/services/transfer.service';
-import { Transfer } from '../../../core/Models/TransferModel';
+import { Transfer, TransferItem } from '../../../core/Models/TransferModel';
 import { UsersService } from '../../../core/services/users.service';
 import { SYSTEM_USER_ID } from '../../../core/system-user';
 import { ToastService } from '../../../core/services/toast.service';
@@ -55,7 +55,7 @@ export class RequestDetailComponent implements OnInit {
 
   /** ---- Data coming from parent ---- */
   constructor(
-    private dialogRef: MxDialogRef<any>,
+    private dialogRef: MxDialogRef<unknown>,
     @Inject(MX_DIALOG_DATA) public data: { requestId: string },
     private wfSvc: WorkflowService,
     private stockSvc: StockService,
@@ -69,11 +69,11 @@ export class RequestDetailComponent implements OnInit {
   // UI state
   loading = true;
   request!: WorkflowRequest;
-  stockHdr: any;
+  stockHdr: Stock | null = null;
   stockRows: StockDetails[] = [];
   isTransfer = false;
   transfer: Transfer | null = null;
-  transferRows: any[] = [];
+  transferRows: TransferItem[] = [];
   transferColumns = ['transferProduct', 'transferDescription', 'transferQty'];
 
   /** Approval form */
@@ -91,6 +91,14 @@ export class RequestDetailComponent implements OnInit {
     return this.actions.length > 0 && this.canAct;
   }
 
+  get displayedRequestId(): string | undefined {
+    return this.request?.requestId;
+  }
+
+  get displayedRequestStatus(): RequestStatus | undefined {
+    return this.request?.status;
+  }
+
   get showApprovalBlocked(): boolean {
     return this.actions.length > 0 && !this.canAct;
   }
@@ -100,7 +108,7 @@ export class RequestDetailComponent implements OnInit {
     if (!value) {
       return null;
     }
-    if (typeof value.toDate === 'function') {
+    if (typeof value === 'object' && !(value instanceof Date)) {
       return value.toDate();
     }
     return value instanceof Date ? value : new Date(value);

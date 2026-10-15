@@ -2,7 +2,6 @@ import { ConfirmService } from '../../../core/services/confirm.service';
 import { Component, OnInit, ViewChild, AfterViewInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
-  MxBadgeComponent,
   MxButtonComponent,
   MxEmptyStateComponent,
   MxGridComponent,
@@ -35,7 +34,6 @@ import { ToastService } from '../../../core/services/toast.service';
     MxPageHeaderComponent,
     MxButtonComponent,
     MxGridComponent,
-    MxBadgeComponent,
     MxEmptyStateComponent,
     PrivilegeDirective,
   ],

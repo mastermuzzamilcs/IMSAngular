@@ -26,7 +26,7 @@ export class CustomerFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    public dialogRef: MxDialogRef<any>,
+    public dialogRef: MxDialogRef<unknown>,
     @Inject(MX_DIALOG_DATA) public data: { mode: string; customer?: Customer },
   ) {}
 

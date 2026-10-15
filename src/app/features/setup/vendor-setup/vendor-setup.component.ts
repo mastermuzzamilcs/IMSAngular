@@ -48,7 +48,7 @@ export class VendorSetupComponent implements OnInit, AfterViewInit {
 
   readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'location', 'description', 'status', 'actions'];
-  dataSource = new MatTableDataSource<any>();
+  dataSource = new MatTableDataSource<Vendor>();
   tableLoading = false;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;

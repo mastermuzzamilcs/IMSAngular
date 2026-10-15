@@ -5,6 +5,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { CommonModule } from '@angular/common';
 import { MxButtonComponent, MxDialogRef, MX_DIALOG_DATA } from '@mesix/custom-control';
 import { asStatus, Status } from '../../../core/enums/status.enum';
+import { Role } from '../../../core/Models/RoleModel';
 
 @Component({
   selector: 'app-roles-form',
@@ -26,8 +27,8 @@ export class RolesFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    public dialogRef: MxDialogRef<any>,
-    @Inject(MX_DIALOG_DATA) public data: any,
+    public dialogRef: MxDialogRef<unknown>,
+    @Inject(MX_DIALOG_DATA) public data: { mode: string; role?: Role },
   ) {}
   ngOnInit(): void {
     this.InitForm();

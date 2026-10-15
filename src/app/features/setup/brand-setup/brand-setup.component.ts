@@ -48,7 +48,7 @@ export class BrandSetupComponent implements OnInit, AfterViewInit {
 
   readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'description', 'status', 'actions'];
-  dataSource = new MatTableDataSource<any>();
+  dataSource = new MatTableDataSource<Brand>();
   tableLoading = false;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;

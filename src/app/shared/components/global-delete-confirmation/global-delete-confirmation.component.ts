@@ -11,8 +11,8 @@ import { MatIconModule } from '@angular/material/icon';
 })
 export class GlobalDeleteConfirmationComponent {
   constructor(
-    public dialogRef: MxDialogRef<any>,
-    @Inject(MX_DIALOG_DATA) public data: any,
+    public dialogRef: MxDialogRef<boolean>,
+    @Inject(MX_DIALOG_DATA) public data: { title?: string; message?: string },
   ) {}
 
   onCancel(): void {

@@ -8,6 +8,7 @@ import {
 } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
 import { Customer } from '../../../core/Models/CustomerModel';
+import { StockLineItem } from '../../../core/Models/StockModel';
 import { StockService } from '../../../core/services/stock.service';
 import { ItemSearchModalComponent } from '../item-search-modal/item-search-modal.component';
 import { CustomerSearchModalComponent } from '../../../shared/components/customer-search-modal/customer-search-modal.component';
@@ -65,7 +66,7 @@ export class SalesComponent implements OnInit {
   private readonly notice = inject(MxNoticeService);
 
   readonly privileges = privilegeAccess;
-  dataSource = new MatTableDataSource<any>([]);
+  dataSource = new MatTableDataSource<StockLineItem>([]);
   displayedColumns: string[] = [
     'product',
     'description',
@@ -76,7 +77,7 @@ export class SalesComponent implements OnInit {
     'actions',
   ];
   salesForm!: FormGroup;
-  saleDetails: any[] = [];
+  saleDetails: StockLineItem[] = [];
   private linkedCustomer: Customer | null = null;
 
   subTotal = 0;
@@ -152,7 +153,7 @@ export class SalesComponent implements OnInit {
     });
   }
 
-  updateRowTotal(row: any): void {
+  updateRowTotal(row: StockLineItem): void {
     const quantity = Number(row.quantity) || 0;
     const unitPrice = Number(row.unitPrice) || 0;
     const discount = Number(row.discount) || 0;
@@ -173,7 +174,7 @@ export class SalesComponent implements OnInit {
     this.netTotal = this.subTotal - discount;
   }
 
-  removeProduct(row: any): void {
+  removeProduct(row: StockLineItem): void {
     this.dataSource.data = this.dataSource.data.filter((item) => item !== row);
     this.recalculateTotal();
   }

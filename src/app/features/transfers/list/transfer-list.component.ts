@@ -121,7 +121,7 @@ export class TransferListComponent implements OnInit, AfterViewInit {
     });
   }
 
-  viewTransferDetail(transfer: any) {
+  viewTransferDetail(transfer: Transfer) {
     this.notice.open(TransferDetailComponent, {
       data: {
         transfer,
@@ -129,7 +129,7 @@ export class TransferListComponent implements OnInit, AfterViewInit {
     });
   }
 
-  async updateStatus(transfer: any, newStatus: Status) {
+  async updateStatus(transfer: Transfer, newStatus: Status) {
     try {
       await this.transferService.updateTransfer({
         ...transfer,

@@ -17,6 +17,8 @@ import {
 import { BranchService } from '../../../core/services/branchservice.service';
 import { Status } from '../../../core/enums/status.enum';
 import { Branch } from '../../../core/Models/BranchModel';
+import { User } from '../../../core/Models/UsersModel';
+import { Role } from '../../../core/Models/RoleModel';
 import { LoadingService } from '../../../core/services/Loading.service';
 import { ActivatedRoute } from '@angular/router';
 import jsonData from '../../../Assets/appConfig.json';
@@ -53,10 +55,10 @@ export class BranchListComponent implements OnInit, AfterViewInit {
   readonly Status = Status;
   readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'location', 'manager', 'contact', 'status', 'actions'];
-  dataSource = new MatTableDataSource<any>([]);
+  dataSource = new MatTableDataSource<Branch>([]);
   tableLoading = false;
-  userRolesLookup: any[];
-  managerUsersLookup: any[] | null = null;
+  userRolesLookup: Role[];
+  managerUsersLookup: User[] | null = null;
   managerRoleName: string = jsonData.managerRoleName;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -113,7 +115,7 @@ export class BranchListComponent implements OnInit, AfterViewInit {
       }
     });
   }
-  openEditDialog(branch: any) {
+  openEditDialog(branch: Branch) {
     const dialogRef = this.notice.open(BranchFormComponent, {
       data: { mode: 'edit', branch, managerUsersLookup: this.managerUsersLookup },
     });

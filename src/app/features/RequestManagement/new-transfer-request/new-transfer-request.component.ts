@@ -35,6 +35,8 @@ import { privileges as privilegeAccess } from '../../../core/auth/privilege-cata
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 import { LoadingService } from '../../../core/services/Loading.service';
 import { Transfer } from '../../../core/Models/TransferModel';
+import { Branch } from '../../../core/Models/BranchModel';
+import { Product } from '../../../core/Models/ProductModel';
 import { User } from '../../../core/Models/UsersModel';
 import { RequestStatus, RequestType } from '../../../core/Models/WorkflowModel';
 import {
@@ -73,14 +75,14 @@ export class NewTransferRequestComponent implements OnInit {
   private readonly notice = inject(MxNoticeService);
 
   readonly privileges = privilegeAccess;
-  dataSource = new MatTableDataSource<any>([]);
+  dataSource = new MatTableDataSource<Product & { quantity: number }>([]);
   displayedColumns: string[] = ['product', 'description', 'quantity', 'actions'];
   transferForm!: FormGroup;
-  branches: any[] = [];
+  branches: Branch[] = [];
   users: User[] = [];
   private linksByUser = new Map<string, string[]>();
   searchedUser: User | null = null;
-  private itemDialogRef: MxDialogRef<any> | null = null;
+  private itemDialogRef: MxDialogRef<Product | Product[] | null> | null = null;
   private addItemOpen = false;
 
   constructor(
@@ -170,7 +172,7 @@ export class NewTransferRequestComponent implements OnInit {
     return links.some((branchid) => branchid === ALL_BRANCHES_ID || branches.has(branchid));
   }
 
-  get destinationBranches(): any[] {
+  get destinationBranches(): Branch[] {
     const current = this.auth.currentBranchId();
     return this.branches.filter((branch) => branch.branchid !== current);
   }
@@ -201,7 +203,7 @@ export class NewTransferRequestComponent implements OnInit {
         if (Array.isArray(result) && result.length) {
           const updatedData = [...this.dataSource.data];
           result.forEach((product) => {
-            if (!allowedIds.has(product.id)) {
+            if (!product.id || !allowedIds.has(product.id)) {
               return;
             }
             const existing = updatedData.find((item) => item.id === product.id);
@@ -223,7 +225,7 @@ export class NewTransferRequestComponent implements OnInit {
     }
   }
 
-  removeProduct(row: any): void {
+  removeProduct(row: Product & { quantity: number }): void {
     this.dataSource.data = this.dataSource.data.filter((item) => item !== row);
   }
 
@@ -256,7 +258,7 @@ export class NewTransferRequestComponent implements OnInit {
       requestDate: new Date(),
       status: RequestStatus.Pending,
       items: this.dataSource.data.map((row) => ({
-        productId: row.id,
+        productId: row.id || '',
         productName: row.name,
         description: row.description || '',
         quantity: Number(row.quantity) || 0,

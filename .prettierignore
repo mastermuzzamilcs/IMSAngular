@@ -3,3 +3,7 @@ coverage
 node_modules
 package-lock.json
 .angular
+CustomPackages/**/fesm2022/**
+CustomPackages/**/lib/**
+CustomPackages/**/index.d.ts
+CustomPackages/**/public-api.d.ts

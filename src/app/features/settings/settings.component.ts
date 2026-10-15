@@ -8,7 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MxButtonComponent, MxPageHeaderComponent } from '@mesix/custom-control';
+import { MxPageHeaderComponent } from '@mesix/custom-control';
 import {
   notificationSounds,
   NotificationSoundId,
@@ -35,7 +35,6 @@ import { ToastService } from '../../core/services/toast.service';
     MatIconModule,
     MatSlideToggleModule,
     MxPageHeaderComponent,
-    MxButtonComponent,
   ],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss'],

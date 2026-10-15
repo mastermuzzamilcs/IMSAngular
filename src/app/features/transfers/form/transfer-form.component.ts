@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -8,13 +8,22 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
-import { MxButtonComponent, MxDialogRef, MX_DIALOG_DATA } from '@mesix/custom-control';
+import { MxButtonComponent, MxDialogRef } from '@mesix/custom-control';
 
 import { StockService } from '../../../core/services/stock.service';
 import { BranchService } from '../../../core/services/branchservice.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Status } from '../../../core/enums/status.enum';
 import { Branch } from '../../../core/Models/BranchModel';
+import { Transfer, TransferItem } from '../../../core/Models/TransferModel';
+
+interface AvailableTransferStock extends TransferItem {
+  id: string;
+  brand: string;
+  availableQuantity: number;
+  description: string;
+  price: number;
+}
 
 @Component({
   selector: 'app-transfer-form',
@@ -36,10 +45,10 @@ import { Branch } from '../../../core/Models/BranchModel';
 export class TransferFormComponent implements OnInit {
   transferForm!: FormGroup;
 
-  availableLaptops: any[] = [];
-  filteredLaptops: any[] = [];
+  availableLaptops: AvailableTransferStock[] = [];
+  filteredLaptops: AvailableTransferStock[] = [];
 
-  selectedLaptops: any[] = [];
+  selectedLaptops: TransferItem[] = [];
 
   branches: Branch[] = [];
 
@@ -48,8 +57,7 @@ export class TransferFormComponent implements OnInit {
     private stockService: StockService,
     private branchService: BranchService,
     private auth: AuthService,
-    private dialogRef: MxDialogRef<any>,
-    @Inject(MX_DIALOG_DATA) public data: any,
+    private dialogRef: MxDialogRef<Transfer>,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -115,8 +123,8 @@ export class TransferFormComponent implements OnInit {
     }
   }
 
-  searchLaptop(event: any) {
-    const value = event.target.value.toLowerCase();
+  searchLaptop(event: Event) {
+    const value = (event.target as HTMLInputElement).value.toLowerCase();
 
     this.filteredLaptops = this.availableLaptops.filter(
       (item) =>
@@ -124,7 +132,7 @@ export class TransferFormComponent implements OnInit {
     );
   }
 
-  addLaptop(product: any) {
+  addLaptop(product: AvailableTransferStock) {
     const exists = this.selectedLaptops.find((x) => x.productId === product.productId);
 
     if (!exists) {
@@ -140,7 +148,7 @@ export class TransferFormComponent implements OnInit {
     }
   }
 
-  removeLaptop(product: any) {
+  removeLaptop(product: TransferItem) {
     this.selectedLaptops = this.selectedLaptops.filter((x) => x.productId !== product.productId);
   }
 

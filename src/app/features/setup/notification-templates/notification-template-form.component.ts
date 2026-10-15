@@ -74,7 +74,7 @@ export class NotificationTemplateFormComponent implements OnInit {
     private usersService: UsersService,
     private itemSourceService: ItemSourceService,
     private auth: AuthService,
-    public dialogRef: MxDialogRef<any>,
+    public dialogRef: MxDialogRef<unknown>,
     @Inject(MX_DIALOG_DATA)
     public data: { mode: string; template?: NotificationTemplate },
   ) {}

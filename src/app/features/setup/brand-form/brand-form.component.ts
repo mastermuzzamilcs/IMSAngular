@@ -5,6 +5,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { CommonModule } from '@angular/common';
 import { MxButtonComponent, MxDialogRef, MX_DIALOG_DATA } from '@mesix/custom-control';
 import { asStatus, Status } from '../../../core/enums/status.enum';
+import { Brand } from '../../../core/Models/BrandModel';
 
 @Component({
   selector: 'app-brand-form',
@@ -26,8 +27,8 @@ export class BrandFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    public dialogRef: MxDialogRef<any>,
-    @Inject(MX_DIALOG_DATA) public data: any,
+    public dialogRef: MxDialogRef<unknown>,
+    @Inject(MX_DIALOG_DATA) public data: { mode: string; _brand?: Brand },
   ) {}
   ngOnInit(): void {
     this.InitForm();

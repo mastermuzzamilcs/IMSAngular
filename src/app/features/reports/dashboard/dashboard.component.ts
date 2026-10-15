@@ -19,9 +19,9 @@ import { Chart } from 'chart.js';
   styleUrls: ['./dashboard.component.scss'],
 })
 export class DashboardComponent implements OnInit {
-  salesChart: any;
-  inventoryChart: any;
-  transferChart: any;
+  salesChart: Chart | undefined;
+  inventoryChart: Chart | undefined;
+  transferChart: Chart | undefined;
 
   kpiData = {
     totalStock: 0,

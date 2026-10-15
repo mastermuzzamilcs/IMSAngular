@@ -1,4 +1,4 @@
-<h2 class="mx-dialog-title">Request #{{ request?.requestId }}</h2>
+<h2 class="mx-dialog-title">Request #{{ displayedRequestId }}</h2>
 
 <div class="mx-dialog-body content" *ngIf="!loading; else spn">
   <mat-tab-group>
@@ -112,7 +112,7 @@
   selected
   *ngIf="!loading && request && !showApproval && !showApprovalBlocked"
 >
-  This request has already been {{ request?.status }}.
+  This request has already been {{ displayedRequestStatus }}.
 </mat-chip>
 <ng-template #spn>
   <div class="spinner">

@@ -61,6 +61,6 @@
 <div class="mx-dialog-actions" class="form-actions">
   <mx-button variant="outline" tone="neutral" (pressed)="onCancel()">Cancel</mx-button>
   <mx-button tone="primary" (pressed)="onSubmit()" [disabled]="productForm.invalid">
-    {{ data?.mode === 'edit' ? 'Update' : 'Add' }}
+    {{ data.mode === 'edit' ? 'Update' : 'Add' }}
   </mx-button>
 </div>

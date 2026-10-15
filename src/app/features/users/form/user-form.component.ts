@@ -5,6 +5,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { CommonModule } from '@angular/common';
 import { MxButtonComponent, MxDialogRef, MX_DIALOG_DATA } from '@mesix/custom-control';
 import { Role } from '../../../core/Models/RoleModel';
+import { User } from '../../../core/Models/UsersModel';
+import { Branch } from '../../../core/Models/BranchModel';
 import { asStatus, Status } from '../../../core/enums/status.enum';
 @Component({
   selector: 'app-user-form',
@@ -27,8 +29,14 @@ export class UserFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    public dialogRef: MxDialogRef<any>,
-    @Inject(MX_DIALOG_DATA) public data: any,
+    public dialogRef: MxDialogRef<unknown>,
+    @Inject(MX_DIALOG_DATA)
+    public data: {
+      mode: string;
+      rolesLookup: Role[];
+      branchesLookup: Branch[];
+      user?: User;
+    },
   ) {}
 
   ngOnInit(): void {
@@ -55,7 +63,7 @@ export class UserFormComponent implements OnInit {
     });
   }
   patchFormValues(): void {
-    const user = this.data.user;
+    const user = this.data.user!;
     this.userForm.patchValue({
       name: user.name,
       email: user.email,

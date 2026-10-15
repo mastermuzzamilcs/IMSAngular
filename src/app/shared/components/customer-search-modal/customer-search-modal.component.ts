@@ -59,7 +59,7 @@ export class CustomerSearchModalComponent implements OnInit {
     private customerService: CustomerService,
     private usersService: UsersService,
     private loadingService: LoadingService,
-    public dialogRef: MxDialogRef<any>,
+    public dialogRef: MxDialogRef<Customer | User | (Customer | User)[] | null>,
     @Inject(MX_DIALOG_DATA) data: DirectorySearchData | null,
   ) {
     this.type = data?.type || 'Customers';

@@ -8,6 +8,8 @@ import {
 } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
 import { StockService } from '../../../core/services/stock.service';
+import { StockLineItem } from '../../../core/Models/StockModel';
+import { Vendor } from '../../../core/Models/VendorModel';
 import { VendorService } from '../../../core/services/vendor.service';
 import { ItemSearchModalComponent } from '../item-search-modal/item-search-modal.component';
 import { CommonModule } from '@angular/common';
@@ -64,7 +66,7 @@ export class StockOutComponent implements OnInit {
   private readonly notice = inject(MxNoticeService);
 
   readonly privileges = privilegeAccess;
-  dataSource = new MatTableDataSource<any>([]);
+  dataSource = new MatTableDataSource<StockLineItem>([]);
   displayedColumns: string[] = [
     'product',
     'description',
@@ -77,8 +79,8 @@ export class StockOutComponent implements OnInit {
     'actions',
   ];
   stockOutForm!: FormGroup;
-  vendors: any[] = [];
-  stockDetails: any[] = [];
+  vendors: Vendor[] = [];
+  stockDetails: StockLineItem[] = [];
 
   subTotal = 0;
   discountType: 'amount' | 'percentage' = 'amount';
@@ -132,7 +134,7 @@ export class StockOutComponent implements OnInit {
     });
   }
 
-  updateRowTotal(row: any): void {
+  updateRowTotal(row: StockLineItem): void {
     const quantity = Number(row.quantity) || 0;
     const unitPrice = Number(row.unitPrice) || 0;
     const discount = Number(row.discount) || 0;
@@ -152,7 +154,7 @@ export class StockOutComponent implements OnInit {
     this.netTotal = this.subTotal - discount;
   }
 
-  removeProduct(row: any): void {
+  removeProduct(row: StockLineItem): void {
     this.dataSource.data = this.dataSource.data.filter((item) => item !== row);
     this.recalculateTotal();
   }

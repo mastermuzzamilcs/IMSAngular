@@ -51,7 +51,7 @@ export class InventoryListComponent implements OnInit, AfterViewInit {
     'reservedQuantity',
     'alert',
   ];
-  dataSource = new MatTableDataSource<any>([]);
+  dataSource = new MatTableDataSource<StockOverview>([]);
   tableLoading = false;
   selectedBranchId = '';
   allStock: Stock[] = [];

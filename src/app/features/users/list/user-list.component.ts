@@ -20,6 +20,9 @@ import { ActivatedRoute } from '@angular/router';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 import { ToastService } from '../../../core/services/toast.service';
+import { User } from '../../../core/Models/UsersModel';
+import { Role } from '../../../core/Models/RoleModel';
+import { Branch } from '../../../core/Models/BranchModel';
 
 @Component({
   selector: 'app-userlist',
@@ -47,10 +50,10 @@ export class UserListComponent implements OnInit, AfterViewInit {
 
   readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'email', 'role', 'status', 'actions'];
-  dataSource = new MatTableDataSource<any>([]);
+  dataSource = new MatTableDataSource<User>([]);
   tableLoading = false;
-  userRolesLookup: any[];
-  userBranchesLookup: any[];
+  userRolesLookup: Role[];
+  userBranchesLookup: Branch[];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -95,7 +98,7 @@ export class UserListComponent implements OnInit, AfterViewInit {
     });
   }
 
-  openEditUserDialog(user: any) {
+  openEditUserDialog(user: User) {
     const dialogRef = this.notice.open(UserFormComponent, {
       data: {
         mode: 'edit',
@@ -117,7 +120,7 @@ export class UserListComponent implements OnInit, AfterViewInit {
     });
   }
 
-  toggleUserStatus(_user: any) {
+  toggleUserStatus(_user: User) {
     // Toggle user active status
   }
 
@@ -154,7 +157,7 @@ export class UserListComponent implements OnInit, AfterViewInit {
     this.tableLoading = false;
   }
 
-  ResetPasswordAction(_user: any) {
+  ResetPasswordAction(_user: User) {
     //alert('Implementation Pending');
   }
 }

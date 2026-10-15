@@ -9,6 +9,8 @@ import { MaterialModule } from '../../../shared/material/material.module'; // if
 import { MxButtonComponent, MxDialogRef, MX_DIALOG_DATA } from '@mesix/custom-control';
 import { asStatus, Status } from '../../../core/enums/status.enum';
 import { BrandService } from '../../../core/services/brand.service'; // update path as needed
+import { Brand } from '../../../core/Models/BrandModel';
+import { Product } from '../../../core/Models/ProductModel';
 
 @Component({
   selector: 'app-products-form',
@@ -30,13 +32,14 @@ export class ProductsFormComponent implements OnInit {
   readonly Status = Status;
   productForm!: FormGroup;
   dialogTitle: string = 'Add Product';
-  brands: any[] = [];
+  brands: Brand[] = [];
 
   constructor(
     private fb: FormBuilder,
     private brandService: BrandService,
-    public dialogRef: MxDialogRef<any>,
-    @Inject(MX_DIALOG_DATA) public data: any,
+    public dialogRef: MxDialogRef<unknown>,
+    @Inject(MX_DIALOG_DATA)
+    public data: { mode: string; _product?: Product & { brandid?: string } },
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -50,7 +53,7 @@ export class ProductsFormComponent implements OnInit {
     }
   }
   patchFormValues(): void {
-    const _product = this.data._product;
+    const _product = this.data._product!;
     this.productForm.patchValue({
       name: _product.name,
       description: _product.description,

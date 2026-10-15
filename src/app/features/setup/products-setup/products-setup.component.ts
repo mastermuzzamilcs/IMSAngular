@@ -49,7 +49,7 @@ export class ProductsSetupComponent implements OnInit, AfterViewInit {
 
   readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'brand', 'description', 'price', 'status', 'actions'];
-  dataSource = new MatTableDataSource<any>();
+  dataSource = new MatTableDataSource<Product>();
   tableLoading = false;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;

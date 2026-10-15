@@ -2,10 +2,10 @@
 
 Local equivalents of NuGet / DLL packages for IMS.
 
-| Folder | Package | Role |
-| --- | --- | --- |
-| `@mesix/theme` | `@mesix/theme` | Design tokens + theme API |
-| `@mesix/custom-control` | `@mesix/custom-control` | UI controls |
+| Folder                  | Package                 | Role                      |
+| ----------------------- | ----------------------- | ------------------------- |
+| `@mesix/theme`          | `@mesix/theme`          | Design tokens + theme API |
+| `@mesix/custom-control` | `@mesix/custom-control` | UI controls               |
 
 These folders contain **built** library output (compiled JS, typings, styles), not Angular source.
 
