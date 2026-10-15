@@ -13,8 +13,8 @@
     [opened]="(isHandset$ | async) === false"
   >
     <mat-toolbar class="brand-toolbar">
-      <img src="assets/logo.png" alt="IMS Logo" class="logo" />
-      <span class="brand-title">IMS</span>
+      <img [src]="(appLogo$ | async) || 'assets/logo.png'" alt="App logo" class="logo" />
+      <span class="brand-title">{{ (appTitle$ | async) || 'IMS' }}</span>
     </mat-toolbar>
 
     <nav class="nav-scroll">
@@ -479,7 +479,21 @@
           {{ branch.name }}
         </button>
       </mat-menu>
-      <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="User menu" class="user-btn">
+      <button
+        mat-icon-button
+        type="button"
+        routerLink="/settings"
+        aria-label="Settings"
+        matTooltip="Settings"
+      >
+        <mat-icon>settings</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        [matMenuTriggerFor]="userMenu"
+        aria-label="User menu"
+        class="user-btn"
+      >
         <mat-icon>account_circle</mat-icon>
       </button>
       <mat-menu #userMenu="matMenu">
@@ -506,24 +520,6 @@
             (change)="onDarkModeChange($event.checked)"
             (click)="$event.stopPropagation()"
           ></mat-slide-toggle>
-        </button>
-        <button mat-menu-item type="button" (click)="$event.stopPropagation()">
-          <mat-slide-toggle
-            [checked]="(soundEnabled$ | async) === true"
-            (change)="setNotificationSound($event.checked)"
-            (click)="$event.stopPropagation()"
-          >
-            Notification sound
-          </mat-slide-toggle>
-        </button>
-        <button
-          mat-menu-item
-          type="button"
-          *ngFor="let option of sounds"
-          (click)="chooseNotificationSound(option.id)"
-        >
-          <mat-icon>{{ (soundId$ | async) === option.id ? 'check' : 'music_note' }}</mat-icon>
-          <span>{{ option.label }}</span>
         </button>
         <mat-divider></mat-divider>
         <button mat-menu-item type="button" (click)="logout()">

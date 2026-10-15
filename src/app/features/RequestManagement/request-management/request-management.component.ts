@@ -8,17 +8,25 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
 import { Status } from '../../../core/enums/status.enum';
 import { RequestType, WorkflowRequest } from '../../../core/Models/WorkflowModel';
-import { Router } from '@angular/router';
-import { MxBadgeComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
+import {
+  MxBadgeComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+  MxNoticeService,
+} from '@mesix/custom-control';
 import { RequestDetailComponent } from '../request-detail/request-detail.component';
-import { LoadingService } from '../../../core/services/Loading.service';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { AuthService } from '../../../core/services/auth.service';
 import { BranchService } from '../../../core/services/branchservice.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { UsersService } from '../../../core/services/users.service';
+import { SYSTEM_USER_ID, SYSTEM_USER_NAME } from '../../../core/system-user';
 
 interface WorkflowRequestRow extends WorkflowRequest {
   branchName: string;
+  requestedByName: string;
+  assignedToName: string;
 }
 
 @Component({
@@ -40,32 +48,31 @@ interface WorkflowRequestRow extends WorkflowRequest {
 })
 export class RequestManagementComponent implements OnInit, AfterViewInit {
   private readonly notice = inject(MxNoticeService);
-
   private readonly toast = inject(ToastService);
+
   readonly Status = Status;
   readonly privileges = privilegeAccess;
   displayedColumns: string[] = [
-    'stockId',
+    'requestedOn',
     'type',
     'branchName',
     'requestedBy',
     'assignedTo',
-    'requestedOn',
     'status',
   ];
   dataSource = new MatTableDataSource<WorkflowRequestRow>([]);
   tableLoading = false;
   private watchedBranch: string | null = null;
   private branchNames = new Map<string, string>();
+  private userNames = new Map<string, string>();
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor(
-    private router: Router,
     private workflowService: WorkflowService,
     private branchService: BranchService,
-    private _loadingService: LoadingService,
+    private usersService: UsersService,
     private auth: AuthService,
     private destroyRef: DestroyRef,
   ) {}
@@ -95,16 +102,25 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
     }
     this.tableLoading = true;
     try {
-      const [requests, branches] = await Promise.all([
+      const [requests, branches, users] = await Promise.all([
         this.workflowService.getForBranch(branchId),
         this.branchService.getBranches(),
+        this.usersService.getUsers(),
       ]);
       this.branchNames = new Map(
         branches.map((branch) => [branch.branchid || '', branch.name || '']),
       );
+      this.userNames = new Map(
+        users
+          .filter((user) => !!user.userid)
+          .map((user) => [user.userid as string, user.name || user.userid || '']),
+      );
+      this.userNames.set(SYSTEM_USER_ID, SYSTEM_USER_NAME);
       this.dataSource.data = requests.map((request) => ({
         ...request,
         branchName: this.branchLabel(request),
+        requestedByName: this.userLabel(request.requestedBy),
+        assignedToName: this.userLabel(request.assignedTo),
       }));
     } catch (error) {
       console.error('Error loading workflow requests', error);
@@ -125,6 +141,15 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
     }
     return from || '—';
   }
+
+  private userLabel(userId: string | undefined): string {
+    const id = (userId || '').trim();
+    if (!id) {
+      return '—';
+    }
+    return this.userNames.get(id) || id;
+  }
+
   onGridFilter(value: string): void {
     this.dataSource.filter = value.trim().toLowerCase();
   }
@@ -144,7 +169,7 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
       })
       .afterClosed()
       .subscribe((res) => {
-        if (res?.updated) this.loadRequests(); // refresh grid
+        if (res?.updated) this.loadRequests();
       });
   }
 }
