@@ -14,7 +14,7 @@ import { asStatus, Status } from '../../../core/enums/status.enum';
     MaterialModule,
     ReactiveFormsModule,
     CommonModule,
-    MxButtonComponent
+    MxButtonComponent,
   ],
   templateUrl: './user-form.component.html',
   styleUrls: ['./user-form.component.scss'],

@@ -1,7 +1,14 @@
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { Component, OnInit, ViewChild, AfterViewInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MxBadgeComponent, MxButtonComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+  MxNoticeService,
+} from '@mesix/custom-control';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -50,7 +57,7 @@ export class WorkflowTransitionsComponent implements OnInit, AfterViewInit {
 
   constructor(
     private transitionService: WorkflowTransitionService,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
   ) {}
 
   ngOnInit(): void {
@@ -83,7 +90,7 @@ export class WorkflowTransitionsComponent implements OnInit, AfterViewInit {
 
   openAddDialog(): void {
     const dialogRef = this.notice.open(WorkflowTransitionFormComponent, {
-      data: { mode: 'add' }
+      data: { mode: 'add' },
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (!result) {
@@ -102,7 +109,7 @@ export class WorkflowTransitionsComponent implements OnInit, AfterViewInit {
 
   openEditDialog(transition: WorkflowStatusTransition): void {
     const dialogRef = this.notice.open(WorkflowTransitionFormComponent, {
-      data: { mode: 'edit', transition }
+      data: { mode: 'edit', transition },
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (!result) {
@@ -120,15 +127,18 @@ export class WorkflowTransitionsComponent implements OnInit, AfterViewInit {
   }
 
   openDeleteDialog(transition: WorkflowStatusTransition): void {
-    this.confirm.confirmDelete(`Remove ${transition.fromStatus} → ${transition.toStatus}?`, 'Delete Status Transition').subscribe(async (result) => {
-      if (result && transition.id) {
-        this.loadingService.show();
-        await this.transitionService.deleteTransition(transition.id);
-        this.loadingService.hide();
-        this.loadTransitions();
-      }
-    });
+    this.confirm
+      .confirmDelete(
+        `Remove ${transition.fromStatus} → ${transition.toStatus}?`,
+        'Delete Status Transition',
+      )
+      .subscribe(async (result) => {
+        if (result && transition.id) {
+          this.loadingService.show();
+          await this.transitionService.deleteTransition(transition.id);
+          this.loadingService.hide();
+          this.loadTransitions();
+        }
+      });
   }
 }
-
-

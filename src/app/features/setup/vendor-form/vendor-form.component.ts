@@ -15,7 +15,7 @@ import { UsersService } from '../../../core/services/users.service';
     MaterialModule,
     ReactiveFormsModule,
     CommonModule,
-    MxButtonComponent
+    MxButtonComponent,
   ],
   templateUrl: './vendor-form.component.html',
   styleUrls: ['./vendor-form.component.scss'],

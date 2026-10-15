@@ -43,7 +43,7 @@ import { ToastService } from '../../../core/services/toast.service';
     MatButtonModule,
     MatCheckboxModule,
     MatIconModule,
-    MatSlideToggleModule
+    MatSlideToggleModule,
   ],
   templateUrl: './notification-template-form.component.html',
   styleUrl: './notification-template-form.component.scss',
@@ -199,7 +199,9 @@ export class NotificationTemplateFormComponent implements OnInit {
       userIds.length === 0 &&
       audienceSources.length === 0
     ) {
-      this.toast.warning('Choose at least one audience: public, groups, custom users, or an item source.');
+      this.toast.warning(
+        'Choose at least one audience: public, groups, custom users, or an item source.',
+      );
       return;
     }
     const seen = new Set<string>();

@@ -21,7 +21,7 @@ import { BrandService } from '../../../core/services/brand.service'; // update p
     MatSelectModule,
     MatOptionModule,
     MxButtonComponent,
-    MaterialModule
+    MaterialModule,
   ],
   templateUrl: './products-form.component.html',
   styleUrls: ['./products-form.component.scss'],

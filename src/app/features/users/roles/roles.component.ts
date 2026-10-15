@@ -6,7 +6,14 @@ import { Role } from '../../../core/Models/RoleModel';
 import { RoleService } from '../../../core/services/role.service';
 import { RolesFormComponent } from '../roles-form/roles-form.component';
 import { CommonModule } from '@angular/common';
-import { MxBadgeComponent, MxButtonComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+  MxNoticeService,
+} from '@mesix/custom-control';
 import { MatIconModule } from '@angular/material/icon';
 import { LoadingService } from '../../../core/services/Loading.service';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -49,7 +56,7 @@ export class RolesComponent implements OnInit, AfterViewInit {
 
   constructor(
     private roleService: RoleService,
-    private _loadingService: LoadingService
+    private _loadingService: LoadingService,
   ) {}
 
   ngOnInit() {
@@ -83,7 +90,7 @@ export class RolesComponent implements OnInit, AfterViewInit {
 
   openAddDialog() {
     const dialogRef = this.notice.open(RolesFormComponent, {
-      data: { mode: 'add' }
+      data: { mode: 'add' },
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
@@ -97,7 +104,7 @@ export class RolesComponent implements OnInit, AfterViewInit {
 
   openEditDialog(role: Role) {
     const dialogRef = this.notice.open(RolesFormComponent, {
-      data: { mode: 'edit', role }
+      data: { mode: 'edit', role },
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
@@ -110,16 +117,17 @@ export class RolesComponent implements OnInit, AfterViewInit {
     });
   }
   openDeleteDialog(role: Role) {
-    this.confirm.confirmDelete(`Are you sure you want to delete "${role.name}"?`, 'Delete Role').subscribe(async (result) => {
-      if (result) {
-        if (role.id) {
-          this._loadingService.show();
-          await this.roleService.deleteRole(role.id);
-          this._loadingService.hide();
-          this.loadRoles();
+    this.confirm
+      .confirmDelete(`Are you sure you want to delete "${role.name}"?`, 'Delete Role')
+      .subscribe(async (result) => {
+        if (result) {
+          if (role.id) {
+            this._loadingService.show();
+            await this.roleService.deleteRole(role.id);
+            this._loadingService.hide();
+            this.loadRoles();
+          }
         }
-      }
-    });
+      });
   }
 }
-

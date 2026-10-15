@@ -29,10 +29,7 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "node_modules/@mesix/theme/styles/mesix-theme.scss",
-              "src/styles.scss"
-            ],
+            "styles": ["node_modules/@mesix/theme/styles/mesix-theme.scss", "src/styles.scss"],
             "scripts": []
           },
           "configurations": {
@@ -92,10 +89,7 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "node_modules/@mesix/theme/styles/mesix-theme.scss",
-              "src/styles.scss"
-            ],
+            "styles": ["node_modules/@mesix/theme/styles/mesix-theme.scss", "src/styles.scss"],
             "scripts": []
           }
         }

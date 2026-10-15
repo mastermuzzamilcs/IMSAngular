@@ -4,7 +4,14 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { BrandFormComponent } from '../brand-form/brand-form.component';
 import { CommonModule } from '@angular/common';
-import { MxBadgeComponent, MxButtonComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+  MxNoticeService,
+} from '@mesix/custom-control';
 import { MatIconModule } from '@angular/material/icon';
 import { LoadingService } from '../../../core/services/Loading.service';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -49,7 +56,7 @@ export class BrandSetupComponent implements OnInit, AfterViewInit {
 
   constructor(
     private _brandService: BrandService,
-    private _loadingService: LoadingService
+    private _loadingService: LoadingService,
   ) {}
 
   ngOnInit() {
@@ -83,7 +90,7 @@ export class BrandSetupComponent implements OnInit, AfterViewInit {
 
   openAddDialog() {
     const dialogRef = this.notice.open(BrandFormComponent, {
-      data: { mode: 'add' }
+      data: { mode: 'add' },
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
@@ -97,7 +104,7 @@ export class BrandSetupComponent implements OnInit, AfterViewInit {
 
   openEditDialog(_brand: Brand) {
     const dialogRef = this.notice.open(BrandFormComponent, {
-      data: { mode: 'edit', _brand }
+      data: { mode: 'edit', _brand },
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
@@ -110,16 +117,17 @@ export class BrandSetupComponent implements OnInit, AfterViewInit {
     });
   }
   openDeleteDialog(_brand: Brand) {
-    this.confirm.confirmDelete(`Are you sure you want to delete "${_brand.name}"?`, 'Delete Brand').subscribe(async (result) => {
-      if (result) {
-        if (_brand.id) {
-          this._loadingService.show();
-          await this._brandService.deleteBrand(_brand.id);
-          this._loadingService.hide();
-          this.loadBrands();
+    this.confirm
+      .confirmDelete(`Are you sure you want to delete "${_brand.name}"?`, 'Delete Brand')
+      .subscribe(async (result) => {
+        if (result) {
+          if (_brand.id) {
+            this._loadingService.show();
+            await this._brandService.deleteBrand(_brand.id);
+            this._loadingService.hide();
+            this.loadBrands();
+          }
         }
-      }
-    });
+      });
   }
 }
-

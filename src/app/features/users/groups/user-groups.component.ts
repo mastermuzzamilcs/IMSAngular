@@ -5,7 +5,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MxBadgeComponent, MxButtonComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+  MxNoticeService,
+} from '@mesix/custom-control';
 import { UserGroup } from '../../../core/Models/UserGroupModel';
 import { LoadingService } from '../../../core/services/Loading.service';
 import { UserGroupAssociationService } from '../../../core/services/user-group-association.service';
@@ -50,7 +57,7 @@ export class UserGroupsComponent implements OnInit, AfterViewInit {
   constructor(
     private groupService: UserGroupService,
     private associationService: UserGroupAssociationService,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
   ) {}
 
   ngOnInit(): void {
@@ -79,7 +86,7 @@ export class UserGroupsComponent implements OnInit, AfterViewInit {
 
   openAddDialog(): void {
     const dialogRef = this.notice.open(UserGroupFormComponent, {
-      data: { mode: 'add' }
+      data: { mode: 'add' },
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (!result) {
@@ -94,7 +101,7 @@ export class UserGroupsComponent implements OnInit, AfterViewInit {
 
   openEditDialog(group: UserGroup): void {
     const dialogRef = this.notice.open(UserGroupFormComponent, {
-      data: { mode: 'edit', group }
+      data: { mode: 'edit', group },
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (!result || !group.id) {
@@ -108,20 +115,22 @@ export class UserGroupsComponent implements OnInit, AfterViewInit {
   }
 
   openDeleteDialog(group: UserGroup): void {
-    this.confirm.confirmDelete(`Delete "${group.name}"?`, 'Delete User Group').subscribe(async (confirmed) => {
-      if (!confirmed || !group.id) {
-        return;
-      }
-      this.loadingService.show();
-      const associations = await this.associationService.getAssociations();
-      await Promise.all(
-        associations
-          .filter((item) => item.groupid === group.id && item.id)
-          .map((item) => this.associationService.disassociate(item.id as string)),
-      );
-      await this.groupService.deleteGroup(group.id);
-      this.loadingService.hide();
-      this.loadGroups();
-    });
+    this.confirm
+      .confirmDelete(`Delete "${group.name}"?`, 'Delete User Group')
+      .subscribe(async (confirmed) => {
+        if (!confirmed || !group.id) {
+          return;
+        }
+        this.loadingService.show();
+        const associations = await this.associationService.getAssociations();
+        await Promise.all(
+          associations
+            .filter((item) => item.groupid === group.id && item.id)
+            .map((item) => this.associationService.disassociate(item.id as string)),
+        );
+        await this.groupService.deleteGroup(group.id);
+        this.loadingService.hide();
+        this.loadGroups();
+      });
   }
 }

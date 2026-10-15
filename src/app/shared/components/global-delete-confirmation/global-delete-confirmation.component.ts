@@ -5,10 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-global-delete-confirmation',
-  imports: [
-    MatButtonModule,
-    MatIconModule
-  ],
+  imports: [MatButtonModule, MatIconModule],
   templateUrl: './global-delete-confirmation.component.html',
   styleUrl: './global-delete-confirmation.component.scss',
 })

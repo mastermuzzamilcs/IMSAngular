@@ -4,7 +4,14 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { ProductsFormComponent } from '../products-form/products-form.component';
 import { CommonModule } from '@angular/common';
-import { MxBadgeComponent, MxButtonComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+  MxNoticeService,
+} from '@mesix/custom-control';
 import { MatIconModule } from '@angular/material/icon';
 import { LoadingService } from '../../../core/services/Loading.service';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -51,7 +58,7 @@ export class ProductsSetupComponent implements OnInit, AfterViewInit {
   constructor(
     private _productService: ProductService,
     private _brandService: BrandService,
-    private _loadingService: LoadingService
+    private _loadingService: LoadingService,
   ) {}
 
   ngOnInit() {
@@ -94,7 +101,7 @@ export class ProductsSetupComponent implements OnInit, AfterViewInit {
 
   openAddDialog() {
     const dialogRef = this.notice.open(ProductsFormComponent, {
-      data: { mode: 'add' }
+      data: { mode: 'add' },
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
@@ -108,7 +115,7 @@ export class ProductsSetupComponent implements OnInit, AfterViewInit {
 
   openEditDialog(_product: Product) {
     const dialogRef = this.notice.open(ProductsFormComponent, {
-      data: { mode: 'edit', _product }
+      data: { mode: 'edit', _product },
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
@@ -121,16 +128,20 @@ export class ProductsSetupComponent implements OnInit, AfterViewInit {
     });
   }
   openDeleteDialog(_product: Product) {
-    this.confirm.confirmDelete(`Are you sure you want to delete Product "${_product.name}"?`, 'Delete Product').subscribe(async (result) => {
-      if (result) {
-        if (_product.id) {
-          this._loadingService.show();
-          await this._productService.deleteProduct(_product.id);
-          this._loadingService.hide();
-          this.loadProducts();
+    this.confirm
+      .confirmDelete(
+        `Are you sure you want to delete Product "${_product.name}"?`,
+        'Delete Product',
+      )
+      .subscribe(async (result) => {
+        if (result) {
+          if (_product.id) {
+            this._loadingService.show();
+            await this._productService.deleteProduct(_product.id);
+            this._loadingService.hide();
+            this.loadProducts();
+          }
         }
-      }
-    });
+      });
   }
 }
-

@@ -42,7 +42,7 @@ interface DirectoryRow {
     MatButtonModule,
     MatIconModule,
     MatCheckboxModule,
-    MatTableModule
+    MatTableModule,
   ],
   templateUrl: './customer-search-modal.component.html',
 })

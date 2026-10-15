@@ -103,7 +103,7 @@ export class SalesReturnComponent implements OnInit {
   }
   openCustomerDialog(): void {
     const dialogRef = this.notice.open(CustomerSearchModalComponent, {
-      data: { type: 'Customers', isMultiSelect: false }
+      data: { type: 'Customers', isMultiSelect: false },
     });
     dialogRef.afterClosed().subscribe((customer: Customer | null) => {
       if (!customer) {

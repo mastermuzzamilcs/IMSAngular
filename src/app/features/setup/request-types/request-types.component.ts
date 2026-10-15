@@ -21,7 +21,8 @@ import { ToastService } from '../../../core/services/toast.service';
   imports: [
     CommonModule,
     FormsModule,
-    MxPageHeaderComponent, MxCardComponent,
+    MxPageHeaderComponent,
+    MxCardComponent,
     MatTableModule,
     MatSlideToggleModule,
     MatFormFieldModule,

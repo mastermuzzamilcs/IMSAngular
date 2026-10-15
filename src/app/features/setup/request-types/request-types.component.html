@@ -18,7 +18,11 @@
       <ng-container matColumnDef="assignedToSource">
         <th mat-header-cell *matHeaderCellDef>Assigned to (item source)</th>
         <td mat-cell *matCellDef="let row">
-          <mat-form-field appearance="outline" class="full-width" *ngIf="canEdit; else readOnlySource">
+          <mat-form-field
+            appearance="outline"
+            class="full-width"
+            *ngIf="canEdit; else readOnlySource"
+          >
             <mat-label>Item source</mat-label>
             <mat-select
               [ngModel]="row.assignedToSource"

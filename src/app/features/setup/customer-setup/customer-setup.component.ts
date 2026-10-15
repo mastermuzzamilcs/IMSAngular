@@ -1,7 +1,14 @@
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { Component, OnInit, AfterViewInit, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MxBadgeComponent, MxButtonComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+  MxNoticeService,
+} from '@mesix/custom-control';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -48,7 +55,7 @@ export class CustomerSetupComponent implements OnInit, AfterViewInit {
 
   constructor(
     private customerService: CustomerService,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
   ) {}
 
   ngOnInit(): void {
@@ -77,7 +84,7 @@ export class CustomerSetupComponent implements OnInit, AfterViewInit {
 
   openAddDialog(): void {
     const dialogRef = this.notice.open(CustomerFormComponent, {
-      data: { mode: 'add' }
+      data: { mode: 'add' },
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (!result) {
@@ -92,7 +99,7 @@ export class CustomerSetupComponent implements OnInit, AfterViewInit {
 
   openEditDialog(customer: Customer): void {
     const dialogRef = this.notice.open(CustomerFormComponent, {
-      data: { mode: 'edit', customer }
+      data: { mode: 'edit', customer },
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (!result || !customer.id) {
@@ -106,13 +113,15 @@ export class CustomerSetupComponent implements OnInit, AfterViewInit {
   }
 
   openDeleteDialog(customer: Customer): void {
-    this.confirm.confirmDelete(`Are you sure you want to delete "${customer.name}"?`, 'Delete Customer').subscribe(async (result) => {
-      if (result && customer.id) {
-        this.loadingService.show();
-        await this.customerService.deleteCustomer(customer.id);
-        this.loadingService.hide();
-        this.loadCustomers();
-      }
-    });
+    this.confirm
+      .confirmDelete(`Are you sure you want to delete "${customer.name}"?`, 'Delete Customer')
+      .subscribe(async (result) => {
+        if (result && customer.id) {
+          this.loadingService.show();
+          await this.customerService.deleteCustomer(customer.id);
+          this.loadingService.hide();
+          this.loadCustomers();
+        }
+      });
   }
 }

@@ -6,7 +6,14 @@ import { SalesFormComponent } from '../form/sales-form.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { CommonModule } from '@angular/common';
-import { MxBadgeComponent, MxButtonComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+  MxNoticeService,
+} from '@mesix/custom-control';
 import { Status } from '../../../core/enums/status.enum';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
@@ -70,7 +77,7 @@ export class SalesListComponent implements AfterViewInit {
 
   openNewSaleDialog() {
     const dialogRef = this.notice.open(SalesFormComponent, {
-      data: { mode: 'new' }
+      data: { mode: 'new' },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
@@ -89,4 +96,3 @@ export class SalesListComponent implements AfterViewInit {
     // Export sales data to CSV/Excel
   }
 }
-

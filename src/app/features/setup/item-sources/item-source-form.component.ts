@@ -37,7 +37,7 @@ interface ParameterDraft {
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
   ],
   templateUrl: './item-source-form.component.html',
   styleUrl: './item-source-form.component.scss',

@@ -18,7 +18,7 @@ import { WorkflowStatusTransition } from '../../../core/Models/WorkflowStatusTra
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatButtonModule
+    MatButtonModule,
   ],
   templateUrl: './workflow-transition-form.component.html',
 })

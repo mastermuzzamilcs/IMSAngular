@@ -5,7 +5,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MxButtonComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
+import {
+  MxButtonComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+  MxNoticeService,
+} from '@mesix/custom-control';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 import {
@@ -59,7 +65,7 @@ export class NotificationTemplatesComponent implements OnInit, AfterViewInit {
     private templateService: NotificationTemplateService,
     private branchService: BranchService,
     private auth: AuthService,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
   ) {}
 
   ngOnInit(): void {
@@ -163,7 +169,10 @@ export class NotificationTemplatesComponent implements OnInit, AfterViewInit {
 
   openDeleteDialog(template: NotificationTemplate): void {
     this.confirm
-      .confirmDelete(`Are you sure you want to delete "${template.name}"?`, 'Delete Notification Template')
+      .confirmDelete(
+        `Are you sure you want to delete "${template.name}"?`,
+        'Delete Notification Template',
+      )
       .subscribe(async (confirmed: boolean) => {
         if (!confirmed || !template.id) {
           return;

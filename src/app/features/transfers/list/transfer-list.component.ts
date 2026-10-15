@@ -1,6 +1,13 @@
 import { Component, OnInit, ViewChild, AfterViewInit, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { MxBadgeComponent, MxButtonComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+  MxNoticeService,
+} from '@mesix/custom-control';
 import type { MxTone } from '@mesix/custom-control';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
@@ -57,9 +64,7 @@ export class TransferListComponent implements OnInit, AfterViewInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(
-    private transferService: TransferService,
-  ) {}
+  constructor(private transferService: TransferService) {}
 
   async ngOnInit(): Promise<void> {
     await this.loadTransfers();
@@ -98,7 +103,7 @@ export class TransferListComponent implements OnInit, AfterViewInit {
     const dialogRef = this.notice.open(TransferFormComponent, {
       data: {
         mode: 'new',
-      }
+      },
     });
 
     dialogRef.afterClosed().subscribe(async (result) => {
@@ -122,7 +127,7 @@ export class TransferListComponent implements OnInit, AfterViewInit {
     this.notice.open(TransferDetailComponent, {
       data: {
         transfer,
-      }
+      },
     });
   }
 
@@ -181,4 +186,3 @@ export class TransferListComponent implements OnInit, AfterViewInit {
     }
   }
 }
-

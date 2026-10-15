@@ -15,7 +15,7 @@ import { Customer } from '../../../core/Models/CustomerModel';
     ReactiveFormsModule,
     MatFormFieldModule,
     MaterialModule,
-    MxButtonComponent
+    MxButtonComponent,
   ],
   templateUrl: './customer-form.component.html',
 })

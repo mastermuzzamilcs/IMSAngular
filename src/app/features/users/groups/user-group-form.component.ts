@@ -20,7 +20,7 @@ import { UserGroup } from '../../../core/Models/UserGroupModel';
     MatInputModule,
     MatSelectModule,
     MatCheckboxModule,
-    MatButtonModule
+    MatButtonModule,
   ],
   templateUrl: './user-group-form.component.html',
 })

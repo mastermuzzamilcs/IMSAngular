@@ -5,7 +5,14 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { UserFormComponent } from '../form/user-form.component';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
-import { MxBadgeComponent, MxButtonComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+  MxNoticeService,
+} from '@mesix/custom-control';
 import type { MxTone } from '@mesix/custom-control';
 import { UsersService } from '../../../core/services/users.service';
 import { LoadingService } from '../../../core/services/Loading.service';
@@ -75,7 +82,7 @@ export class UserListComponent implements OnInit, AfterViewInit {
         mode: 'add',
         rolesLookup: this.userRolesLookup,
         branchesLookup: this.userBranchesLookup,
-      }
+      },
     });
 
     dialogRef.afterClosed().subscribe(async (result) => {
@@ -95,7 +102,7 @@ export class UserListComponent implements OnInit, AfterViewInit {
         user,
         rolesLookup: this.userRolesLookup,
         branchesLookup: this.userBranchesLookup,
-      }
+      },
     });
 
     dialogRef.afterClosed().subscribe(async (result) => {

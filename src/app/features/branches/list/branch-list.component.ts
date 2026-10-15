@@ -6,7 +6,14 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { BranchFormComponent } from '../form/branch-form.component';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { MxBadgeComponent, MxButtonComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+  MxNoticeService,
+} from '@mesix/custom-control';
 import { BranchService } from '../../../core/services/branchservice.service';
 import { Status } from '../../../core/enums/status.enum';
 import { Branch } from '../../../core/Models/BranchModel';
@@ -94,7 +101,7 @@ export class BranchListComponent implements OnInit, AfterViewInit {
 
   openAddDialog() {
     const dialogRef = this.notice.open(BranchFormComponent, {
-      data: { mode: 'add', managerUsersLookup: this.managerUsersLookup }
+      data: { mode: 'add', managerUsersLookup: this.managerUsersLookup },
     });
 
     dialogRef.afterClosed().subscribe(async (result) => {
@@ -108,7 +115,7 @@ export class BranchListComponent implements OnInit, AfterViewInit {
   }
   openEditDialog(branch: any) {
     const dialogRef = this.notice.open(BranchFormComponent, {
-      data: { mode: 'edit', branch, managerUsersLookup: this.managerUsersLookup }
+      data: { mode: 'edit', branch, managerUsersLookup: this.managerUsersLookup },
     });
 
     dialogRef.afterClosed().subscribe(async (result) => {
@@ -141,15 +148,17 @@ export class BranchListComponent implements OnInit, AfterViewInit {
     this.tableLoading = false;
   }
   openDeleteDialog(branch: Branch) {
-    this.confirm.confirmDelete(`Are you sure you want to delete "${branch.name}"?`, 'Delete Branch').subscribe(async (result) => {
-      if (result) {
-        if (branch.branchid) {
-          this.loadingService.show();
-          await this.branchService.deleteBranch(branch.branchid);
-          this.loadingService.hide();
-          this.loadBranches();
+    this.confirm
+      .confirmDelete(`Are you sure you want to delete "${branch.name}"?`, 'Delete Branch')
+      .subscribe(async (result) => {
+        if (result) {
+          if (branch.branchid) {
+            this.loadingService.show();
+            await this.branchService.deleteBranch(branch.branchid);
+            this.loadingService.hide();
+            this.loadBranches();
+          }
         }
-      }
-    });
+      });
   }
 }

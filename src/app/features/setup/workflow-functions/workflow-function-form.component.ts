@@ -10,13 +10,7 @@ import { WorkflowFunctionRecord } from '../../../core/Models/WorkflowFunctionRec
 @Component({
   selector: 'app-workflow-function-form',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule
-  ],
+  imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule],
   templateUrl: './workflow-function-form.component.html',
 })
 export class WorkflowFunctionFormComponent implements OnInit {

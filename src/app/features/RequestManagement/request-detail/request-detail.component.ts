@@ -8,7 +8,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { FormsModule } from '@angular/forms';
-import { MxBadgeComponent, MxButtonComponent, MxDialogRef, MX_DIALOG_DATA } from '@mesix/custom-control';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxDialogRef,
+  MX_DIALOG_DATA,
+} from '@mesix/custom-control';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { WorkflowService } from '../../../core/services/Workflow.service';
@@ -42,7 +47,7 @@ import { ToastService } from '../../../core/services/toast.service';
     FormsModule,
     MatProgressSpinnerModule,
     MxButtonComponent,
-    MxBadgeComponent
+    MxBadgeComponent,
   ],
 })
 export class RequestDetailComponent implements OnInit {

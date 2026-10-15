@@ -4,7 +4,14 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { VendorFormComponent } from '../vendor-form/vendor-form.component';
 import { CommonModule } from '@angular/common';
-import { MxBadgeComponent, MxButtonComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+  MxNoticeService,
+} from '@mesix/custom-control';
 import { MatIconModule } from '@angular/material/icon';
 import { LoadingService } from '../../../core/services/Loading.service';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -49,7 +56,7 @@ export class VendorSetupComponent implements OnInit, AfterViewInit {
 
   constructor(
     private _vendorService: VendorService,
-    private _loadingService: LoadingService
+    private _loadingService: LoadingService,
   ) {}
 
   ngOnInit() {
@@ -83,7 +90,7 @@ export class VendorSetupComponent implements OnInit, AfterViewInit {
 
   openAddDialog() {
     const dialogRef = this.notice.open(VendorFormComponent, {
-      data: { mode: 'add' }
+      data: { mode: 'add' },
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
@@ -97,7 +104,7 @@ export class VendorSetupComponent implements OnInit, AfterViewInit {
 
   openEditDialog(_vendor: Vendor) {
     const dialogRef = this.notice.open(VendorFormComponent, {
-      data: { mode: 'edit', _vendor }
+      data: { mode: 'edit', _vendor },
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
@@ -110,16 +117,17 @@ export class VendorSetupComponent implements OnInit, AfterViewInit {
     });
   }
   openDeleteDialog(_vendor: Vendor) {
-    this.confirm.confirmDelete(`Are you sure you want to delete "${_vendor.name}"?`, 'Delete Vendor').subscribe(async (result) => {
-      if (result) {
-        if (_vendor.id) {
-          this._loadingService.show();
-          await this._vendorService.deleteVendor(_vendor.id);
-          this._loadingService.hide();
-          this.loadVendors();
+    this.confirm
+      .confirmDelete(`Are you sure you want to delete "${_vendor.name}"?`, 'Delete Vendor')
+      .subscribe(async (result) => {
+        if (result) {
+          if (_vendor.id) {
+            this._loadingService.show();
+            await this._vendorService.deleteVendor(_vendor.id);
+            this._loadingService.hide();
+            this.loadVendors();
+          }
         }
-      }
-    });
+      });
   }
 }
-

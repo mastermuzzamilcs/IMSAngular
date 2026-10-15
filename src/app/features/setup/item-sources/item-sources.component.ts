@@ -5,7 +5,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MxButtonComponent, MxEmptyStateComponent, MxGridComponent, MxPageHeaderComponent, MxNoticeService } from '@mesix/custom-control';
+import {
+  MxButtonComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+  MxNoticeService,
+} from '@mesix/custom-control';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 import { ItemSource } from '../../../core/item-sources/item-source.model';
@@ -48,7 +54,7 @@ export class ItemSourcesComponent implements OnInit, AfterViewInit {
 
   constructor(
     private itemSourceService: ItemSourceService,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
   ) {}
 
   ngOnInit(): void {
@@ -89,7 +95,9 @@ export class ItemSourcesComponent implements OnInit, AfterViewInit {
           await this.loadSources();
         } catch (error) {
           console.error('Error adding item source', error);
-          this.toast.error(error instanceof Error ? error.message : 'Could not save the item source');
+          this.toast.error(
+            error instanceof Error ? error.message : 'Could not save the item source',
+          );
           this.loadingService.hide();
         }
       });
@@ -109,7 +117,9 @@ export class ItemSourcesComponent implements OnInit, AfterViewInit {
           await this.loadSources();
         } catch (error) {
           console.error('Error updating item source', error);
-          this.toast.error(error instanceof Error ? error.message : 'Could not save the item source');
+          this.toast.error(
+            error instanceof Error ? error.message : 'Could not save the item source',
+          );
           this.loadingService.hide();
         }
       });

@@ -17,7 +17,7 @@ import { Role } from '../../../core/Models/RoleModel';
     MaterialModule,
     ReactiveFormsModule,
     CommonModule,
-    MxButtonComponent
+    MxButtonComponent,
   ],
   templateUrl: './branch-form.component.html',
   styleUrls: ['./branch-form.component.scss'],

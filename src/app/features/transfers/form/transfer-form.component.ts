@@ -28,7 +28,7 @@ import { Branch } from '../../../core/Models/BranchModel';
     ReactiveFormsModule,
     MatIconModule,
     MatCardModule,
-    MxButtonComponent
+    MxButtonComponent,
   ],
   templateUrl: './transfer-form.component.html',
   styleUrls: ['./transfer-form.component.scss'],

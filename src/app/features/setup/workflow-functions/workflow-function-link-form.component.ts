@@ -19,7 +19,7 @@ import { WorkflowFunctionRecord } from '../../../core/Models/WorkflowFunctionRec
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatButtonModule
+    MatButtonModule,
   ],
   templateUrl: './workflow-function-link-form.component.html',
 })

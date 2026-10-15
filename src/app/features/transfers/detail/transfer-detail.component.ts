@@ -7,10 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
   templateUrl: './transfer-detail.component.html',
   styleUrls: ['./transfer-detail.component.scss'],
   standalone: true,
-  imports: [
-    CommonModule,
-    MatButtonModule
-  ],
+  imports: [CommonModule, MatButtonModule],
 })
 export class TransferDetailComponent {
   constructor(
