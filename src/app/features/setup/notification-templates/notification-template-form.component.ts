@@ -1,14 +1,9 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { MX_DIALOG_DATA, MxDialogRef, MxNoticeService } from '@mesix/custom-control';
+import { Component, Inject, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import {
-  MAT_DIALOG_DATA,
-  MatDialog,
-  MatDialogModule,
-  MatDialogRef,
-} from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -34,6 +29,7 @@ import { ALL_BRANCHES_ID } from '../../../core/services/user-branch-association.
 import { AuthService } from '../../../core/services/auth.service';
 import { SessionBranch } from '../../../core/Models/AuthSession';
 import { CustomerSearchModalComponent } from '../../../shared/components/customer-search-modal/customer-search-modal.component';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-notification-template-form',
@@ -41,7 +37,6 @@ import { CustomerSearchModalComponent } from '../../../shared/components/custome
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
@@ -54,6 +49,10 @@ import { CustomerSearchModalComponent } from '../../../shared/components/custome
   styleUrl: './notification-template-form.component.scss',
 })
 export class NotificationTemplateFormComponent implements OnInit {
+  private readonly notice = inject(MxNoticeService);
+
+  private readonly toast = inject(ToastService);
+
   readonly channelLabel = notificationChannelLabel;
   readonly requestTypes = Object.values(RequestType);
   readonly requestStatuses = Object.values(RequestStatus);
@@ -75,9 +74,8 @@ export class NotificationTemplateFormComponent implements OnInit {
     private usersService: UsersService,
     private itemSourceService: ItemSourceService,
     private auth: AuthService,
-    private dialog: MatDialog,
-    public dialogRef: MatDialogRef<NotificationTemplateFormComponent>,
-    @Inject(MAT_DIALOG_DATA)
+    public dialogRef: MxDialogRef<unknown>,
+    @Inject(MX_DIALOG_DATA)
     public data: { mode: string; template?: NotificationTemplate },
   ) {}
 
@@ -148,11 +146,8 @@ export class NotificationTemplateFormComponent implements OnInit {
   }
 
   openUserDialog(): void {
-    this.dialog
+    this.notice
       .open(CustomerSearchModalComponent, {
-        width: '95vw',
-        maxWidth: '960px',
-        maxHeight: '85vh',
         data: {
           type: 'all',
           isMultiSelect: true,
@@ -204,7 +199,9 @@ export class NotificationTemplateFormComponent implements OnInit {
       userIds.length === 0 &&
       audienceSources.length === 0
     ) {
-      alert('Choose at least one audience: public, groups, custom users, or an item source.');
+      this.toast.warning(
+        'Choose at least one audience: public, groups, custom users, or an item source.',
+      );
       return;
     }
     const seen = new Set<string>();

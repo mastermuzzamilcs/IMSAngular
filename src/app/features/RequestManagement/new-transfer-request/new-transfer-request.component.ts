@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -6,7 +6,6 @@ import {
   ReactiveFormsModule,
   FormsModule,
 } from '@angular/forms';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -15,9 +14,16 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { MatNativeDateModule } from '@angular/material/core';
+import {
+  MxButtonComponent,
+  MxCardComponent,
+  MxDialogRef,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxNoticeService,
+  MxPageHeaderComponent,
+} from '@mesix/custom-control';
 import { ItemSearchModalComponent } from '../../inventory/item-search-modal/item-search-modal.component';
 import { UsersService } from '../../../core/services/users.service';
 import { BranchService } from '../../../core/services/branchservice.service';
@@ -29,6 +35,8 @@ import { privileges as privilegeAccess } from '../../../core/auth/privilege-cata
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 import { LoadingService } from '../../../core/services/Loading.service';
 import { Transfer } from '../../../core/Models/TransferModel';
+import { Branch } from '../../../core/Models/BranchModel';
+import { Product } from '../../../core/Models/ProductModel';
 import { User } from '../../../core/Models/UsersModel';
 import { RequestStatus, RequestType } from '../../../core/Models/WorkflowModel';
 import {
@@ -36,6 +44,7 @@ import {
   UserBranchAssociationService,
 } from '../../../core/services/user-branch-association.service';
 import { CustomerSearchModalComponent } from '../../../shared/components/customer-search-modal/customer-search-modal.component';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-new-transfer-request',
@@ -50,29 +59,34 @@ import { CustomerSearchModalComponent } from '../../../shared/components/custome
     MatDatepickerModule,
     MatIconModule,
     MatTableModule,
-    MatButtonModule,
-    MatCardModule,
     MatNativeDateModule,
+    MxPageHeaderComponent,
+    MxButtonComponent,
+    MxCardComponent,
+    MxGridComponent,
+    MxEmptyStateComponent,
     PrivilegeDirective,
   ],
   templateUrl: './new-transfer-request.component.html',
   styleUrls: ['./new-transfer-request.component.scss'],
 })
 export class NewTransferRequestComponent implements OnInit {
+  private readonly toast = inject(ToastService);
+  private readonly notice = inject(MxNoticeService);
+
   readonly privileges = privilegeAccess;
-  dataSource = new MatTableDataSource<any>([]);
+  dataSource = new MatTableDataSource<Product & { quantity: number }>([]);
   displayedColumns: string[] = ['product', 'description', 'quantity', 'actions'];
   transferForm!: FormGroup;
-  branches: any[] = [];
+  branches: Branch[] = [];
   users: User[] = [];
   private linksByUser = new Map<string, string[]>();
   searchedUser: User | null = null;
-  private itemDialogRef: MatDialogRef<ItemSearchModalComponent> | null = null;
+  private itemDialogRef: MxDialogRef<Product | Product[] | null> | null = null;
   private addItemOpen = false;
 
   constructor(
     private fb: FormBuilder,
-    private dialog: MatDialog,
     private usersService: UsersService,
     private branchAssociationService: UserBranchAssociationService,
     private branchService: BranchService,
@@ -133,11 +147,8 @@ export class NewTransferRequestComponent implements OnInit {
   }
 
   openUserSearch(): void {
-    this.dialog
+    this.notice
       .open(CustomerSearchModalComponent, {
-        width: '95vw',
-        maxWidth: '960px',
-        maxHeight: '85vh',
         data: { type: 'all', isMultiSelect: false },
       })
       .afterClosed()
@@ -161,7 +172,7 @@ export class NewTransferRequestComponent implements OnInit {
     return links.some((branchid) => branchid === ALL_BRANCHES_ID || branches.has(branchid));
   }
 
-  get destinationBranches(): any[] {
+  get destinationBranches(): Branch[] {
     const current = this.auth.currentBranchId();
     return this.branches.filter((branch) => branch.branchid !== current);
   }
@@ -182,8 +193,7 @@ export class NewTransferRequestComponent implements OnInit {
           .forEach((item) => allowedIds.add(item.productid));
       }
 
-      this.itemDialogRef = this.dialog.open(ItemSearchModalComponent, {
-        width: '800px',
+      this.itemDialogRef = this.notice.open(ItemSearchModalComponent, {
         data: {},
       });
 
@@ -193,7 +203,7 @@ export class NewTransferRequestComponent implements OnInit {
         if (Array.isArray(result) && result.length) {
           const updatedData = [...this.dataSource.data];
           result.forEach((product) => {
-            if (!allowedIds.has(product.id)) {
+            if (!product.id || !allowedIds.has(product.id)) {
               return;
             }
             const existing = updatedData.find((item) => item.id === product.id);
@@ -215,14 +225,14 @@ export class NewTransferRequestComponent implements OnInit {
     }
   }
 
-  removeProduct(row: any): void {
+  removeProduct(row: Product & { quantity: number }): void {
     this.dataSource.data = this.dataSource.data.filter((item) => item !== row);
   }
 
   async submitTransfer(): Promise<void> {
     const fromBranchId = this.auth.currentBranchId();
     if (!fromBranchId) {
-      alert('Choose a branch from the top bar before continuing.');
+      this.toast.warning('Choose a branch from the top bar before continuing.');
       return;
     }
     if (this.transferForm.invalid || this.dataSource.data.length === 0) {
@@ -248,7 +258,7 @@ export class NewTransferRequestComponent implements OnInit {
       requestDate: new Date(),
       status: RequestStatus.Pending,
       items: this.dataSource.data.map((row) => ({
-        productId: row.id,
+        productId: row.id || '',
         productName: row.name,
         description: row.description || '',
         quantity: Number(row.quantity) || 0,
@@ -265,12 +275,12 @@ export class NewTransferRequestComponent implements OnInit {
         toBranchId: formValue.toBranch,
         remarks: 'Auto-generated from New Transfer Request',
       });
-      alert('Transfer request added successfully');
+      this.toast.success('Transfer request added successfully');
       this.dataSource.data = [];
       this.transferForm.reset({ date: new Date() });
     } catch (err) {
       console.error('Error submitting transfer request:', err);
-      alert(err instanceof Error ? err.message : 'Failed to submit transfer request');
+      this.toast.error(err instanceof Error ? err.message : 'Failed to submit transfer request');
     }
     this.loadingService.hide();
   }

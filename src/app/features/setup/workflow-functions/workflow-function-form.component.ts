@@ -1,6 +1,6 @@
+import { MX_DIALOG_DATA, MxDialogRef } from '@mesix/custom-control';
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,14 +10,7 @@ import { WorkflowFunctionRecord } from '../../../core/Models/WorkflowFunctionRec
 @Component({
   selector: 'app-workflow-function-form',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-  ],
+  imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule],
   templateUrl: './workflow-function-form.component.html',
 })
 export class WorkflowFunctionFormComponent implements OnInit {
@@ -26,8 +19,8 @@ export class WorkflowFunctionFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    public dialogRef: MatDialogRef<WorkflowFunctionFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { mode: string; record?: WorkflowFunctionRecord },
+    public dialogRef: MxDialogRef<unknown>,
+    @Inject(MX_DIALOG_DATA) public data: { mode: string; record?: WorkflowFunctionRecord },
   ) {}
 
   ngOnInit(): void {

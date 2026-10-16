@@ -1,6 +1,6 @@
-<h2 mat-dialog-title>Transfer Details</h2>
+<h2 class="mx-dialog-title">Transfer Details</h2>
 
-<mat-dialog-content>
+<div class="mx-dialog-body">
   <div class="detail-row">
     <strong>Transfer ID:</strong>
     {{ transfer.id || transfer.transferId }}
@@ -62,8 +62,8 @@
       </tr>
     </tbody>
   </table>
-</mat-dialog-content>
+</div>
 
-<mat-dialog-actions align="end">
+<div class="mx-dialog-actions">
   <button mat-button (click)="dialogRef.close()">Close</button>
-</mat-dialog-actions>
+</div>

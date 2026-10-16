@@ -1,6 +1,6 @@
-<h2 mat-dialog-title>New Transfer Request</h2>
+<h2 class="mx-dialog-title">New Transfer Request</h2>
 
-<mat-dialog-content>
+<div class="mx-dialog-body">
   <form [formGroup]="transferForm">
     <div class="form-row two-columns">
       <mat-form-field appearance="outline">
@@ -77,9 +77,13 @@
                   <p>{{ laptop.description }}</p>
                 </div>
 
-                <button mat-icon-button color="primary" type="button" (click)="addLaptop(laptop)">
-                  <mat-icon>add_circle</mat-icon>
-                </button>
+                <mx-button
+                  variant="ghost"
+                  tone="primary"
+                  icon="add_circle"
+                  [iconOnly]="true"
+                  (pressed)="addLaptop(laptop)"
+                ></mx-button>
               </mat-card-content>
             </mat-card>
           </div>
@@ -102,9 +106,13 @@
                   </p>
                 </div>
 
-                <button mat-icon-button color="warn" (click)="removeLaptop(laptop)">
-                  <mat-icon> remove_circle </mat-icon>
-                </button>
+                <mx-button
+                  variant="ghost"
+                  tone="danger"
+                  icon="remove_circle"
+                  [iconOnly]="true"
+                  (pressed)="removeLaptop(laptop)"
+                ></mx-button>
               </mat-card-content>
             </mat-card>
           </div>
@@ -112,17 +120,15 @@
       </div>
     </div>
   </form>
-</mat-dialog-content>
+</div>
 
-<mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()">Cancel</button>
-
-  <button
-    mat-raised-button
-    color="primary"
-    (click)="onSubmit()"
+<div class="mx-dialog-actions" class="form-actions">
+  <mx-button variant="outline" tone="neutral" (pressed)="onCancel()">Cancel</mx-button>
+  <mx-button
+    tone="primary"
+    (pressed)="onSubmit()"
     [disabled]="transferForm.invalid || selectedLaptops.length === 0"
   >
     Create Transfer
-  </button>
-</mat-dialog-actions>
+  </mx-button>
+</div>

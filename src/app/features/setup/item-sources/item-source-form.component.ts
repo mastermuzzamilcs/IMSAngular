@@ -1,9 +1,9 @@
+import { MX_DIALOG_DATA, MxDialogRef } from '@mesix/custom-control';
 import { Component, DestroyRef, Inject, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -33,7 +33,6 @@ interface ParameterDraft {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
@@ -58,8 +57,8 @@ export class ItemSourceFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    public dialogRef: MatDialogRef<ItemSourceFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { mode: string; source?: ItemSource },
+    public dialogRef: MxDialogRef<unknown>,
+    @Inject(MX_DIALOG_DATA) public data: { mode: string; source?: ItemSource },
   ) {}
 
   ngOnInit(): void {

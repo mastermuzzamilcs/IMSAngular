@@ -3,19 +3,23 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatCardModule } from '@angular/material/card';
-import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+} from '@mesix/custom-control';
+import type { MxTone } from '@mesix/custom-control';
 import { StockService } from '../../../core/services/stock.service';
 import { VendorService } from '../../../core/services/vendor.service';
 import { ProductService } from '../../../core/services/product.service';
 import { Stock, StockOverview } from '../../../core/Models/StockModel';
 import { LoadingService } from '../../../core/services/Loading.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { RouterModule } from '@angular/router';
 
 @Component({
   standalone: true,
@@ -25,13 +29,13 @@ import { RouterModule } from '@angular/router';
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
-    MatFormFieldModule,
-    MatCardModule,
-    MatInputModule,
     MatIconModule,
-    MatButtonModule,
     CommonModule,
-    RouterModule,
+    MxPageHeaderComponent,
+    MxButtonComponent,
+    MxGridComponent,
+    MxBadgeComponent,
+    MxEmptyStateComponent,
   ],
   styleUrls: ['./inventory-list.component.scss'],
 })
@@ -47,7 +51,8 @@ export class InventoryListComponent implements OnInit, AfterViewInit {
     'reservedQuantity',
     'alert',
   ];
-  dataSource = new MatTableDataSource<any>([]);
+  dataSource = new MatTableDataSource<StockOverview>([]);
+  tableLoading = false;
   selectedBranchId = '';
   allStock: Stock[] = [];
   stockOverviewData: StockOverview[] = [];
@@ -62,6 +67,7 @@ export class InventoryListComponent implements OnInit, AfterViewInit {
     private loadingService: LoadingService,
     private auth: AuthService,
     private destroyRef: DestroyRef,
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -82,16 +88,41 @@ export class InventoryListComponent implements OnInit, AfterViewInit {
 
   applyFilter(event: Event): void {
     const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+    this.onGridFilter(filterValue);
+  }
+
+  onGridFilter(value: string): void {
+    this.dataSource.filter = value.trim().toLowerCase();
+  }
+
+  goStockIn(): void {
+    void this.router.navigate(['/inventory/stock-in']);
+  }
+
+  goStockOut(): void {
+    void this.router.navigate(['/inventory/stock-out']);
+  }
+
+  getAlertTone(alert: string): MxTone {
+    switch (alert) {
+      case 'Empty':
+        return 'danger';
+      case 'Low':
+        return 'warning';
+      case 'Healthy':
+        return 'success';
+      default:
+        return 'neutral';
+    }
   }
 
   async filterByBranch(): Promise<void> {
     if (!this.selectedBranchId) {
       this.dataSource.data = [];
-      this.loadingService.hide();
+      this.tableLoading = false;
       return;
     }
-    this.loadingService.show();
+    this.tableLoading = true;
     try {
       this.stockOverviewData = await this.stockService.getStockOverviewByBranch(
         this.selectedBranchId,
@@ -102,7 +133,7 @@ export class InventoryListComponent implements OnInit, AfterViewInit {
       });
       this.dataSource.data = this.stockOverviewData;
     } finally {
-      this.loadingService.hide();
+      this.tableLoading = false;
     }
   }
 }

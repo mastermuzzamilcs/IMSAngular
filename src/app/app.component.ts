@@ -5,7 +5,6 @@ import {
   RouterLink,
   RouterLinkActive,
   Router,
-  NavigationStart,
   NavigationEnd,
   NavigationCancel,
   NavigationError,
@@ -13,8 +12,13 @@ import {
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
-import { GlobalSpinnerComponent } from './shared/global-spinner/global-spinner.component';
-// Material Imports
+import { MxThemeService } from '@mesix/theme';
+import {
+  MxSpinnerComponent,
+  MxToastHostComponent,
+  MxDialogHostComponent,
+} from '@mesix/custom-control';
+import { applyImsTheme, readStoredThemeId } from './core/theme/theme-preference';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
@@ -25,6 +29,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { LoadingService } from './core/services/Loading.service';
 import { NotificationInboxService } from './core/notifications/notification-inbox.service';
 import { NotificationSoundService } from './core/notifications/notification-sound.service';
@@ -49,10 +54,13 @@ import { AppSettingsService } from './core/services/app-settings.service';
     MatListModule,
     MatMenuModule,
     MatDividerModule,
-    GlobalSpinnerComponent,
-    MatExpansionModule,
+    MatSlideToggleModule,
     MatBadgeModule,
+    MatExpansionModule,
     MatTooltipModule,
+    MxSpinnerComponent,
+    MxToastHostComponent,
+    MxDialogHostComponent,
     PrivilegeDirective,
   ],
   templateUrl: './app.component.html',
@@ -68,16 +76,19 @@ export class AppComponent {
   unreadCount$;
   appTitle$;
   appLogo$;
+  darkMode = false;
 
   constructor(
     private breakpointObserver: BreakpointObserver,
     private router: Router,
     private loadingService: LoadingService,
+    private theme: MxThemeService,
     private auth: AuthService,
     private inbox: NotificationInboxService,
     private sound: NotificationSoundService,
     private appSettings: AppSettingsService,
   ) {
+    this.darkMode = readStoredThemeId() === 'dark';
     this.session$ = this.auth.session$;
     this.notifications$ = this.inbox.items$;
     this.unreadCount$ = this.inbox.unreadCount$;
@@ -100,15 +111,13 @@ export class AppComponent {
       shareReplay(),
     );
     this.router.events.subscribe((event) => {
-      if (event instanceof NavigationStart) {
-        this.loadingService.show();
-      }
+      // Clear any leftover overlay after navigation settles; pages own their own show/hide.
       if (
         event instanceof NavigationEnd ||
         event instanceof NavigationCancel ||
         event instanceof NavigationError
       ) {
-        this.loadingService.hide();
+        this.loadingService.reset();
       }
     });
   }
@@ -119,6 +128,11 @@ export class AppComponent {
 
   toggleSidenav(): void {
     this.drawer?.toggle();
+  }
+
+  onDarkModeChange(enabled: boolean): void {
+    this.darkMode = enabled;
+    applyImsTheme(this.theme, enabled ? 'dark' : 'light');
   }
 
   logout(): void {

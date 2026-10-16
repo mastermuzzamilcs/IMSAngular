@@ -1,15 +1,19 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+  MxNoticeService,
+} from '@mesix/custom-control';
+import type { MxTone } from '@mesix/custom-control';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
 
 import { TransferFormComponent } from '../form/transfer-form.component';
@@ -27,20 +31,22 @@ import { Transfer } from '../../../core/Models/TransferModel';
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
-    MatDialogModule,
     MatButtonModule,
     MatIconModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatChipsModule,
     MatMenuModule,
     DatePipe,
+    MxPageHeaderComponent,
+    MxButtonComponent,
+    MxGridComponent,
+    MxBadgeComponent,
+    MxEmptyStateComponent,
   ],
   templateUrl: './transfer-list.component.html',
   styleUrls: ['./transfer-list.component.scss'],
 })
 export class TransferListComponent implements OnInit, AfterViewInit {
+  private readonly notice = inject(MxNoticeService);
+
   readonly Status = Status;
   displayedColumns: string[] = [
     'transferId',
@@ -53,14 +59,12 @@ export class TransferListComponent implements OnInit, AfterViewInit {
   ];
 
   dataSource = new MatTableDataSource<Transfer>([]);
+  tableLoading = false;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(
-    private dialog: MatDialog,
-    private transferService: TransferService,
-  ) {}
+  constructor(private transferService: TransferService) {}
 
   async ngOnInit(): Promise<void> {
     await this.loadTransfers();
@@ -72,26 +76,29 @@ export class TransferListComponent implements OnInit, AfterViewInit {
   }
 
   async loadTransfers() {
+    this.tableLoading = true;
     try {
       const transfers = await this.transferService.getTransfers();
-
       this.dataSource.data = transfers;
     } catch (error) {
       console.error('Error loading transfers', error);
+    } finally {
+      this.tableLoading = false;
     }
   }
 
   applyFilter(event: Event) {
-    const filterValue = (event.target as HTMLInputElement).value;
+    this.onGridFilter((event.target as HTMLInputElement).value);
+  }
 
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+  onGridFilter(value: string) {
+    this.dataSource.filter = value.trim().toLowerCase();
   }
 
   openNewTransferDialog() {
     console.log('New Transfer clicked');
 
-    const dialogRef = this.dialog.open(TransferFormComponent, {
-      width: '800px',
+    const dialogRef = this.notice.open(TransferFormComponent, {
       data: {
         mode: 'new',
       },
@@ -114,16 +121,15 @@ export class TransferListComponent implements OnInit, AfterViewInit {
     });
   }
 
-  viewTransferDetail(transfer: any) {
-    this.dialog.open(TransferDetailComponent, {
-      width: '800px',
+  viewTransferDetail(transfer: Transfer) {
+    this.notice.open(TransferDetailComponent, {
       data: {
         transfer,
       },
     });
   }
 
-  async updateStatus(transfer: any, newStatus: Status) {
+  async updateStatus(transfer: Transfer, newStatus: Status) {
     try {
       await this.transferService.updateTransfer({
         ...transfer,
@@ -158,6 +164,23 @@ export class TransferListComponent implements OnInit, AfterViewInit {
 
       default:
         return '';
+    }
+  }
+
+  getStatusTone(status: string): MxTone {
+    switch (status) {
+      case Status.Pending:
+        return 'warning';
+      case Status.Approved:
+        return 'primary';
+      case Status.InTransit:
+        return 'info';
+      case Status.Completed:
+        return 'success';
+      case Status.Rejected:
+        return 'danger';
+      default:
+        return 'neutral';
     }
   }
 }

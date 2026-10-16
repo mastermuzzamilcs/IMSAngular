@@ -1,29 +1,34 @@
-import { Component, Inject, OnInit } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { Component, Inject, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTableModule } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { FormsModule } from '@angular/forms';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxDialogRef,
+  MX_DIALOG_DATA,
+} from '@mesix/custom-control';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { WorkflowService } from '../../../core/services/Workflow.service';
 import { StockService } from '../../../core/services/stock.service';
-import { StockDetails } from '../../../core/Models/StockModel';
+import { Stock, StockDetails } from '../../../core/Models/StockModel';
 import { RequestStatus, RequestType, WorkflowRequest } from '../../../core/Models/WorkflowModel';
 import { WorkflowTransitionOption } from '../../../core/Models/WorkflowStatusTransition';
 import { WorkflowTransitionService } from '../../../core/services/workflow-transition.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ProductService } from '../../../core/services/product.service';
 import { TransferService } from '../../../core/services/transfer.service';
-import { Transfer } from '../../../core/Models/TransferModel';
+import { Transfer, TransferItem } from '../../../core/Models/TransferModel';
 import { UsersService } from '../../../core/services/users.service';
 import { SYSTEM_USER_ID } from '../../../core/system-user';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-request-detail',
@@ -32,24 +37,26 @@ import { SYSTEM_USER_ID } from '../../../core/system-user';
   styleUrls: ['./request-detail.component.scss'],
   imports: [
     CommonModule,
-    MatDialogModule,
     MatTabsModule,
     MatTableModule,
     MatFormFieldModule,
     MatSelectModule,
     MatInputModule,
-    MatButtonModule,
     MatIconModule,
     MatChipsModule,
     FormsModule,
     MatProgressSpinnerModule,
+    MxButtonComponent,
+    MxBadgeComponent,
   ],
 })
 export class RequestDetailComponent implements OnInit {
+  private readonly toast = inject(ToastService);
+
   /** ---- Data coming from parent ---- */
   constructor(
-    private dialogRef: MatDialogRef<RequestDetailComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { requestId: string },
+    private dialogRef: MxDialogRef<unknown>,
+    @Inject(MX_DIALOG_DATA) public data: { requestId: string },
     private wfSvc: WorkflowService,
     private stockSvc: StockService,
     private _productService: ProductService,
@@ -62,11 +69,11 @@ export class RequestDetailComponent implements OnInit {
   // UI state
   loading = true;
   request!: WorkflowRequest;
-  stockHdr: any;
+  stockHdr: Stock | null = null;
   stockRows: StockDetails[] = [];
   isTransfer = false;
   transfer: Transfer | null = null;
-  transferRows: any[] = [];
+  transferRows: TransferItem[] = [];
   transferColumns = ['transferProduct', 'transferDescription', 'transferQty'];
 
   /** Approval form */
@@ -84,6 +91,14 @@ export class RequestDetailComponent implements OnInit {
     return this.actions.length > 0 && this.canAct;
   }
 
+  get displayedRequestId(): string | undefined {
+    return this.request?.requestId;
+  }
+
+  get displayedRequestStatus(): RequestStatus | undefined {
+    return this.request?.status;
+  }
+
   get showApprovalBlocked(): boolean {
     return this.actions.length > 0 && !this.canAct;
   }
@@ -93,7 +108,7 @@ export class RequestDetailComponent implements OnInit {
     if (!value) {
       return null;
     }
-    if (typeof value.toDate === 'function') {
+    if (typeof value === 'object' && !(value instanceof Date)) {
       return value.toDate();
     }
     return value instanceof Date ? value : new Date(value);
@@ -155,7 +170,7 @@ export class RequestDetailComponent implements OnInit {
       this.dialogRef.close({ updated: true });
     } catch (err) {
       console.error('Error updating workflow request:', err);
-      alert(err instanceof Error ? err.message : 'Failed to update request');
+      this.toast.error(err instanceof Error ? err.message : 'Failed to update request');
     }
     this.submitting = false;
   }

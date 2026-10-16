@@ -1,45 +1,39 @@
 <div class="container">
-  <div class="header-container">
-    <h1 class="mat-headline-5">Group Privileges</h1>
-    <button
-      mat-raised-button
-      color="primary"
-      type="button"
+  <mx-page-header title="Group Privileges" subtitle="Page and action access by user group">
+    <mx-button
+      variant="outline"
+      tone="primary"
       *appPrivilege="privileges.groupPrivileges.edit"
-      (click)="save()"
+      (pressed)="save()"
       [disabled]="groupForm.invalid"
+      >Save</mx-button
     >
-      Save
-    </button>
-  </div>
-  <mat-card>
-    <mat-card-content>
-      <p>
-        Each page is a privilege. Create, Details, Delete, and Edit are the actions on that page. A
-        signed-in user sees an action only when one of their groups has it enabled.
-      </p>
-      <form [formGroup]="groupForm">
-        <mat-form-field appearance="outline">
-          <mat-label>User group</mat-label>
-          <mat-select formControlName="groupid" (selectionChange)="onGroupChange()">
-            <mat-option *ngFor="let group of groups" [value]="group.id">{{
-              group.name
-            }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </form>
-      <section class="privilege-section" *ngFor="let section of sections">
-        <h2>{{ section.name }}</h2>
-        <div class="privilege-actions">
-          <mat-checkbox
-            *ngFor="let item of section.items"
-            [checked]="isChecked(item)"
-            (change)="toggle(item, $event.checked)"
-          >
-            {{ item.action }} ({{ item.functionId }})
-          </mat-checkbox>
-        </div>
-      </section>
-    </mat-card-content>
-  </mat-card>
+  </mx-page-header>
+
+  <mx-card>
+    <p>
+      Each page is a privilege. Create, Details, Delete, and Edit are the actions on that page. A
+      signed-in user sees an action only when one of their groups has it enabled.
+    </p>
+    <form [formGroup]="groupForm">
+      <mat-form-field appearance="outline">
+        <mat-label>User group</mat-label>
+        <mat-select formControlName="groupid" (selectionChange)="onGroupChange()">
+          <mat-option *ngFor="let group of groups" [value]="group.id">{{ group.name }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </form>
+    <section class="privilege-section" *ngFor="let section of sections">
+      <h2>{{ section.name }}</h2>
+      <div class="privilege-actions">
+        <mat-checkbox
+          *ngFor="let item of section.items"
+          [checked]="isChecked(item)"
+          (change)="toggle(item, $event.checked)"
+        >
+          {{ item.action }} ({{ item.functionId }})
+        </mat-checkbox>
+      </div>
+    </section>
+  </mx-card>
 </div>

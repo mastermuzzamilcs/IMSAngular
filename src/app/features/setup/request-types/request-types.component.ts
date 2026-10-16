@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MxCardComponent, MxPageHeaderComponent } from '@mesix/custom-control';
 import { FormsModule } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
@@ -13,6 +13,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ItemSourceService } from '../../../core/services/item-source.service';
 import { LoadingService } from '../../../core/services/Loading.service';
 import { RequestTypeService } from '../../../core/services/request-type.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-request-types',
@@ -20,7 +21,8 @@ import { RequestTypeService } from '../../../core/services/request-type.service'
   imports: [
     CommonModule,
     FormsModule,
-    MatCardModule,
+    MxPageHeaderComponent,
+    MxCardComponent,
     MatTableModule,
     MatSlideToggleModule,
     MatFormFieldModule,
@@ -29,6 +31,8 @@ import { RequestTypeService } from '../../../core/services/request-type.service'
   templateUrl: './request-types.component.html',
 })
 export class RequestTypesComponent implements OnInit {
+  private readonly toast = inject(ToastService);
+
   displayedColumns = ['requestType', 'assignedToSource', 'IS_Auto_Approve'];
   settings: RequestTypeSetting[] = [];
   itemSources: ItemSource[] = [];
@@ -59,7 +63,7 @@ export class RequestTypesComponent implements OnInit {
       this.itemSources = sources.slice().sort((a, b) => a.code.localeCompare(b.code));
     } catch (error) {
       console.error('Error loading request types', error);
-      alert('Error loading request types');
+      this.toast.error('Error loading request types');
     }
     this.loadingService.hide();
   }
@@ -73,7 +77,7 @@ export class RequestTypesComponent implements OnInit {
     } catch (error) {
       setting.IS_Auto_Approve = previous;
       console.error('Error saving auto approve', error);
-      alert('Could not save auto approve');
+      this.toast.error('Could not save auto approve');
     }
     this.loadingService.hide();
   }
@@ -90,7 +94,7 @@ export class RequestTypesComponent implements OnInit {
     } catch (error) {
       setting.assignedToSource = previous;
       console.error('Error saving assigned to source', error);
-      alert('Could not save Assigned to item source');
+      this.toast.error('Could not save Assigned to item source');
     }
     this.loadingService.hide();
   }
@@ -100,6 +104,6 @@ export class RequestTypesComponent implements OnInit {
       return 'Not set';
     }
     const source = this.itemSources.find((item) => item.code === code);
-    return source ? `${source.code} — ${source.name}` : code;
+    return source ? `${source.code} â€” ${source.name}` : code;
   }
 }

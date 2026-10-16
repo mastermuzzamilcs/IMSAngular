@@ -207,21 +207,21 @@ export class WorkflowService {
     return snap.docs.map((d) => this.mapDoc(d.data(), d.id));
   }
 
-  private mapDoc(data: any, id: string): WorkflowRequest {
-    const requestType = (data.requestType || '') as RequestType;
+  private mapDoc(data: DocumentData, id: string): WorkflowRequest {
+    const requestType = (data['requestType'] || '') as RequestType;
     return {
       requestId: id,
-      moduleId: data.moduleId,
+      moduleId: data['moduleId'],
       requestType,
-      status: data.status,
-      requestedBy: data.requestedBy,
-      requestedOn: (data.requestedOn?.toDate?.() || new Date()) as Date,
-      assignedTo: data.assignedTo || '',
-      approvedBy: data.approvedBy,
-      approvedOn: data.approvedOn?.toDate?.(),
-      remarks: data.remarks || '',
-      branchId: data.branchId || '',
-      toBranchId: requestType === RequestType.Transfer ? data.toBranchId || '' : '',
+      status: data['status'],
+      requestedBy: data['requestedBy'],
+      requestedOn: (data['requestedOn']?.toDate?.() || new Date()) as Date,
+      assignedTo: data['assignedTo'] || '',
+      approvedBy: data['approvedBy'],
+      approvedOn: data['approvedOn']?.toDate?.(),
+      remarks: data['remarks'] || '',
+      branchId: data['branchId'] || '',
+      toBranchId: requestType === RequestType.Transfer ? data['toBranchId'] || '' : '',
     };
   }
 

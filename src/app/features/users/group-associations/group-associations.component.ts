@@ -1,12 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
+import {
+  MxButtonComponent,
+  MxCardComponent,
+  MxEmptyStateComponent,
+  MxPageHeaderComponent,
+} from '@mesix/custom-control';
 import { isStatus, Status } from '../../../core/enums/status.enum';
 import { User } from '../../../core/Models/UsersModel';
 import { UserGroup, UserGroupAssociation } from '../../../core/Models/UserGroupModel';
@@ -17,6 +20,7 @@ import { UserGroupService } from '../../../core/services/user-group.service';
 import { UsersService } from '../../../core/services/users.service';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-group-associations',
@@ -24,17 +28,20 @@ import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatCardModule,
     MatFormFieldModule,
     MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
     MatTableModule,
+    MxPageHeaderComponent,
+    MxButtonComponent,
+    MxCardComponent,
+    MxEmptyStateComponent,
     PrivilegeDirective,
   ],
   templateUrl: './group-associations.component.html',
 })
 export class GroupAssociationsComponent implements OnInit {
+  private readonly toast = inject(ToastService);
+
   readonly privileges = privilegeAccess;
   users: User[] = [];
   groups: UserGroup[] = [];
@@ -87,7 +94,7 @@ export class GroupAssociationsComponent implements OnInit {
       }));
     } catch (error) {
       console.error('Error loading group associations', error);
-      alert('Error loading group associations');
+      this.toast.error('Error loading group associations');
     }
     this.loadingService.hide();
   }
@@ -106,7 +113,7 @@ export class GroupAssociationsComponent implements OnInit {
       await this.load();
     } catch (error) {
       console.error('Error associating user', error);
-      alert('Could not associate the user');
+      this.toast.error('Could not associate the user');
       this.loadingService.hide();
     }
   }
@@ -122,7 +129,7 @@ export class GroupAssociationsComponent implements OnInit {
       await this.load();
     } catch (error) {
       console.error('Error removing association', error);
-      alert('Could not remove the association');
+      this.toast.error('Could not remove the association');
       this.loadingService.hide();
     }
   }

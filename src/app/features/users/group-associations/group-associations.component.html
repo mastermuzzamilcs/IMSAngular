@@ -1,79 +1,75 @@
 <div class="container">
-  <div class="header-container">
-    <h1 class="mat-headline-5">User Group Associations</h1>
-  </div>
-  <mat-card>
-    <mat-card-content>
-      <p>
-        Associate users with app groups. Until the first association exists, any signed-in user can
-        open this page and assign Admin.
-      </p>
-      <form
-        [formGroup]="associationForm"
-        style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center"
-      >
-        <mat-form-field appearance="outline" style="flex: 1 1 240px">
-          <mat-label>User</mat-label>
-          <mat-select formControlName="userid">
-            <mat-option *ngFor="let user of users" [value]="user.userid">
-              {{ user.name }} ({{ user.email }})
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field appearance="outline" style="flex: 1 1 200px">
-          <mat-label>Group</mat-label>
-          <mat-select formControlName="groupid">
-            <mat-option *ngFor="let group of groups" [value]="group.id">{{
-              group.name
-            }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-        <button
-          mat-raised-button
-          color="primary"
-          type="button"
-          *appPrivilege="privileges.groupAssociations.create"
-          (click)="associate()"
-        >
-          <mat-icon>link</mat-icon>
-          Associate
-        </button>
-      </form>
+  <mx-page-header
+    title="User Group Associations"
+    subtitle="Associate users with app groups"
+  ></mx-page-header>
 
-      <table
-        mat-table
-        [dataSource]="associations"
-        class="mat-elevation-z1"
-        style="margin-top: 1rem"
+  <mx-card>
+    <p>
+      Associate users with app groups. Until the first association exists, any signed-in user can
+      open this page and assign Admin.
+    </p>
+    <form
+      [formGroup]="associationForm"
+      style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center"
+    >
+      <mat-form-field appearance="outline" style="flex: 1 1 240px">
+        <mat-label>User</mat-label>
+        <mat-select formControlName="userid">
+          <mat-option *ngFor="let user of users" [value]="user.userid">
+            {{ user.name }} ({{ user.email }})
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" style="flex: 1 1 200px">
+        <mat-label>Group</mat-label>
+        <mat-select formControlName="groupid">
+          <mat-option *ngFor="let group of groups" [value]="group.id">{{ group.name }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mx-button
+        variant="outline"
+        tone="primary"
+        icon="link"
+        *appPrivilege="privileges.groupAssociations.create"
+        (pressed)="associate()"
+        >Associate</mx-button
       >
-        <ng-container matColumnDef="userName">
-          <th mat-header-cell *matHeaderCellDef>User</th>
-          <td mat-cell *matCellDef="let row">{{ row.userName }}</td>
-        </ng-container>
-        <ng-container matColumnDef="groupName">
-          <th mat-header-cell *matHeaderCellDef>Group</th>
-          <td mat-cell *matCellDef="let row">{{ row.groupName }}</td>
-        </ng-container>
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef></th>
-          <td mat-cell *matCellDef="let row">
-            <button
-              mat-button
-              color="warn"
-              type="button"
-              *appPrivilege="privileges.groupAssociations.delete"
-              (click)="disassociate(row)"
-            >
-              Disassociate
-            </button>
-          </td>
-        </ng-container>
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-        <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell" colspan="3">No associations yet.</td>
-        </tr>
-      </table>
-    </mat-card-content>
-  </mat-card>
+    </form>
+
+    <table mat-table [dataSource]="associations" style="margin-top: 1rem; width: 100%">
+      <ng-container matColumnDef="userName">
+        <th mat-header-cell *matHeaderCellDef>User</th>
+        <td mat-cell *matCellDef="let row">{{ row.userName }}</td>
+      </ng-container>
+      <ng-container matColumnDef="groupName">
+        <th mat-header-cell *matHeaderCellDef>Group</th>
+        <td mat-cell *matCellDef="let row">{{ row.groupName }}</td>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let row">
+          <mx-button
+            variant="ghost"
+            tone="danger"
+            *appPrivilege="privileges.groupAssociations.delete"
+            (pressed)="disassociate(row)"
+            >Disassociate</mx-button
+          >
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" colspan="3">
+          <mx-empty-state
+            title="No associations yet"
+            description="Associate a user with a group."
+            icon="link"
+            [compact]="true"
+          ></mx-empty-state>
+        </td>
+      </tr>
+    </table>
+  </mx-card>
 </div>

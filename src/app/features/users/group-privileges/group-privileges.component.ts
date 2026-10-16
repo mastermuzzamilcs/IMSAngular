@@ -1,11 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
+import { MxButtonComponent, MxCardComponent, MxPageHeaderComponent } from '@mesix/custom-control';
 import {
   CatalogPrivilege,
   privilegeCatalog,
@@ -19,6 +18,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { GroupPrivilegeService } from '../../../core/services/group-privilege.service';
 import { LoadingService } from '../../../core/services/Loading.service';
 import { UserGroupService } from '../../../core/services/user-group.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 interface PrivilegeSection {
   name: string;
@@ -31,17 +31,20 @@ interface PrivilegeSection {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatCardModule,
     MatFormFieldModule,
     MatSelectModule,
-    MatButtonModule,
     MatCheckboxModule,
+    MxPageHeaderComponent,
+    MxButtonComponent,
+    MxCardComponent,
     PrivilegeDirective,
   ],
   templateUrl: './group-privileges.component.html',
   styleUrl: './group-privileges.component.scss',
 })
 export class GroupPrivilegesComponent implements OnInit {
+  private readonly toast = inject(ToastService);
+
   readonly privileges = privilegeAccess;
   groups: UserGroup[] = [];
   sections: PrivilegeSection[] = [];
@@ -74,7 +77,7 @@ export class GroupPrivilegesComponent implements OnInit {
       }
     } catch (error) {
       console.error('Error loading group privileges', error);
-      alert('Error loading group privileges');
+      this.toast.error('Error loading group privileges');
     }
     this.loadingService.hide();
   }
@@ -90,7 +93,7 @@ export class GroupPrivilegesComponent implements OnInit {
       await this.loadGroup(groupid);
     } catch (error) {
       console.error('Error loading privileges for group', error);
-      alert('Error loading privileges for this group');
+      this.toast.error('Error loading privileges for this group');
     }
     this.loadingService.hide();
   }
@@ -118,10 +121,10 @@ export class GroupPrivilegesComponent implements OnInit {
     try {
       await this.privilegeService.saveGroup(groupid, selected);
       await this.auth.refreshAccess();
-      alert('Group privileges saved');
+      this.toast.success('Group privileges saved');
     } catch (error) {
       console.error('Error saving group privileges', error);
-      alert('Could not save group privileges');
+      this.toast.error('Could not save group privileges');
     }
     this.loadingService.hide();
   }

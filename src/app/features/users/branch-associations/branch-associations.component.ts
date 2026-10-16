@@ -1,12 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
+import {
+  MxButtonComponent,
+  MxCardComponent,
+  MxEmptyStateComponent,
+  MxPageHeaderComponent,
+} from '@mesix/custom-control';
 import { isStatus, Status } from '../../../core/enums/status.enum';
 import { Branch } from '../../../core/Models/BranchModel';
 import { User } from '../../../core/Models/UsersModel';
@@ -20,6 +23,7 @@ import {
   UserBranchAssociationService,
 } from '../../../core/services/user-branch-association.service';
 import { UsersService } from '../../../core/services/users.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-branch-associations',
@@ -27,17 +31,20 @@ import { UsersService } from '../../../core/services/users.service';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatCardModule,
     MatFormFieldModule,
     MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
     MatTableModule,
+    MxPageHeaderComponent,
+    MxButtonComponent,
+    MxCardComponent,
+    MxEmptyStateComponent,
     PrivilegeDirective,
   ],
   templateUrl: './branch-associations.component.html',
 })
 export class BranchAssociationsComponent implements OnInit {
+  private readonly toast = inject(ToastService);
+
   readonly privileges = privilegeAccess;
   readonly allBranchesId = ALL_BRANCHES_ID;
   users: User[] = [];
@@ -81,7 +88,7 @@ export class BranchAssociationsComponent implements OnInit {
       }));
     } catch (error) {
       console.error('Error loading branch associations', error);
-      alert('Error loading branch associations');
+      this.toast.error('Error loading branch associations');
     }
     this.loadingService.hide();
   }
@@ -100,7 +107,7 @@ export class BranchAssociationsComponent implements OnInit {
       await this.load();
     } catch (error) {
       console.error('Error assigning branch', error);
-      alert('Could not assign the branch');
+      this.toast.error('Could not assign the branch');
       this.loadingService.hide();
     }
   }
@@ -115,7 +122,7 @@ export class BranchAssociationsComponent implements OnInit {
       await this.load();
     } catch (error) {
       console.error('Error removing branch assignment', error);
-      alert('Could not remove the branch assignment');
+      this.toast.error('Could not remove the branch assignment');
       this.loadingService.hide();
     }
   }

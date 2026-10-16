@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -6,9 +6,9 @@ import {
   ReactiveFormsModule,
   FormsModule,
 } from '@angular/forms';
-import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { Customer } from '../../../core/Models/CustomerModel';
+import { StockLineItem } from '../../../core/Models/StockModel';
 import { StockService } from '../../../core/services/stock.service';
 import { ItemSearchModalComponent } from '../item-search-modal/item-search-modal.component';
 import { CustomerSearchModalComponent } from '../../../shared/components/customer-search-modal/customer-search-modal.component';
@@ -19,9 +19,15 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { MatNativeDateModule } from '@angular/material/core';
+import {
+  MxButtonComponent,
+  MxCardComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxNoticeService,
+  MxPageHeaderComponent,
+} from '@mesix/custom-control';
 import { WorkflowService } from '../../../core/services/Workflow.service';
 import { Status } from '../../../core/enums/status.enum';
 import { RequestType } from '../../../core/Models/WorkflowModel';
@@ -29,6 +35,7 @@ import { LoadingService } from '../../../core/services/Loading.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-sale-out',
@@ -42,18 +49,24 @@ import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
     MatDatepickerModule,
     MatIconModule,
     MatTableModule,
-    MatButtonModule,
-    MatCardModule,
     MatNativeDateModule,
     FormsModule,
+    MxPageHeaderComponent,
+    MxButtonComponent,
+    MxCardComponent,
+    MxGridComponent,
+    MxEmptyStateComponent,
     PrivilegeDirective,
   ],
   templateUrl: './sales-return.component.html',
   styleUrls: ['./sales-return.component.scss'],
 })
 export class SalesReturnComponent implements OnInit {
+  private readonly toast = inject(ToastService);
+  private readonly notice = inject(MxNoticeService);
+
   readonly privileges = privilegeAccess;
-  dataSource = new MatTableDataSource<any>([]);
+  dataSource = new MatTableDataSource<StockLineItem>([]);
   displayedColumns: string[] = [
     'product',
     'description',
@@ -66,7 +79,7 @@ export class SalesReturnComponent implements OnInit {
     'actions',
   ];
   salesReturnForm!: FormGroup;
-  saleDetails: any[] = [];
+  saleDetails: StockLineItem[] = [];
   private linkedCustomer: Customer | null = null;
   subTotal = 0;
   discountType: 'amount' | 'percentage' = 'amount';
@@ -74,7 +87,6 @@ export class SalesReturnComponent implements OnInit {
   netTotal = 0;
   constructor(
     private fb: FormBuilder,
-    private dialog: MatDialog,
     private stockService: StockService,
     private _workflowService: WorkflowService,
     private _loadingService: LoadingService,
@@ -91,10 +103,7 @@ export class SalesReturnComponent implements OnInit {
     });
   }
   openCustomerDialog(): void {
-    const dialogRef = this.dialog.open(CustomerSearchModalComponent, {
-      width: '95vw',
-      maxWidth: '960px',
-      maxHeight: '85vh',
+    const dialogRef = this.notice.open(CustomerSearchModalComponent, {
       data: { type: 'Customers', isMultiSelect: false },
     });
     dialogRef.afterClosed().subscribe((customer: Customer | null) => {
@@ -112,8 +121,7 @@ export class SalesReturnComponent implements OnInit {
     });
   }
   openProductDialog(): void {
-    const dialogRef = this.dialog.open(ItemSearchModalComponent, {
-      width: '800px',
+    const dialogRef = this.notice.open(ItemSearchModalComponent, {
       data: {},
     });
     dialogRef.afterClosed().subscribe((result) => {
@@ -138,7 +146,7 @@ export class SalesReturnComponent implements OnInit {
       }
     });
   }
-  updateRowTotal(row: any): void {
+  updateRowTotal(row: StockLineItem): void {
     const quantity = Number(row.quantity) || 0;
     const unitPrice = Number(row.unitPrice) || 0;
     const discount = Number(row.discount) || 0;
@@ -153,14 +161,14 @@ export class SalesReturnComponent implements OnInit {
         : Number(this.discountValue) || 0;
     this.netTotal = this.subTotal - discount;
   }
-  removeProduct(row: any): void {
+  removeProduct(row: StockLineItem): void {
     this.dataSource.data = this.dataSource.data.filter((item) => item !== row);
     this.recalculateTotal();
   }
   async submitSalesReturn(): Promise<void> {
     const branch = this.auth.currentBranchId();
     if (!branch) {
-      alert('Choose a branch from the top bar before continuing.');
+      this.toast.warning('Choose a branch from the top bar before continuing.');
       return;
     }
     this._loadingService.show();
@@ -191,7 +199,7 @@ export class SalesReturnComponent implements OnInit {
         branchId: this.auth.currentBranchId(),
         remarks: 'Auto-generated from Sale-Return screen',
       });
-      alert('Sale-return entry added successfully');
+      this.toast.success('Sale-return entry added successfully');
       this.dataSource.data = [];
       this.linkedCustomer = null;
       this.salesReturnForm.reset({
@@ -208,7 +216,7 @@ export class SalesReturnComponent implements OnInit {
       this.netTotal = 0;
     } catch (err) {
       console.error('Error submitting sale return:', err);
-      alert('Failed to submit sale-return');
+      this.toast.error('Failed to submit sale-return');
     }
     this._loadingService.hide();
   }

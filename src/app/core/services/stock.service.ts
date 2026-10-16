@@ -20,7 +20,38 @@ import { VendorService } from './vendor.service';
 import { ProductService } from './product.service';
 import { BrandService } from './brand.service';
 
-function toJsDate(raw: any): Date {
+interface StockItemPayload {
+  id?: string;
+  quantity?: number;
+  unitPrice?: number;
+  discount?: number;
+  total?: number;
+  reason?: string;
+  comments?: string;
+}
+
+interface StockEntityPayload {
+  branch?: string;
+  vendor?: string;
+  date?: Date | string;
+  lastUpdated?: Date | string;
+  TotalItems?: number;
+  DiscountType?: string;
+  DiscountValue?: number;
+  SubTotal?: number;
+  NetTotal?: number;
+  status?: Status;
+  stocktype?: string;
+  customerId?: string;
+  customerName?: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  customerAddress?: string;
+  remarks?: string;
+  stockItems?: StockItemPayload[];
+}
+
+function toJsDate(raw: unknown): Date {
   if (!raw) return new Date();
   if (raw instanceof Date) return raw;
   if (raw instanceof Timestamp) return raw.toDate();
@@ -69,7 +100,7 @@ export class StockService {
     return this.cachedStocks;
   }
 
-  async addStock(_stock: Stock): Promise<any> {
+  async addStock(_stock: Stock): Promise<string> {
     const branchRef = collection(firestore, this.topicName);
     const resDocRef = await addDoc(branchRef, _stock);
     this.cachedStocks = null;
@@ -80,7 +111,7 @@ export class StockService {
     await addDoc(branchRef, _stockDetails);
     this.cachedStocks = null;
   }
-  async addStockEntity(_payload: any): Promise<string> {
+  async addStockEntity(_payload: StockEntityPayload): Promise<string> {
     const stockid = await this.addStock(this.populateStockMain(_payload));
     const details = this.populateStockDetails(stockid, _payload.stockItems);
     await Promise.all(details.map((d) => this.addStockDetails(d)));
@@ -88,7 +119,7 @@ export class StockService {
     return stockid;
   }
 
-  populateStockMain(_payload: any): Stock {
+  populateStockMain(_payload: StockEntityPayload): Stock {
     const _stock: Stock = {
       branchid: _payload['branch'] || '',
       vendorid: _payload['vendor'] || '',
@@ -112,7 +143,7 @@ export class StockService {
     return _stock;
   }
 
-  populateStockDetails(_stockid: string, payload: any): StockDetails[] {
+  populateStockDetails(_stockid: string, payload: StockItemPayload[] | undefined): StockDetails[] {
     const stockDetails: StockDetails[] = [];
 
     if (payload && Array.isArray(payload)) {

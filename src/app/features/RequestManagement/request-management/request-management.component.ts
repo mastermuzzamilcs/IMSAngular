@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, DestroyRef, OnInit, AfterViewInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { WorkflowService } from '../../../core/services/Workflow.service';
@@ -6,20 +6,20 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Status } from '../../../core/enums/status.enum';
 import { RequestType, WorkflowRequest } from '../../../core/Models/WorkflowModel';
-import { Router } from '@angular/router';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatCardModule } from '@angular/material/card';
-import { MatDividerModule } from '@angular/material/divider';
+import {
+  MxBadgeComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+  MxNoticeService,
+} from '@mesix/custom-control';
 import { RequestDetailComponent } from '../request-detail/request-detail.component';
-import { LoadingService } from '../../../core/services/Loading.service';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { AuthService } from '../../../core/services/auth.service';
 import { BranchService } from '../../../core/services/branchservice.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { UsersService } from '../../../core/services/users.service';
 import { SYSTEM_USER_ID, SYSTEM_USER_NAME } from '../../../core/system-user';
 
@@ -40,15 +40,16 @@ interface WorkflowRequestRow extends WorkflowRequest {
     MatPaginatorModule,
     MatSortModule,
     MatIconModule,
-    MatButtonModule,
-    MatDialogModule,
-    MatSnackBarModule,
-    MatChipsModule,
-    MatCardModule,
-    MatDividerModule,
+    MxPageHeaderComponent,
+    MxGridComponent,
+    MxBadgeComponent,
+    MxEmptyStateComponent,
   ],
 })
 export class RequestManagementComponent implements OnInit, AfterViewInit {
+  private readonly notice = inject(MxNoticeService);
+  private readonly toast = inject(ToastService);
+
   readonly Status = Status;
   readonly privileges = privilegeAccess;
   displayedColumns: string[] = [
@@ -60,6 +61,7 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
     'status',
   ];
   dataSource = new MatTableDataSource<WorkflowRequestRow>([]);
+  tableLoading = false;
   private watchedBranch: string | null = null;
   private branchNames = new Map<string, string>();
   private userNames = new Map<string, string>();
@@ -68,13 +70,9 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor(
-    private router: Router,
     private workflowService: WorkflowService,
     private branchService: BranchService,
     private usersService: UsersService,
-    private _loadingService: LoadingService,
-    private dialog: MatDialog,
-    private snack: MatSnackBar,
     private auth: AuthService,
     private destroyRef: DestroyRef,
   ) {}
@@ -99,10 +97,10 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
     const branchId = this.auth.currentBranchId();
     if (!branchId) {
       this.dataSource.data = [];
-      this._loadingService.hide();
+      this.tableLoading = false;
       return;
     }
-    this._loadingService.show();
+    this.tableLoading = true;
     try {
       const [requests, branches, users] = await Promise.all([
         this.workflowService.getForBranch(branchId),
@@ -126,9 +124,9 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
       }));
     } catch (error) {
       console.error('Error loading workflow requests', error);
-      this.snack.open('Could not load workflow requests', 'Dismiss', { duration: 3000 });
+      this.toast.error('Could not load workflow requests', 3000);
     } finally {
-      this._loadingService.hide();
+      this.tableLoading = false;
     }
   }
 
@@ -151,6 +149,11 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
     }
     return this.userNames.get(id) || id;
   }
+
+  onGridFilter(value: string): void {
+    this.dataSource.filter = value.trim().toLowerCase();
+  }
+
   onRowDblClick(req: WorkflowRequest) {
     if (
       !this.auth.hasPrivilege(
@@ -160,14 +163,13 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
     ) {
       return;
     }
-    this.dialog
+    this.notice
       .open(RequestDetailComponent, {
-        width: '750px',
         data: { requestId: req.requestId },
       })
       .afterClosed()
       .subscribe((res) => {
-        if (res?.updated) this.loadRequests(); // refresh grid
+        if (res?.updated) this.loadRequests();
       });
   }
 }

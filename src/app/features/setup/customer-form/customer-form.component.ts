@@ -1,16 +1,22 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MaterialModule } from '../../../shared/material/material.module';
+import { MxButtonComponent, MxDialogRef, MX_DIALOG_DATA } from '@mesix/custom-control';
 import { asStatus, Status } from '../../../core/enums/status.enum';
 import { Customer } from '../../../core/Models/CustomerModel';
 
 @Component({
   selector: 'app-customer-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MaterialModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MaterialModule,
+    MxButtonComponent,
+  ],
   templateUrl: './customer-form.component.html',
 })
 export class CustomerFormComponent implements OnInit {
@@ -20,8 +26,8 @@ export class CustomerFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    public dialogRef: MatDialogRef<CustomerFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { mode: string; customer?: Customer },
+    public dialogRef: MxDialogRef<unknown>,
+    @Inject(MX_DIALOG_DATA) public data: { mode: string; customer?: Customer },
   ) {}
 
   ngOnInit(): void {

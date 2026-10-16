@@ -8,7 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MxPageHeaderComponent } from '@mesix/custom-control';
 import {
   notificationSounds,
   NotificationSoundId,
@@ -19,6 +19,7 @@ import {
   DEFAULT_APP_LOGO,
   PAGE_SIZE_OPTIONS,
 } from '../../core/services/app-settings.service';
+import { ToastService } from '../../core/services/toast.service';
 
 @Component({
   selector: 'app-settings',
@@ -33,7 +34,7 @@ import {
     MatButtonModule,
     MatIconModule,
     MatSlideToggleModule,
-    MatSnackBarModule,
+    MxPageHeaderComponent,
   ],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss'],
@@ -49,7 +50,7 @@ export class SettingsComponent implements OnInit {
     private fb: FormBuilder,
     private settings: AppSettingsService,
     private sound: NotificationSoundService,
-    private snack: MatSnackBar,
+    private toast: ToastService,
   ) {}
 
   ngOnInit(): void {
@@ -70,7 +71,7 @@ export class SettingsComponent implements OnInit {
       return;
     }
     if (!file.type.startsWith('image/')) {
-      this.snack.open('Choose an image file', 'Dismiss', { duration: 3000 });
+      this.toast.error('Choose an image file', 3000);
       return;
     }
     const reader = new FileReader();
@@ -110,6 +111,6 @@ export class SettingsComponent implements OnInit {
     }
     this.sound.setEnabled(!!value.soundEnabled);
     this.sound.setSound(value.soundId as NotificationSoundId, false);
-    this.snack.open('Settings saved', 'Dismiss', { duration: 2500 });
+    this.toast.success('Settings saved', 2500);
   }
 }

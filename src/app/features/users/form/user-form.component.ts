@@ -1,15 +1,23 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MaterialModule } from '../../../shared/material/material.module';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { MxButtonComponent, MxDialogRef, MX_DIALOG_DATA } from '@mesix/custom-control';
 import { Role } from '../../../core/Models/RoleModel';
+import { User } from '../../../core/Models/UsersModel';
+import { Branch } from '../../../core/Models/BranchModel';
 import { asStatus, Status } from '../../../core/enums/status.enum';
 @Component({
   selector: 'app-user-form',
   standalone: true,
-  imports: [MatDialogModule, MatFormFieldModule, MaterialModule, ReactiveFormsModule, CommonModule],
+  imports: [
+    MatFormFieldModule,
+    MaterialModule,
+    ReactiveFormsModule,
+    CommonModule,
+    MxButtonComponent,
+  ],
   templateUrl: './user-form.component.html',
   styleUrls: ['./user-form.component.scss'],
 })
@@ -21,8 +29,14 @@ export class UserFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    public dialogRef: MatDialogRef<UserFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    public dialogRef: MxDialogRef<unknown>,
+    @Inject(MX_DIALOG_DATA)
+    public data: {
+      mode: string;
+      rolesLookup: Role[];
+      branchesLookup: Branch[];
+      user?: User;
+    },
   ) {}
 
   ngOnInit(): void {
@@ -49,7 +63,7 @@ export class UserFormComponent implements OnInit {
     });
   }
   patchFormValues(): void {
-    const user = this.data.user;
+    const user = this.data.user!;
     this.userForm.patchValue({
       name: user.name,
       email: user.email,

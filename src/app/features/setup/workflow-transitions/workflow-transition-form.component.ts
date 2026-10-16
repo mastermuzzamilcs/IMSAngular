@@ -1,6 +1,6 @@
+import { MX_DIALOG_DATA, MxDialogRef } from '@mesix/custom-control';
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -15,7 +15,6 @@ import { WorkflowStatusTransition } from '../../../core/Models/WorkflowStatusTra
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
@@ -31,8 +30,8 @@ export class WorkflowTransitionFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    public dialogRef: MatDialogRef<WorkflowTransitionFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { mode: string; transition?: WorkflowStatusTransition },
+    public dialogRef: MxDialogRef<unknown>,
+    @Inject(MX_DIALOG_DATA) public data: { mode: string; transition?: WorkflowStatusTransition },
   ) {}
 
   ngOnInit(): void {

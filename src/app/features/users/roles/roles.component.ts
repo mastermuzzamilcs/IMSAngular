@@ -1,20 +1,25 @@
-import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { ConfirmService } from '../../../core/services/confirm.service';
+import { Component, OnInit, AfterViewInit, ViewChild, inject } from '@angular/core';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Role } from '../../../core/Models/RoleModel';
 import { RoleService } from '../../../core/services/role.service';
 import { RolesFormComponent } from '../roles-form/roles-form.component';
 import { CommonModule } from '@angular/common';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+  MxNoticeService,
+} from '@mesix/custom-control';
 import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
 import { LoadingService } from '../../../core/services/Loading.service';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { GlobalDeleteConfirmationComponent } from '../../../shared/components/global-delete-confirmation/global-delete-confirmation.component';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-roles',
@@ -23,11 +28,12 @@ import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
     MatTableModule,
     MatPaginatorModule,
     MatIconModule,
-    MatButtonModule,
-    MatDialogModule,
-    MatCardModule,
-    MatChipsModule,
     MatSortModule,
+    MxPageHeaderComponent,
+    MxButtonComponent,
+    MxGridComponent,
+    MxBadgeComponent,
+    MxEmptyStateComponent,
     PrivilegeDirective,
   ],
   templateUrl: './roles.component.html',
@@ -35,9 +41,15 @@ import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
   standalone: true,
 })
 export class RolesComponent implements OnInit, AfterViewInit {
+  private readonly notice = inject(MxNoticeService);
+  private readonly confirm = inject(ConfirmService);
+
+  private readonly toast = inject(ToastService);
+
   readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'description', 'status', 'actions'];
-  dataSource = new MatTableDataSource<any>();
+  dataSource = new MatTableDataSource<Role>();
+  tableLoading = false;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -45,7 +57,6 @@ export class RolesComponent implements OnInit, AfterViewInit {
   constructor(
     private roleService: RoleService,
     private _loadingService: LoadingService,
-    private dialog: MatDialog,
   ) {}
 
   ngOnInit() {
@@ -57,25 +68,27 @@ export class RolesComponent implements OnInit, AfterViewInit {
   }
 
   applyFilter(event: Event) {
-    const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+    this.onGridFilter((event.target as HTMLInputElement).value);
+  }
+
+  onGridFilter(value: string) {
+    this.dataSource.filter = value.trim().toLowerCase();
   }
 
   async loadRoles() {
-    this._loadingService.show();
+    this.tableLoading = true;
     try {
       const roles = await this.roleService.getRoles();
       this.dataSource.data = roles;
     } catch (err) {
       console.error('Error loading User Roles', err);
-      alert('Error loading User Roles');
+      this.toast.error('Error loading User Roles');
     }
-    this._loadingService.hide();
+    this.tableLoading = false;
   }
 
   openAddDialog() {
-    const dialogRef = this.dialog.open(RolesFormComponent, {
-      width: '500px',
+    const dialogRef = this.notice.open(RolesFormComponent, {
       data: { mode: 'add' },
     });
     dialogRef.afterClosed().subscribe(async (result) => {
@@ -89,8 +102,7 @@ export class RolesComponent implements OnInit, AfterViewInit {
   }
 
   openEditDialog(role: Role) {
-    const dialogRef = this.dialog.open(RolesFormComponent, {
-      width: '500px',
+    const dialogRef = this.notice.open(RolesFormComponent, {
       data: { mode: 'edit', role },
     });
     dialogRef.afterClosed().subscribe(async (result) => {
@@ -104,22 +116,17 @@ export class RolesComponent implements OnInit, AfterViewInit {
     });
   }
   openDeleteDialog(role: Role) {
-    const dialogRef = this.dialog.open(GlobalDeleteConfirmationComponent, {
-      width: '300px',
-      data: {
-        title: 'Delete Role',
-        message: `Are you sure you want to delete "${role.name}"?`,
-      },
-    });
-    dialogRef.afterClosed().subscribe(async (result) => {
-      if (result) {
-        if (role.id) {
-          this._loadingService.show();
-          await this.roleService.deleteRole(role.id);
-          this._loadingService.hide();
-          this.loadRoles();
+    this.confirm
+      .confirmDelete(`Are you sure you want to delete "${role.name}"?`, 'Delete Role')
+      .subscribe(async (result) => {
+        if (result) {
+          if (role.id) {
+            this._loadingService.show();
+            await this.roleService.deleteRole(role.id);
+            this._loadingService.hide();
+            this.loadRoles();
+          }
         }
-      }
-    });
+      });
   }
 }

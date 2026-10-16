@@ -1,15 +1,22 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MaterialModule } from '../../../shared/material/material.module';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { MxButtonComponent, MxDialogRef, MX_DIALOG_DATA } from '@mesix/custom-control';
 import { asStatus, Status } from '../../../core/enums/status.enum';
+import { Role } from '../../../core/Models/RoleModel';
 
 @Component({
   selector: 'app-roles-form',
   standalone: true,
-  imports: [MatDialogModule, MatFormFieldModule, MaterialModule, ReactiveFormsModule, CommonModule],
+  imports: [
+    MatFormFieldModule,
+    MaterialModule,
+    ReactiveFormsModule,
+    CommonModule,
+    MxButtonComponent,
+  ],
   templateUrl: './roles-form.component.html',
   styleUrl: './roles-form.component.scss',
 })
@@ -20,8 +27,8 @@ export class RolesFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    public dialogRef: MatDialogRef<RolesFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    public dialogRef: MxDialogRef<unknown>,
+    @Inject(MX_DIALOG_DATA) public data: { mode: string; role?: Role },
   ) {}
   ngOnInit(): void {
     this.InitForm();
