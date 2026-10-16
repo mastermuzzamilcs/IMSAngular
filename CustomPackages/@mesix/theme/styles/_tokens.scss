@@ -1,0 +1,57 @@
+:root {
+  /*
+   * Google Drive Light defaults
+   * Brand Blue #1A73E8 | Canvas #F8F9FA | Surface #FFFFFF | Ink #202124
+   */
+  --mx-primary: #1a73e8;
+  --mx-primary-contrast: #ffffff;
+  --mx-accent: #1967d2;
+  --mx-warn: #d93025;
+  --mx-success: #188038;
+  --mx-warning: #f9ab00;
+
+  --mx-bg: #f8f9fa;
+  --mx-surface: #ffffff;
+  --mx-surface-elevated: #ffffff;
+  --mx-text: #202124;
+  --mx-text-muted: #5f6368;
+  --mx-border: #dadce0;
+  --mx-overlay: rgba(32, 33, 36, 0.48);
+  --mx-overlay-light: rgba(32, 33, 36, 0.24);
+
+  --mx-success-bg: #e6f4ea;
+  --mx-success-border: #a8dab5;
+  --mx-warning-bg: #fef7e0;
+  --mx-warning-border: #fdd663;
+  --mx-error-bg: #fce8e6;
+  --mx-error-border: #f6aea9;
+  --mx-focus-ring: rgba(26, 115, 232, 0.28);
+
+  --mx-radius: 8px;
+  --mx-radius-lg: 12px;
+  --mx-radius-full: 999px;
+  --mx-space-1: 4px;
+  --mx-space-2: 8px;
+  --mx-space-3: 12px;
+  --mx-space-4: 16px;
+  --mx-space-5: 24px;
+  --mx-space-6: 32px;
+  --mx-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+  --mx-shadow-lg: 0 1px 3px 0 rgba(60, 64, 67, 0.3), 0 4px 8px 3px rgba(60, 64, 67, 0.15);
+  --mx-font: 'Google Sans', Roboto, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  --mx-font-display: 'Google Sans', Roboto, 'Segoe UI', sans-serif;
+  --mx-density: comfortable;
+  --mx-density-scale: 1;
+  --mx-motion-fast: 100ms;
+  --mx-motion: 200ms;
+  --mx-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  --mx-z-spinner: 9999;
+  --mx-z-dialog: 10000;
+  --mx-z-toast: 10050;
+}
+
+[data-mx-theme='dark'],
+[data-mx-mode='dark'] {
+  color-scheme: dark;
+}

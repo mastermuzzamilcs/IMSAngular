@@ -1,6 +1,6 @@
-import { Component, Inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { MxDialogRef } from '@mesix/custom-control';
 import { ProductService } from '../../../core/services/product.service';
 import { BrandService } from '../../../core/services/brand.service';
 import { MatIconModule } from '@angular/material/icon';
@@ -13,6 +13,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { LoadingService } from '../../../core/services/Loading.service';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { Product } from '../../../core/Models/ProductModel';
+import { Brand } from '../../../core/Models/BrandModel';
 
 @Component({
   selector: 'app-item-search-modal',
@@ -21,7 +23,6 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
   imports: [
     MatIconModule,
     CommonModule,
-    MatDialogModule,
     MatTableModule,
     MatInputModule,
     MatSelectModule,
@@ -29,26 +30,24 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
     ReactiveFormsModule,
     MatButtonModule,
     MatFormFieldModule,
-    MatIconModule,
     MatCheckboxModule,
   ],
 })
 export class ItemSearchModalComponent {
   searchForm: FormGroup;
-  brands: any[] = [];
-  productList: any[] = [];
-  selectedProduct: any = null;
+  brands: Brand[] = [];
+  productList: Product[] = [];
+  selectedProduct: Product | null = null;
   displayedColumns: string[] = ['select', 'name', 'brand', 'description', 'price'];
 
-  selection = new SelectionModel<any>(true, []);
+  selection = new SelectionModel<Product>(true, []);
 
   constructor(
     private fb: FormBuilder,
     private productService: ProductService,
     private brandService: BrandService,
     private _loadingService: LoadingService,
-    public dialogRef: MatDialogRef<ItemSearchModalComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    public dialogRef: MxDialogRef<Product | Product[] | null>,
   ) {
     this.searchForm = this.fb.group({
       brandId: [''],
@@ -61,25 +60,31 @@ export class ItemSearchModalComponent {
 
   async loadBrands() {
     this._loadingService.show();
-    this.brands = await this.brandService.getBrands();
-    this._loadingService.hide();
+    try {
+      this.brands = await this.brandService.getBrands();
+    } finally {
+      this._loadingService.hide();
+    }
   }
 
   async searchProducts() {
     this._loadingService.show();
-    const filters = this.searchForm.value;
-    this.productList = await this.productService.searchProducts(
-      filters['brandId'],
-      filters['name'],
-      filters['description'],
-    );
-    this._loadingService.hide();
+    try {
+      const filters = this.searchForm.value;
+      this.productList = await this.productService.searchProducts(
+        filters['brandId'],
+        filters['name'],
+        filters['description'],
+      );
+    } finally {
+      this._loadingService.hide();
+    }
   }
 
-  selectRow(row: any) {
+  selectRow(row: Product) {
     this.selectedProduct = row;
   }
-  selectItem(row: any) {
+  selectItem(row: Product) {
     this.dialogRef.close(row);
   }
   onCancel() {

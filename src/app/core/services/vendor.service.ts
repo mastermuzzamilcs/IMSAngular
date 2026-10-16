@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { collection, addDoc, getDocs, doc, deleteDoc, setDoc, getDoc } from 'firebase/firestore';
 import { firestore } from '../../firebase-config';
+import { asStatus } from '../enums/status.enum';
 import { Vendor } from '../Models/VendorModel';
 
 @Injectable({ providedIn: 'root' })
@@ -21,7 +22,7 @@ export class VendorService {
         name: data['name'] || '',
         location: data['location'] || '',
         description: data['description'] || '',
-        status: data['status'] || '',
+        status: asStatus(data['status']),
       };
     });
     return this.cachedVendors;
@@ -50,6 +51,9 @@ export class VendorService {
     this.cachedVendors = null;
   }
   async getVendorById(vendorid: string): Promise<Vendor | null> {
+    if (!vendorid) {
+      return null;
+    }
     const docRef = doc(firestore, this.topicName, vendorid);
     const docSnap = await getDoc(docRef);
 
@@ -60,7 +64,7 @@ export class VendorService {
         name: data['name'] || '',
         location: data['location'] || '',
         description: data['description'] || '',
-        status: data['status'] || '',
+        status: asStatus(data['status']),
       } as Vendor;
     } else {
       return null;

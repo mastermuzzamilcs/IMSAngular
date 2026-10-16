@@ -1,16 +1,22 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { MxLoadingService } from '@mesix/custom-control';
 
+/** App loading API — backed by Mesix MxLoadingService / mx-spinner. */
 @Injectable({ providedIn: 'root' })
 export class LoadingService {
-  private _loading = new BehaviorSubject<boolean>(false);
-  readonly loading$ = this._loading.asObservable();
+  private readonly mxLoading = inject(MxLoadingService);
+  readonly loading$ = this.mxLoading.loading$;
 
-  show() {
-    this._loading.next(true);
+  show(): void {
+    this.mxLoading.show();
   }
 
-  hide() {
-    this._loading.next(false);
+  hide(): void {
+    this.mxLoading.hide();
+  }
+
+  /** Clears any stuck overlay (e.g. after navigation). */
+  reset(): void {
+    this.mxLoading.reset();
   }
 }

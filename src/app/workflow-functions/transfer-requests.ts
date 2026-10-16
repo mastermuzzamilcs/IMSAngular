@@ -77,6 +77,7 @@ export async function ensureBranchStockRequest(
       moduleId: stockId,
       requestType,
       requestedBy: approver,
+      branchId,
       remarks: remark,
     }));
   transfer[requestKey] = requestId;

@@ -1,14 +1,16 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
 import { MatOptionModule } from '@angular/material/core';
 import { MaterialModule } from '../../../shared/material/material.module'; // if you're using shared material
+import { MxButtonComponent, MxDialogRef, MX_DIALOG_DATA } from '@mesix/custom-control';
+import { asStatus, Status } from '../../../core/enums/status.enum';
 import { BrandService } from '../../../core/services/brand.service'; // update path as needed
+import { Brand } from '../../../core/Models/BrandModel';
+import { Product } from '../../../core/Models/ProductModel';
 
 @Component({
   selector: 'app-products-form',
@@ -16,27 +18,28 @@ import { BrandService } from '../../../core/services/brand.service'; // update p
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatButtonModule,
     MatOptionModule,
+    MxButtonComponent,
     MaterialModule,
   ],
   templateUrl: './products-form.component.html',
   styleUrls: ['./products-form.component.scss'],
 })
 export class ProductsFormComponent implements OnInit {
+  readonly Status = Status;
   productForm!: FormGroup;
   dialogTitle: string = 'Add Product';
-  brands: any[] = [];
+  brands: Brand[] = [];
 
   constructor(
     private fb: FormBuilder,
     private brandService: BrandService,
-    public dialogRef: MatDialogRef<ProductsFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    public dialogRef: MxDialogRef<unknown>,
+    @Inject(MX_DIALOG_DATA)
+    public data: { mode: string; _product?: Product & { brandid?: string } },
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -50,13 +53,13 @@ export class ProductsFormComponent implements OnInit {
     }
   }
   patchFormValues(): void {
-    const _product = this.data._product;
+    const _product = this.data._product!;
     this.productForm.patchValue({
       name: _product.name,
       description: _product.description,
       brandId: _product.brandid || _product.brand,
       price: _product.price,
-      status: _product.status,
+      status: asStatus(_product.status),
     });
   }
 
@@ -66,7 +69,7 @@ export class ProductsFormComponent implements OnInit {
       description: [''],
       brandId: ['', Validators.required],
       price: [null, [Validators.required, Validators.min(0)]],
-      status: ['Active'],
+      status: [Status.Active],
     });
   }
 

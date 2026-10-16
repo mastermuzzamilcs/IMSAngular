@@ -1,18 +1,25 @@
-import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { ConfirmService } from '../../../core/services/confirm.service';
+import { Component, OnInit, AfterViewInit, ViewChild, inject } from '@angular/core';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BrandFormComponent } from '../brand-form/brand-form.component';
 import { CommonModule } from '@angular/common';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+  MxNoticeService,
+} from '@mesix/custom-control';
 import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
 import { LoadingService } from '../../../core/services/Loading.service';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { GlobalDeleteConfirmationComponent } from '../../../shared/components/global-delete-confirmation/global-delete-confirmation.component';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { Brand } from '../../../core/Models/BrandModel';
 import { BrandService } from '../../../core/services/brand.service';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-brand-setup',
@@ -21,19 +28,28 @@ import { BrandService } from '../../../core/services/brand.service';
     MatTableModule,
     MatPaginatorModule,
     MatIconModule,
-    MatButtonModule,
-    MatDialogModule,
-    MatCardModule,
-    MatChipsModule,
     MatSortModule,
+    MxPageHeaderComponent,
+    MxButtonComponent,
+    MxGridComponent,
+    MxBadgeComponent,
+    MxEmptyStateComponent,
+    PrivilegeDirective,
   ],
   templateUrl: './brand-setup.component.html',
   styleUrl: './brand-setup.component.scss',
   standalone: true,
 })
 export class BrandSetupComponent implements OnInit, AfterViewInit {
+  private readonly notice = inject(MxNoticeService);
+  private readonly confirm = inject(ConfirmService);
+
+  private readonly toast = inject(ToastService);
+
+  readonly privileges = privilegeAccess;
   displayedColumns: string[] = ['name', 'description', 'status', 'actions'];
-  dataSource = new MatTableDataSource<any>();
+  dataSource = new MatTableDataSource<Brand>();
+  tableLoading = false;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -41,7 +57,6 @@ export class BrandSetupComponent implements OnInit, AfterViewInit {
   constructor(
     private _brandService: BrandService,
     private _loadingService: LoadingService,
-    private dialog: MatDialog,
   ) {}
 
   ngOnInit() {
@@ -53,25 +68,27 @@ export class BrandSetupComponent implements OnInit, AfterViewInit {
   }
 
   applyFilter(event: Event) {
-    const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+    this.onGridFilter((event.target as HTMLInputElement).value);
+  }
+
+  onGridFilter(value: string) {
+    this.dataSource.filter = value.trim().toLowerCase();
   }
 
   async loadBrands() {
-    this._loadingService.show();
+    this.tableLoading = true;
     try {
       const brands = await this._brandService.getBrands();
       this.dataSource.data = brands;
     } catch (err) {
       console.error('Error loading Brands', err);
-      alert('Error loading Brands');
+      this.toast.error('Error loading Brands');
     }
-    this._loadingService.hide();
+    this.tableLoading = false;
   }
 
   openAddDialog() {
-    const dialogRef = this.dialog.open(BrandFormComponent, {
-      width: '500px',
+    const dialogRef = this.notice.open(BrandFormComponent, {
       data: { mode: 'add' },
     });
     dialogRef.afterClosed().subscribe(async (result) => {
@@ -85,8 +102,7 @@ export class BrandSetupComponent implements OnInit, AfterViewInit {
   }
 
   openEditDialog(_brand: Brand) {
-    const dialogRef = this.dialog.open(BrandFormComponent, {
-      width: '500px',
+    const dialogRef = this.notice.open(BrandFormComponent, {
       data: { mode: 'edit', _brand },
     });
     dialogRef.afterClosed().subscribe(async (result) => {
@@ -100,22 +116,17 @@ export class BrandSetupComponent implements OnInit, AfterViewInit {
     });
   }
   openDeleteDialog(_brand: Brand) {
-    const dialogRef = this.dialog.open(GlobalDeleteConfirmationComponent, {
-      width: '300px',
-      data: {
-        title: 'Delete Brand',
-        message: `Are you sure you want to delete "${_brand.name}"?`,
-      },
-    });
-    dialogRef.afterClosed().subscribe(async (result) => {
-      if (result) {
-        if (_brand.id) {
-          this._loadingService.show();
-          await this._brandService.deleteBrand(_brand.id);
-          this._loadingService.hide();
-          this.loadBrands();
+    this.confirm
+      .confirmDelete(`Are you sure you want to delete "${_brand.name}"?`, 'Delete Brand')
+      .subscribe(async (result) => {
+        if (result) {
+          if (_brand.id) {
+            this._loadingService.show();
+            await this._brandService.deleteBrand(_brand.id);
+            this._loadingService.hide();
+            this.loadBrands();
+          }
         }
-      }
-    });
+      });
   }
 }

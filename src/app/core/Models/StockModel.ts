@@ -1,3 +1,16 @@
+import { Status } from '../enums/status.enum';
+import { Product } from './ProductModel';
+
+export interface StockLineItem extends Product {
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+  total: number;
+  reason?: string;
+  comments?: string;
+  Comments?: string;
+}
+
 export interface Stock {
   stockid?: string;
   branchid: string;
@@ -11,9 +24,14 @@ export interface Stock {
   NetTotal: number;
   lastUpdated?: Date;
   entrydate?: Date;
-  status: string;
+  status: Status;
   stocktype: string;
   remarks?: string;
+  customerid?: string;
+  customerName?: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  customerAddress?: string;
 }
 
 export interface StockDetails {

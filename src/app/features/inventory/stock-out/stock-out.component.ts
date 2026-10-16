@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -6,11 +6,11 @@ import {
   ReactiveFormsModule,
   FormsModule,
 } from '@angular/forms';
-import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { StockService } from '../../../core/services/stock.service';
+import { StockLineItem } from '../../../core/Models/StockModel';
+import { Vendor } from '../../../core/Models/VendorModel';
 import { VendorService } from '../../../core/services/vendor.service';
-import { BranchService } from '../../../core/services/branchservice.service';
 import { ItemSearchModalComponent } from '../item-search-modal/item-search-modal.component';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -19,12 +19,23 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { MatNativeDateModule } from '@angular/material/core';
+import {
+  MxButtonComponent,
+  MxCardComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxNoticeService,
+  MxPageHeaderComponent,
+} from '@mesix/custom-control';
 import { WorkflowService } from '../../../core/services/Workflow.service';
+import { Status } from '../../../core/enums/status.enum';
 import { RequestType } from '../../../core/Models/WorkflowModel';
 import { LoadingService } from '../../../core/services/Loading.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-stock-out',
@@ -38,16 +49,24 @@ import { LoadingService } from '../../../core/services/Loading.service';
     MatDatepickerModule,
     MatIconModule,
     MatTableModule,
-    MatButtonModule,
-    MatCardModule,
     MatNativeDateModule,
     FormsModule,
+    MxPageHeaderComponent,
+    MxButtonComponent,
+    MxCardComponent,
+    MxGridComponent,
+    MxEmptyStateComponent,
+    PrivilegeDirective,
   ],
   templateUrl: './stock-out.component.html',
   styleUrls: ['./stock-out.component.scss'],
 })
 export class StockOutComponent implements OnInit {
-  dataSource = new MatTableDataSource<any>([]);
+  private readonly toast = inject(ToastService);
+  private readonly notice = inject(MxNoticeService);
+
+  readonly privileges = privilegeAccess;
+  dataSource = new MatTableDataSource<StockLineItem>([]);
   displayedColumns: string[] = [
     'product',
     'description',
@@ -60,9 +79,8 @@ export class StockOutComponent implements OnInit {
     'actions',
   ];
   stockOutForm!: FormGroup;
-  branches: any[] = [];
-  vendors: any[] = [];
-  stockDetails: any[] = [];
+  vendors: Vendor[] = [];
+  stockDetails: StockLineItem[] = [];
 
   subTotal = 0;
   discountType: 'amount' | 'percentage' = 'amount';
@@ -71,28 +89,24 @@ export class StockOutComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private dialog: MatDialog,
     private stockService: StockService,
     private vendorService: VendorService,
-    private branchService: BranchService,
     private _workflowService: WorkflowService,
     private _loadingService: LoadingService,
+    private auth: AuthService,
   ) {}
 
   async ngOnInit(): Promise<void> {
     this.stockOutForm = this.fb.group({
-      branch: ['', Validators.required],
       vendor: ['', Validators.required],
       date: [new Date(), Validators.required],
     });
 
-    this.branches = await this.branchService.getBranches();
     this.vendors = await this.vendorService.getVendors();
   }
 
   openProductDialog(): void {
-    const dialogRef = this.dialog.open(ItemSearchModalComponent, {
-      width: '800px',
+    const dialogRef = this.notice.open(ItemSearchModalComponent, {
       data: {},
     });
 
@@ -120,7 +134,7 @@ export class StockOutComponent implements OnInit {
     });
   }
 
-  updateRowTotal(row: any): void {
+  updateRowTotal(row: StockLineItem): void {
     const quantity = Number(row.quantity) || 0;
     const unitPrice = Number(row.unitPrice) || 0;
     const discount = Number(row.discount) || 0;
@@ -140,23 +154,29 @@ export class StockOutComponent implements OnInit {
     this.netTotal = this.subTotal - discount;
   }
 
-  removeProduct(row: any): void {
+  removeProduct(row: StockLineItem): void {
     this.dataSource.data = this.dataSource.data.filter((item) => item !== row);
     this.recalculateTotal();
   }
 
   async submitStockOut(): Promise<void> {
+    const branch = this.auth.currentBranchId();
+    if (!branch) {
+      this.toast.warning('Choose a branch from the top bar before continuing.');
+      return;
+    }
     this._loadingService.show();
     if (this.stockOutForm.invalid || this.dataSource.data.length === 0) return;
     const payload = {
       ...this.stockOutForm.value,
+      branch,
       stockItems: this.dataSource.data,
       TotalItems: this.dataSource.data.length,
       SubTotal: this.subTotal,
       DiscountType: this.discountType,
       DiscountValue: this.discountValue,
       NetTotal: this.netTotal,
-      status: 'Pending',
+      status: Status.Pending,
       stocktype: 'out',
     };
 
@@ -166,10 +186,11 @@ export class StockOutComponent implements OnInit {
       await this._workflowService.createRequest({
         moduleId: stock_id,
         requestType: RequestType.StockOut,
-        requestedBy: 'currentUserUid', // replace with auth‑service value
+        requestedBy: this.auth.currentUserId(),
+        branchId: this.auth.currentBranchId(),
         remarks: 'Auto‑generated from Stock‑Out screen',
       });
-      alert('Stock-out entry added successfully');
+      this.toast.success('Stock-out entry added successfully');
       this.dataSource.data = [];
       this.stockOutForm.reset({ date: new Date() });
       this.subTotal = 0;
@@ -178,7 +199,7 @@ export class StockOutComponent implements OnInit {
       this.netTotal = 0;
     } catch (err) {
       console.error('Error submitting stock in:', err);
-      alert('Failed to submit stock-in');
+      this.toast.error('Failed to submit stock-in');
     }
     this._loadingService.hide();
   }

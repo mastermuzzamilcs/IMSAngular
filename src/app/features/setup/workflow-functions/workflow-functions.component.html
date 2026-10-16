@@ -1,110 +1,147 @@
 <div class="container">
-  <div class="header-container">
-    <h1 class="mat-headline-5">Workflow Functions</h1>
-    <button mat-raised-button color="primary" (click)="openAddFunction()">
-      <mat-icon>add</mat-icon> Add Function
-    </button>
-  </div>
+  <mx-page-header title="Workflow Functions" subtitle="Define reusable workflow functions">
+    <mx-button
+      variant="outline"
+      tone="primary"
+      icon="add"
+      *appPrivilege="privileges.workflowFunctions.create"
+      (pressed)="openAddFunction()"
+      >Add Function</mx-button
+    >
+  </mx-page-header>
 
-  <mat-card>
-    <mat-card-content>
-      <div class="mat-elevation-z2 table-container">
-        <table mat-table [dataSource]="functions" matSort #functionSort="matSort">
-          <ng-container matColumnDef="code">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Code</th>
-            <td mat-cell *matCellDef="let row">{{ row.code }}</td>
-          </ng-container>
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
-            <td mat-cell *matCellDef="let row">{{ row.name }}</td>
-          </ng-container>
-          <ng-container matColumnDef="className">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Class Name</th>
-            <td mat-cell *matCellDef="let row">{{ row.className }}</td>
-          </ng-container>
-          <ng-container matColumnDef="functionActions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let row">
-              <button
-                mat-icon-button
-                color="primary"
-                (click)="openEditFunction(row)"
-                matTooltip="Edit"
-              >
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button
-                mat-icon-button
-                color="warn"
-                (click)="openDeleteFunction(row)"
-                matTooltip="Delete"
-              >
-                <mat-icon>delete</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-          <tr mat-header-row *matHeaderRowDef="functionColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: functionColumns"></tr>
-          <tr class="mat-row" *matNoDataRow>
-            <td class="mat-cell" colspan="4">No workflow functions found.</td>
-          </tr>
-        </table>
-        <mat-paginator #functionPaginator [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
-      </div>
-    </mat-card-content>
-  </mat-card>
+  <mx-grid
+    [loading]="tableLoading"
+    [skeletonColumns]="functionColumns.length"
+    [showFilter]="true"
+    filterPlaceholder="Search functions..."
+    [hasFooter]="true"
+    (filterChange)="onFunctionsFilter($event)"
+  >
+    <table mat-table [dataSource]="functions" matSort #functionSort="matSort">
+      <ng-container matColumnDef="code">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Code</th>
+        <td mat-cell *matCellDef="let row">{{ row.code }}</td>
+      </ng-container>
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+        <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="className">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Class Name</th>
+        <td mat-cell *matCellDef="let row">{{ row.className }}</td>
+      </ng-container>
+      <ng-container matColumnDef="functionActions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let row">
+          <mx-button
+            variant="ghost"
+            tone="primary"
+            icon="edit"
+            [iconOnly]="true"
+            *appPrivilege="privileges.workflowFunctions.edit"
+            (pressed)="openEditFunction(row)"
+          ></mx-button>
+          <mx-button
+            variant="ghost"
+            tone="danger"
+            icon="delete"
+            [iconOnly]="true"
+            *appPrivilege="privileges.workflowFunctions.delete"
+            (pressed)="openDeleteFunction(row)"
+          ></mx-button>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="functionColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: functionColumns"></tr>
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" colspan="4">
+          <mx-empty-state
+            title="No workflow functions found"
+            description="Add a function to get started."
+            icon="functions"
+            [compact]="true"
+          ></mx-empty-state>
+        </td>
+      </tr>
+    </table>
+    <mat-paginator
+      mxGridFooter
+      #functionPaginator
+      [pageSizeOptions]="[5, 10, 25, 100]"
+    ></mat-paginator>
+  </mx-grid>
 
-  <div class="header-container">
-    <h1 class="mat-headline-5">Associations</h1>
-    <button mat-raised-button color="primary" (click)="openAddLink()">
-      <mat-icon>add</mat-icon> Associate
-    </button>
-  </div>
+  <mx-page-header title="Associations" subtitle="Link functions to request types and statuses">
+    <mx-button
+      variant="outline"
+      tone="primary"
+      icon="add"
+      *appPrivilege="privileges.workflowFunctions.create"
+      (pressed)="openAddLink()"
+      >Associate</mx-button
+    >
+  </mx-page-header>
 
-  <mat-card>
-    <mat-card-content>
-      <div class="mat-elevation-z2 table-container">
-        <table mat-table [dataSource]="links" matSort #linkSort="matSort">
-          <ng-container matColumnDef="requestType">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Request Type</th>
-            <td mat-cell *matCellDef="let row">{{ row.requestType }}</td>
-          </ng-container>
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
-            <td mat-cell *matCellDef="let row">{{ row.status }}</td>
-          </ng-container>
-          <ng-container matColumnDef="priority">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Priority</th>
-            <td mat-cell *matCellDef="let row">{{ row.priority }}</td>
-          </ng-container>
-          <ng-container matColumnDef="functionName">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Function</th>
-            <td mat-cell *matCellDef="let row">{{ functionName(row.functionKey) }}</td>
-          </ng-container>
-          <ng-container matColumnDef="linkActions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let row">
-              <button mat-icon-button color="primary" (click)="openEditLink(row)" matTooltip="Edit">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button
-                mat-icon-button
-                color="warn"
-                (click)="openDeleteLink(row)"
-                matTooltip="Delete"
-              >
-                <mat-icon>delete</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-          <tr mat-header-row *matHeaderRowDef="linkColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: linkColumns"></tr>
-          <tr class="mat-row" *matNoDataRow>
-            <td class="mat-cell" colspan="5">No associations found.</td>
-          </tr>
-        </table>
-        <mat-paginator #linkPaginator [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
-      </div>
-    </mat-card-content>
-  </mat-card>
+  <mx-grid
+    [loading]="tableLoading"
+    [skeletonColumns]="linkColumns.length"
+    [showFilter]="true"
+    filterPlaceholder="Search associations..."
+    [hasFooter]="true"
+    (filterChange)="onLinksFilter($event)"
+  >
+    <table mat-table [dataSource]="links" matSort #linkSort="matSort">
+      <ng-container matColumnDef="requestType">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Request Type</th>
+        <td mat-cell *matCellDef="let row">{{ row.requestType }}</td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+        <td mat-cell *matCellDef="let row">{{ row.status }}</td>
+      </ng-container>
+      <ng-container matColumnDef="priority">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Priority</th>
+        <td mat-cell *matCellDef="let row">{{ row.priority }}</td>
+      </ng-container>
+      <ng-container matColumnDef="functionName">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Function</th>
+        <td mat-cell *matCellDef="let row">{{ functionName(row.functionKey) }}</td>
+      </ng-container>
+      <ng-container matColumnDef="linkActions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let row">
+          <mx-button
+            variant="ghost"
+            tone="primary"
+            icon="edit"
+            [iconOnly]="true"
+            *appPrivilege="privileges.workflowFunctions.edit"
+            (pressed)="openEditLink(row)"
+          ></mx-button>
+          <mx-button
+            variant="ghost"
+            tone="danger"
+            icon="delete"
+            [iconOnly]="true"
+            *appPrivilege="privileges.workflowFunctions.delete"
+            (pressed)="openDeleteLink(row)"
+          ></mx-button>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="linkColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: linkColumns"></tr>
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" colspan="5">
+          <mx-empty-state
+            title="No associations found"
+            description="Associate a function with a request type."
+            icon="link"
+            [compact]="true"
+          ></mx-empty-state>
+        </td>
+      </tr>
+    </table>
+    <mat-paginator mxGridFooter #linkPaginator [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+  </mx-grid>
 </div>

@@ -1,26 +1,35 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MaterialModule } from '../../../shared/material/material.module';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { MxButtonComponent, MxDialogRef, MX_DIALOG_DATA } from '@mesix/custom-control';
+import { asStatus, Status } from '../../../core/enums/status.enum';
 import { UsersService } from '../../../core/services/users.service';
+import { Vendor } from '../../../core/Models/VendorModel';
 
 @Component({
   selector: 'app-vendor-form',
   standalone: true,
-  imports: [MatDialogModule, MatFormFieldModule, MaterialModule, ReactiveFormsModule, CommonModule],
+  imports: [
+    MatFormFieldModule,
+    MaterialModule,
+    ReactiveFormsModule,
+    CommonModule,
+    MxButtonComponent,
+  ],
   templateUrl: './vendor-form.component.html',
   styleUrls: ['./vendor-form.component.scss'],
 })
 export class VendorFormComponent implements OnInit {
+  readonly Status = Status;
   VendorForm!: FormGroup;
   dialogTitle: string = 'Add Vendor';
 
   constructor(
     private fb: FormBuilder,
-    public dialogRef: MatDialogRef<VendorFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    public dialogRef: MxDialogRef<unknown>,
+    @Inject(MX_DIALOG_DATA) public data: { mode: string; _vendor?: Vendor },
     private userService: UsersService,
   ) {}
 
@@ -46,16 +55,16 @@ export class VendorFormComponent implements OnInit {
       name: ['', [Validators.required]],
       location: [''],
       description: [''],
-      status: ['Active'],
+      status: [Status.Active],
     });
   }
   patchFormValues(): void {
-    const vendor = this.data._vendor;
+    const vendor = this.data._vendor!;
     this.VendorForm.patchValue({
       name: vendor.name,
       location: vendor.location,
       description: vendor.description,
-      status: vendor.status,
+      status: asStatus(vendor.status),
     });
   }
   onSubmit(): void {

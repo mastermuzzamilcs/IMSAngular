@@ -4,9 +4,46 @@
   gap: 16px;
   margin-bottom: 32px;
 }
+
 .flexible-Chart-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(40%, 1fr));
   gap: 2%;
   margin-bottom: 32px;
+}
+
+.kpi-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.kpi-icon mat-icon {
+  color: var(--mx-primary, #1a73e8);
+}
+
+.kpi-info h3 {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--mx-text-muted, #5f6368);
+}
+
+.kpi-value {
+  margin: 4px 0 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--mx-text, #202124);
+}
+
+.empty-activity {
+  margin: 0;
+  color: var(--mx-text-muted, #5f6368);
+  font-size: 0.875rem;
+}
+
+.chart-card,
+.activity-card {
+  display: block;
+  margin-bottom: 16px;
 }

@@ -1,20 +1,28 @@
-import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, inject } from '@angular/core';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSort, MatSortModule } from '@angular/material/sort';
 import { UserFormComponent } from '../form/user-form.component';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatInputModule } from '@angular/material/input';
+import {
+  MxBadgeComponent,
+  MxButtonComponent,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxPageHeaderComponent,
+  MxNoticeService,
+} from '@mesix/custom-control';
+import type { MxTone } from '@mesix/custom-control';
 import { UsersService } from '../../../core/services/users.service';
 import { LoadingService } from '../../../core/services/Loading.service';
 import { ActivatedRoute } from '@angular/router';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
+import { ToastService } from '../../../core/services/toast.service';
+import { User } from '../../../core/Models/UsersModel';
+import { Role } from '../../../core/Models/RoleModel';
+import { Branch } from '../../../core/Models/BranchModel';
 
 @Component({
   selector: 'app-userlist',
@@ -23,23 +31,29 @@ import { ActivatedRoute } from '@angular/router';
     CommonModule,
     MatTableModule,
     MatPaginatorModule,
+    MatSortModule,
     MatIconModule,
-    MatButtonModule,
-    MatInputModule,
-    MatDialogModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatChipsModule,
-    MatSlideToggleModule,
+    MxPageHeaderComponent,
+    MxButtonComponent,
+    MxGridComponent,
+    MxBadgeComponent,
+    MxEmptyStateComponent,
+    PrivilegeDirective,
   ],
   templateUrl: './user-list.component.html',
   styleUrls: ['./user-list.component.scss'],
 })
 export class UserListComponent implements OnInit, AfterViewInit {
-  displayedColumns: string[] = ['name', 'email', 'role', 'branch', 'status', 'actions'];
-  dataSource = new MatTableDataSource<any>([]);
-  userRolesLookup: any[];
-  userBranchesLookup: any[];
+  private readonly notice = inject(MxNoticeService);
+
+  private readonly toast = inject(ToastService);
+
+  readonly privileges = privilegeAccess;
+  displayedColumns: string[] = ['name', 'email', 'role', 'status', 'actions'];
+  dataSource = new MatTableDataSource<User>([]);
+  tableLoading = false;
+  userRolesLookup: Role[];
+  userBranchesLookup: Branch[];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -47,7 +61,6 @@ export class UserListComponent implements OnInit, AfterViewInit {
   constructor(
     private _userService: UsersService,
     private loadingService: LoadingService,
-    private dialog: MatDialog,
     private route: ActivatedRoute,
   ) {
     this.userRolesLookup = this.route.snapshot.data['roles'];
@@ -62,14 +75,12 @@ export class UserListComponent implements OnInit, AfterViewInit {
     this.dataSource.sort = this.sort;
   }
 
-  applyFilter(event: Event) {
-    const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+  onGridFilter(value: string) {
+    this.dataSource.filter = value.trim().toLowerCase();
   }
 
   openAddUserDialog() {
-    const dialogRef = this.dialog.open(UserFormComponent, {
-      width: '600px',
+    const dialogRef = this.notice.open(UserFormComponent, {
       data: {
         mode: 'add',
         rolesLookup: this.userRolesLookup,
@@ -87,9 +98,8 @@ export class UserListComponent implements OnInit, AfterViewInit {
     });
   }
 
-  openEditUserDialog(user: any) {
-    const dialogRef = this.dialog.open(UserFormComponent, {
-      width: '600px',
+  openEditUserDialog(user: User) {
+    const dialogRef = this.notice.open(UserFormComponent, {
       data: {
         mode: 'edit',
         user,
@@ -102,6 +112,7 @@ export class UserListComponent implements OnInit, AfterViewInit {
       if (result) {
         this.loadingService.show();
         result.userid = user.userid;
+        result.branch = user.branchid || user.branch || '';
         await this._userService.updateUser(result);
         this.loadingService.hide();
         this.LoadUsers();
@@ -109,44 +120,44 @@ export class UserListComponent implements OnInit, AfterViewInit {
     });
   }
 
-  toggleUserStatus(_user: any) {
+  toggleUserStatus(_user: User) {
     // Toggle user active status
   }
 
-  getRoleColor(role: string): string {
+  getRoleTone(role: string): MxTone {
     switch (role) {
       case 'Admin':
-        return 'warn';
+        return 'danger';
       case 'Manager':
-        return 'accent';
+        return 'warning';
       case 'Staff':
         return 'primary';
       default:
-        return '';
+        return 'neutral';
     }
   }
+
   async LoadUsers() {
-    this.loadingService.show();
+    this.tableLoading = true;
     try {
       const Users = await this._userService.getUsers();
       const usersWithRoleNames = Users.map((user) => {
         const matchedRole = this.userRolesLookup.find((r) => r.id === user.roleid);
-        const matchedBranch = this.userBranchesLookup.find((b) => b.branchid === user.branchid);
         return {
           ...user,
           role: matchedRole ? matchedRole.name : 'Unknown',
-          branch: matchedBranch ? matchedBranch.name : 'Unknown',
         };
       });
 
       this.dataSource.data = usersWithRoleNames;
     } catch (err) {
       console.error('Error loading Users', err);
-      alert('Error loading Users ');
+      this.toast.error('Error loading Users ');
     }
-    this.loadingService.hide();
+    this.tableLoading = false;
   }
-  ResetPasswordAction(_user: any) {
+
+  ResetPasswordAction(_user: User) {
     //alert('Implementation Pending');
   }
 }

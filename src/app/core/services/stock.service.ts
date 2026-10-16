@@ -13,13 +13,45 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import { firestore } from '../../firebase-config';
+import { asStatus, Status } from '../enums/status.enum';
 import { Stock, StockDetails, StockOverview } from '../Models/StockModel';
 import { BranchService } from './branchservice.service';
 import { VendorService } from './vendor.service';
 import { ProductService } from './product.service';
 import { BrandService } from './brand.service';
 
-function toJsDate(raw: any): Date {
+interface StockItemPayload {
+  id?: string;
+  quantity?: number;
+  unitPrice?: number;
+  discount?: number;
+  total?: number;
+  reason?: string;
+  comments?: string;
+}
+
+interface StockEntityPayload {
+  branch?: string;
+  vendor?: string;
+  date?: Date | string;
+  lastUpdated?: Date | string;
+  TotalItems?: number;
+  DiscountType?: string;
+  DiscountValue?: number;
+  SubTotal?: number;
+  NetTotal?: number;
+  status?: Status;
+  stocktype?: string;
+  customerId?: string;
+  customerName?: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  customerAddress?: string;
+  remarks?: string;
+  stockItems?: StockItemPayload[];
+}
+
+function toJsDate(raw: unknown): Date {
   if (!raw) return new Date();
   if (raw instanceof Date) return raw;
   if (raw instanceof Timestamp) return raw.toDate();
@@ -61,14 +93,14 @@ export class StockService {
         lastUpdated: toJsDate(data['lastUpdated']) || '',
         entrydate: toJsDate(data['entrydate']) || '',
         NetTotal: data['NetTotal'] || 0,
-        status: data['status'] || '',
+        status: asStatus(data['status'], Status.Pending),
         stocktype: data['stocktype'] || '',
       };
     });
     return this.cachedStocks;
   }
 
-  async addStock(_stock: Stock): Promise<any> {
+  async addStock(_stock: Stock): Promise<string> {
     const branchRef = collection(firestore, this.topicName);
     const resDocRef = await addDoc(branchRef, _stock);
     this.cachedStocks = null;
@@ -79,7 +111,7 @@ export class StockService {
     await addDoc(branchRef, _stockDetails);
     this.cachedStocks = null;
   }
-  async addStockEntity(_payload: any): Promise<string> {
+  async addStockEntity(_payload: StockEntityPayload): Promise<string> {
     const stockid = await this.addStock(this.populateStockMain(_payload));
     const details = this.populateStockDetails(stockid, _payload.stockItems);
     await Promise.all(details.map((d) => this.addStockDetails(d)));
@@ -87,7 +119,7 @@ export class StockService {
     return stockid;
   }
 
-  populateStockMain(_payload: any): Stock {
+  populateStockMain(_payload: StockEntityPayload): Stock {
     const _stock: Stock = {
       branchid: _payload['branch'] || '',
       vendorid: _payload['vendor'] || '',
@@ -98,15 +130,20 @@ export class StockService {
       discountvalue: _payload['DiscountValue'] || 0,
       subtotal: _payload['SubTotal'] || 0,
       NetTotal: _payload['NetTotal'] || 0,
-      status: _payload['status'] || '',
+      status: asStatus(_payload['status'], Status.Pending),
       stocktype: _payload['stocktype'] || '',
+      customerid: _payload['customerId'] || '',
+      customerName: _payload['customerName'] || '',
+      customerPhone: _payload['customerPhone'] || '',
+      customerEmail: _payload['customerEmail'] || '',
+      customerAddress: _payload['customerAddress'] || '',
       ...(_payload['remarks'] ? { remarks: _payload['remarks'] } : {}),
     };
 
     return _stock;
   }
 
-  populateStockDetails(_stockid: string, payload: any): StockDetails[] {
+  populateStockDetails(_stockid: string, payload: StockItemPayload[] | undefined): StockDetails[] {
     const stockDetails: StockDetails[] = [];
 
     if (payload && Array.isArray(payload)) {
@@ -153,8 +190,12 @@ export class StockService {
     if (docSnap.exists()) {
       const data = docSnap.data();
       const [branch, vendor] = await Promise.all([
-        this._branchService.getBranchById(data['branchid']),
-        this._vendorService.getVendorById(data['vendorid']),
+        data['branchid']
+          ? this._branchService.getBranchById(data['branchid'])
+          : Promise.resolve(null),
+        data['vendorid']
+          ? this._vendorService.getVendorById(data['vendorid'])
+          : Promise.resolve(null),
       ]);
       return {
         stockid: docSnap.id,
@@ -169,7 +210,13 @@ export class StockService {
         lastUpdated: toJsDate(data['lastUpdated']) || '',
         entrydate: toJsDate(data['entrydate']) || '',
         NetTotal: data['NetTotal'] || 0,
-        status: data['status'] || '',
+        status: asStatus(data['status'], Status.Pending),
+        stocktype: data['stocktype'] || '',
+        customerid: data['customerid'] || '',
+        customerName: data['customerName'] || '',
+        customerPhone: data['customerPhone'] || '',
+        customerEmail: data['customerEmail'] || '',
+        customerAddress: data['customerAddress'] || '',
       } as Stock;
     } else {
       return null;
@@ -328,7 +375,7 @@ export class StockService {
     const q = query(
       collection(firestore, this.topicName),
       where('branchid', '==', branchid),
-      where('status', '==', 'Approved'),
+      where('status', '==', Status.Approved),
     );
     const stockSnap = await getDocs(q);
     const stocks = stockSnap.docs.map((d) => ({ stockid: d.id, ...d.data() }) as Stock);

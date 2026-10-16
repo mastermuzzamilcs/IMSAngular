@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -6,7 +6,6 @@ import {
   ReactiveFormsModule,
   FormsModule,
 } from '@angular/forms';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -15,18 +14,37 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { MatNativeDateModule } from '@angular/material/core';
+import {
+  MxButtonComponent,
+  MxCardComponent,
+  MxDialogRef,
+  MxEmptyStateComponent,
+  MxGridComponent,
+  MxNoticeService,
+  MxPageHeaderComponent,
+} from '@mesix/custom-control';
 import { ItemSearchModalComponent } from '../../inventory/item-search-modal/item-search-modal.component';
 import { UsersService } from '../../../core/services/users.service';
 import { BranchService } from '../../../core/services/branchservice.service';
 import { StockService } from '../../../core/services/stock.service';
 import { TransferService } from '../../../core/services/transfer.service';
 import { WorkflowService } from '../../../core/services/Workflow.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
+import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 import { LoadingService } from '../../../core/services/Loading.service';
 import { Transfer } from '../../../core/Models/TransferModel';
+import { Branch } from '../../../core/Models/BranchModel';
+import { Product } from '../../../core/Models/ProductModel';
+import { User } from '../../../core/Models/UsersModel';
 import { RequestStatus, RequestType } from '../../../core/Models/WorkflowModel';
+import {
+  ALL_BRANCHES_ID,
+  UserBranchAssociationService,
+} from '../../../core/services/user-branch-association.service';
+import { CustomerSearchModalComponent } from '../../../shared/components/customer-search-modal/customer-search-modal.component';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-new-transfer-request',
@@ -41,71 +59,122 @@ import { RequestStatus, RequestType } from '../../../core/Models/WorkflowModel';
     MatDatepickerModule,
     MatIconModule,
     MatTableModule,
-    MatButtonModule,
-    MatCardModule,
     MatNativeDateModule,
+    MxPageHeaderComponent,
+    MxButtonComponent,
+    MxCardComponent,
+    MxGridComponent,
+    MxEmptyStateComponent,
+    PrivilegeDirective,
   ],
   templateUrl: './new-transfer-request.component.html',
   styleUrls: ['./new-transfer-request.component.scss'],
 })
 export class NewTransferRequestComponent implements OnInit {
-  dataSource = new MatTableDataSource<any>([]);
+  private readonly toast = inject(ToastService);
+  private readonly notice = inject(MxNoticeService);
+
+  readonly privileges = privilegeAccess;
+  dataSource = new MatTableDataSource<Product & { quantity: number }>([]);
   displayedColumns: string[] = ['product', 'description', 'quantity', 'actions'];
   transferForm!: FormGroup;
-  branches: any[] = [];
-  users: any[] = [];
-  private itemDialogRef: MatDialogRef<ItemSearchModalComponent> | null = null;
+  branches: Branch[] = [];
+  users: User[] = [];
+  private linksByUser = new Map<string, string[]>();
+  searchedUser: User | null = null;
+  private itemDialogRef: MxDialogRef<Product | Product[] | null> | null = null;
   private addItemOpen = false;
 
   constructor(
     private fb: FormBuilder,
-    private dialog: MatDialog,
     private usersService: UsersService,
+    private branchAssociationService: UserBranchAssociationService,
     private branchService: BranchService,
     private stockService: StockService,
     private transferService: TransferService,
     private workflowService: WorkflowService,
     private loadingService: LoadingService,
+    private auth: AuthService,
   ) {}
 
   async ngOnInit(): Promise<void> {
     this.transferForm = this.fb.group({
-      branch: ['', Validators.required],
+      toBranch: ['', Validators.required],
       user: ['', Validators.required],
       date: [new Date(), Validators.required],
     });
 
-    const [users, branches] = await Promise.all([
+    const [users, branches, links] = await Promise.all([
       this.usersService.getUsers(),
       this.branchService.getBranches(),
+      this.branchAssociationService.getAssociations(),
     ]);
 
     this.branches = branches;
-    this.users = users
-      .filter((user) => !!user.branchid)
-      .map((user) => ({
-        ...user,
-        branchName: branches.find((branch) => branch.branchid === user.branchid)?.name || '',
-      }));
+    this.users = users;
+    links.forEach((link) => {
+      const current = this.linksByUser.get(link.userid) || [];
+      current.push(link.branchid);
+      this.linksByUser.set(link.userid, current);
+    });
   }
 
-  get usersForBranch(): any[] {
-    const branchId = this.transferForm?.get('branch')?.value;
-    if (!branchId) {
-      return this.users;
+  get userChoices(): User[] {
+    const toBranch = this.transferForm?.get('toBranch')?.value || '';
+    if (!toBranch) {
+      return this.searchedUser ? [this.searchedUser] : [];
     }
-    return this.users.filter((user) => user.branchid !== branchId);
+    const fromBranch = this.auth.currentBranchId();
+    const allowed = new Set([fromBranch, toBranch]);
+    const choices = this.users.filter((user) => this.userServes(user.userid || '', allowed));
+    if (
+      this.searchedUser?.userid &&
+      !choices.some((user) => user.userid === this.searchedUser?.userid)
+    ) {
+      choices.unshift(this.searchedUser);
+    }
+    return choices;
   }
 
-  onBranchChange(): void {
-    this.dataSource.data = [];
-    const branchId = this.transferForm.get('branch')?.value;
-    const selectedUser = this.users.find(
-      (user) => user.userid === this.transferForm.get('user')?.value,
-    );
-    if (selectedUser && selectedUser.branchid === branchId) {
+  onToBranchChange(): void {
+    const selected = this.transferForm.get('user')?.value || '';
+    const toBranch = this.transferForm.get('toBranch')?.value || '';
+    const allowed = new Set([this.auth.currentBranchId(), toBranch].filter((id) => id.length > 0));
+    if (!this.userServes(selected, allowed)) {
+      this.searchedUser = null;
       this.transferForm.patchValue({ user: '' });
     }
+  }
+
+  openUserSearch(): void {
+    this.notice
+      .open(CustomerSearchModalComponent, {
+        data: { type: 'all', isMultiSelect: false },
+      })
+      .afterClosed()
+      .subscribe((user: User | null) => {
+        if (!user?.userid) {
+          return;
+        }
+        this.searchedUser = user;
+        if (!this.users.some((item) => item.userid === user.userid)) {
+          this.users = [user, ...this.users];
+        }
+        this.transferForm.patchValue({ user: user.userid });
+      });
+  }
+
+  private userServes(userid: string, branches: Set<string>): boolean {
+    if (!userid || branches.size === 0) {
+      return false;
+    }
+    const links = this.linksByUser.get(userid) || [];
+    return links.some((branchid) => branchid === ALL_BRANCHES_ID || branches.has(branchid));
+  }
+
+  get destinationBranches(): Branch[] {
+    const current = this.auth.currentBranchId();
+    return this.branches.filter((branch) => branch.branchid !== current);
   }
 
   async openProductDialog(): Promise<void> {
@@ -115,7 +184,7 @@ export class NewTransferRequestComponent implements OnInit {
     this.addItemOpen = true;
 
     try {
-      const branchId = this.transferForm.get('branch')?.value;
+      const branchId = this.auth.currentBranchId();
       const allowedIds = new Set<string>();
       if (branchId) {
         const stock = await this.stockService.getStockOverviewByBranch(branchId);
@@ -124,8 +193,7 @@ export class NewTransferRequestComponent implements OnInit {
           .forEach((item) => allowedIds.add(item.productid));
       }
 
-      this.itemDialogRef = this.dialog.open(ItemSearchModalComponent, {
-        width: '800px',
+      this.itemDialogRef = this.notice.open(ItemSearchModalComponent, {
         data: {},
       });
 
@@ -135,7 +203,7 @@ export class NewTransferRequestComponent implements OnInit {
         if (Array.isArray(result) && result.length) {
           const updatedData = [...this.dataSource.data];
           result.forEach((product) => {
-            if (!allowedIds.has(product.id)) {
+            if (!product.id || !allowedIds.has(product.id)) {
               return;
             }
             const existing = updatedData.find((item) => item.id === product.id);
@@ -157,34 +225,40 @@ export class NewTransferRequestComponent implements OnInit {
     }
   }
 
-  removeProduct(row: any): void {
+  removeProduct(row: Product & { quantity: number }): void {
     this.dataSource.data = this.dataSource.data.filter((item) => item !== row);
   }
 
   async submitTransfer(): Promise<void> {
+    const fromBranchId = this.auth.currentBranchId();
+    if (!fromBranchId) {
+      this.toast.warning('Choose a branch from the top bar before continuing.');
+      return;
+    }
     if (this.transferForm.invalid || this.dataSource.data.length === 0) {
       return;
     }
 
     this.loadingService.show();
     const formValue = this.transferForm.value;
-    const branch = this.branches.find((item) => item.branchid === formValue.branch);
+    const fromBranch = this.branches.find((item) => item.branchid === fromBranchId);
+    const toBranch = this.branches.find((item) => item.branchid === formValue.toBranch);
     const user = this.users.find((item) => item.userid === formValue.user);
 
     const transfer: Transfer = {
-      fromBranch: formValue.branch,
-      fromBranchName: branch?.name || '',
-      branchId: formValue.branch,
-      branchName: branch?.name || '',
+      fromBranch: fromBranchId,
+      fromBranchName: fromBranch?.name || '',
+      branchId: fromBranchId,
+      branchName: fromBranch?.name || '',
       userId: formValue.user,
       userName: user?.name || '',
-      toBranch: user?.branchid || '',
-      toBranchName: user?.branchName || '',
+      toBranch: formValue.toBranch,
+      toBranchName: toBranch?.name || '',
       expectedDate: formValue.date,
       requestDate: new Date(),
       status: RequestStatus.Pending,
       items: this.dataSource.data.map((row) => ({
-        productId: row.id,
+        productId: row.id || '',
         productName: row.name,
         description: row.description || '',
         quantity: Number(row.quantity) || 0,
@@ -196,15 +270,17 @@ export class NewTransferRequestComponent implements OnInit {
       await this.workflowService.createRequest({
         moduleId: transferId,
         requestType: RequestType.Transfer,
-        requestedBy: 'currentUserUid',
+        requestedBy: this.auth.currentUserId(),
+        branchId: fromBranchId,
+        toBranchId: formValue.toBranch,
         remarks: 'Auto-generated from New Transfer Request',
       });
-      alert('Transfer request added successfully');
+      this.toast.success('Transfer request added successfully');
       this.dataSource.data = [];
       this.transferForm.reset({ date: new Date() });
     } catch (err) {
       console.error('Error submitting transfer request:', err);
-      alert(err instanceof Error ? err.message : 'Failed to submit transfer request');
+      this.toast.error(err instanceof Error ? err.message : 'Failed to submit transfer request');
     }
     this.loadingService.hide();
   }

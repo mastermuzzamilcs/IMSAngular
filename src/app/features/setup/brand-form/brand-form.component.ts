@@ -1,25 +1,34 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MaterialModule } from '../../../shared/material/material.module';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { MxButtonComponent, MxDialogRef, MX_DIALOG_DATA } from '@mesix/custom-control';
+import { asStatus, Status } from '../../../core/enums/status.enum';
+import { Brand } from '../../../core/Models/BrandModel';
 
 @Component({
   selector: 'app-brand-form',
   standalone: true,
-  imports: [MatDialogModule, MatFormFieldModule, MaterialModule, ReactiveFormsModule, CommonModule],
+  imports: [
+    MatFormFieldModule,
+    MaterialModule,
+    ReactiveFormsModule,
+    CommonModule,
+    MxButtonComponent,
+  ],
   templateUrl: './brand-form.component.html',
   styleUrl: './brand-form.component.scss',
 })
 export class BrandFormComponent implements OnInit {
+  readonly Status = Status;
   brandForm!: FormGroup;
   dialogTitle: string = 'Add Brand';
 
   constructor(
     private fb: FormBuilder,
-    public dialogRef: MatDialogRef<BrandFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    public dialogRef: MxDialogRef<unknown>,
+    @Inject(MX_DIALOG_DATA) public data: { mode: string; _brand?: Brand },
   ) {}
   ngOnInit(): void {
     this.InitForm();
@@ -35,11 +44,14 @@ export class BrandFormComponent implements OnInit {
       alias: [''],
       description: [''],
       country: [''],
-      status: ['Active', [Validators.required]],
+      status: [Status.Active, [Validators.required]],
     });
   }
   patchFormValues(): void {
-    this.brandForm.patchValue(this.data._brand);
+    this.brandForm.patchValue({
+      ...this.data._brand,
+      status: asStatus(this.data._brand?.status),
+    });
   }
   onSubmit() {
     if (this.brandForm.valid) {

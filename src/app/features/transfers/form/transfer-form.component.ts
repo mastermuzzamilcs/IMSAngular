@@ -1,20 +1,29 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatButtonModule } from '@angular/material/button';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MxButtonComponent, MxDialogRef } from '@mesix/custom-control';
 
 import { StockService } from '../../../core/services/stock.service';
 import { BranchService } from '../../../core/services/branchservice.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { Status } from '../../../core/enums/status.enum';
 import { Branch } from '../../../core/Models/BranchModel';
+import { Transfer, TransferItem } from '../../../core/Models/TransferModel';
+
+interface AvailableTransferStock extends TransferItem {
+  id: string;
+  brand: string;
+  availableQuantity: number;
+  description: string;
+  price: number;
+}
 
 @Component({
   selector: 'app-transfer-form',
@@ -25,11 +34,10 @@ import { Branch } from '../../../core/Models/BranchModel';
     MatInputModule,
     MatSelectModule,
     MatDatepickerModule,
-    MatButtonModule,
     ReactiveFormsModule,
-    MatDialogModule,
     MatIconModule,
     MatCardModule,
+    MxButtonComponent,
   ],
   templateUrl: './transfer-form.component.html',
   styleUrls: ['./transfer-form.component.scss'],
@@ -37,10 +45,10 @@ import { Branch } from '../../../core/Models/BranchModel';
 export class TransferFormComponent implements OnInit {
   transferForm!: FormGroup;
 
-  availableLaptops: any[] = [];
-  filteredLaptops: any[] = [];
+  availableLaptops: AvailableTransferStock[] = [];
+  filteredLaptops: AvailableTransferStock[] = [];
 
-  selectedLaptops: any[] = [];
+  selectedLaptops: TransferItem[] = [];
 
   branches: Branch[] = [];
 
@@ -48,14 +56,21 @@ export class TransferFormComponent implements OnInit {
     private fb: FormBuilder,
     private stockService: StockService,
     private branchService: BranchService,
-    private dialogRef: MatDialogRef<TransferFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    private auth: AuthService,
+    private dialogRef: MxDialogRef<Transfer>,
   ) {}
 
   async ngOnInit(): Promise<void> {
     this.initForm();
 
     this.branches = await this.branchService.getBranches();
+    this.transferForm.patchValue({ fromBranch: this.auth.currentBranchId() });
+    await this.loadAvailableLaptops();
+  }
+
+  get destinationBranches(): Branch[] {
+    const fromBranch = this.transferForm?.get('fromBranch')?.value;
+    return this.branches.filter((branch) => branch.branchid !== fromBranch);
   }
 
   initForm() {
@@ -108,8 +123,8 @@ export class TransferFormComponent implements OnInit {
     }
   }
 
-  searchLaptop(event: any) {
-    const value = event.target.value.toLowerCase();
+  searchLaptop(event: Event) {
+    const value = (event.target as HTMLInputElement).value.toLowerCase();
 
     this.filteredLaptops = this.availableLaptops.filter(
       (item) =>
@@ -117,7 +132,7 @@ export class TransferFormComponent implements OnInit {
     );
   }
 
-  addLaptop(product: any) {
+  addLaptop(product: AvailableTransferStock) {
     const exists = this.selectedLaptops.find((x) => x.productId === product.productId);
 
     if (!exists) {
@@ -133,7 +148,7 @@ export class TransferFormComponent implements OnInit {
     }
   }
 
-  removeLaptop(product: any) {
+  removeLaptop(product: TransferItem) {
     this.selectedLaptops = this.selectedLaptops.filter((x) => x.productId !== product.productId);
   }
 
@@ -156,7 +171,7 @@ export class TransferFormComponent implements OnInit {
 
         items: this.selectedLaptops,
 
-        status: 'Pending',
+        status: Status.Pending,
 
         requestDate: new Date(),
       };

@@ -1,0 +1,86 @@
+<div class="container">
+  <mx-page-header title="Customers" subtitle="Manage customer records">
+    <mx-button
+      variant="outline"
+      tone="primary"
+      icon="person_add"
+      *appPrivilege="privileges.customers.create"
+      (pressed)="openAddDialog()"
+      >Add Customer</mx-button
+    >
+  </mx-page-header>
+
+  <mx-grid
+    [loading]="tableLoading"
+    [skeletonColumns]="displayedColumns.length"
+    [showFilter]="true"
+    filterPlaceholder="Search customers..."
+    [hasFooter]="true"
+    (filterChange)="onGridFilter($event)"
+  >
+    <table mat-table [dataSource]="dataSource" matSort>
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+        <td mat-cell *matCellDef="let customer">{{ customer.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="phone">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Phone</th>
+        <td mat-cell *matCellDef="let customer">{{ customer.phone }}</td>
+      </ng-container>
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
+        <td mat-cell *matCellDef="let customer">{{ customer.email }}</td>
+      </ng-container>
+      <ng-container matColumnDef="address">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Address</th>
+        <td mat-cell *matCellDef="let customer">{{ customer.address }}</td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+        <td mat-cell *matCellDef="let customer">
+          <mx-badge [tone]="customer.status ? 'success' : 'neutral'">{{
+            customer.status
+          }}</mx-badge>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let customer">
+          <mx-button
+            variant="ghost"
+            tone="primary"
+            icon="edit"
+            [iconOnly]="true"
+            *appPrivilege="privileges.customers.edit"
+            (pressed)="openEditDialog(customer)"
+          ></mx-button>
+          <mx-button
+            variant="ghost"
+            tone="danger"
+            icon="delete"
+            [iconOnly]="true"
+            *appPrivilege="privileges.customers.delete"
+            (pressed)="openDeleteDialog(customer)"
+          ></mx-button>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" colspan="6">
+          <mx-empty-state
+            title="No customers found"
+            description="Add a customer to get started."
+            icon="person"
+            [compact]="true"
+          ></mx-empty-state>
+        </td>
+      </tr>
+    </table>
+    <mat-paginator
+      mxGridFooter
+      [pageSizeOptions]="[5, 10, 25, 100]"
+      aria-label="Select page of customers"
+    ></mat-paginator>
+  </mx-grid>
+</div>

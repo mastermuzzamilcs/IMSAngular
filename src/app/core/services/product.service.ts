@@ -9,10 +9,10 @@ import {
   getDoc,
   query,
   where,
-  QueryConstraint,
   documentId,
 } from 'firebase/firestore';
 import { firestore } from '../../firebase-config';
+import { asStatus } from '../enums/status.enum';
 import { Product } from '../Models/ProductModel';
 import { BrandService } from './brand.service';
 
@@ -48,7 +48,7 @@ export class ProductService {
         brand: '',
         description: data['description'] || '',
         price: data['price'] || 0.0,
-        status: data['status'] || '',
+        status: asStatus(data['status']),
       };
       this.setProductInCache(product);
     });
@@ -96,7 +96,7 @@ export class ProductService {
       brand: '',
       description: data['description'] || '',
       price: data['price'] || 0,
-      status: data['status'] || '',
+      status: asStatus(data['status']),
     };
 
     this.setProductInCache(product);
@@ -110,24 +110,11 @@ export class ProductService {
     _forceRefresh: boolean = false,
   ): Promise<Product[]> {
     const colRef = collection(firestore, this.topicName);
-    const constraints: QueryConstraint[] = [];
-
-    if (brandId) {
-      constraints.push(where('brandId', '==', brandId));
-    }
-
-    if (name) {
-      constraints.push(where('name', '>=', name));
-      constraints.push(where('name', '<=', name + '\uf8ff'));
-    }
-
-    if (description) {
-      constraints.push(where('description', '>=', description));
-      constraints.push(where('description', '<=', description + '\uf8ff'));
-    }
-
-    const finalQuery = constraints.length > 0 ? query(colRef, ...constraints) : colRef;
-    const snapshot = await getDocs(finalQuery);
+    const snapshot = brandId
+      ? await getDocs(query(colRef, where('brandId', '==', brandId)))
+      : await getDocs(colRef);
+    const nameFilter = name?.trim().toLowerCase() || '';
+    const descriptionFilter = description?.trim().toLowerCase() || '';
 
     const freshProducts = await Promise.all(
       snapshot.docs.map(async (doc) => {
@@ -139,20 +126,27 @@ export class ProductService {
           brand: '',
           description: data['description'] || '',
           price: data['price'] || 0,
-          status: data['status'] || '',
+          status: asStatus(data['status']),
           ...data,
         };
 
         this.setProductInCache(product);
 
         const brand = await this._brandService.getBrandById(product.brandId);
+        product.name = String(product.name || '');
+        product.description = String(product.description || '');
         product.brand = brand?.name || 'Unknown';
 
         return product;
       }),
     );
 
-    return freshProducts;
+    return freshProducts.filter((product) => {
+      const matchesName = !nameFilter || product.name.toLowerCase().includes(nameFilter);
+      const matchesDescription =
+        !descriptionFilter || product.description.toLowerCase().includes(descriptionFilter);
+      return matchesName && matchesDescription;
+    });
   }
   async getProductsByIds(ids: string[]): Promise<Product[]> {
     const uncachedIds = ids.filter((id) => !this.productCache.has(id));

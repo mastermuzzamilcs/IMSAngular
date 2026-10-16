@@ -1,0 +1,36 @@
+.mx-dialog-title {
+  margin: 0 0 12px;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.mx-dialog-body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.mx-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.form-row.three-columns > * {
+  flex: 1 1 160px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+table.full-width {
+  margin-top: 8px;
+}
