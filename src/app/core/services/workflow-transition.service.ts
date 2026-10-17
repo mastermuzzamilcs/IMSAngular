@@ -17,10 +17,7 @@ export class WorkflowTransitionService {
 
   async getTransitions(): Promise<WorkflowStatusTransition[]> {
     await this.ensureDefaults();
-    if (
-      this.cachedTransitions &&
-      Date.now() - this.transitionsCachedAt < this.cacheDurationMs
-    ) {
+    if (this.cachedTransitions && Date.now() - this.transitionsCachedAt < this.cacheDurationMs) {
       return this.cachedTransitions;
     }
     const snap = await getDocs(collection(firestore, this.topicName));

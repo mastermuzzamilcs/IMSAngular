@@ -42,7 +42,8 @@ export class RequestTypeService {
       assignedToSource: (assignedToSource || '').trim(),
     });
     const cached = this.settingsCache.get(requestType);
-    if (cached) this.settingsCache.set(requestType, { ...cached, assignedToSource: assignedToSource.trim() });
+    if (cached)
+      this.settingsCache.set(requestType, { ...cached, assignedToSource: assignedToSource.trim() });
   }
 
   ensureDefaults(): Promise<void> {
@@ -80,14 +81,16 @@ export class RequestTypeService {
     const snapshots = await Promise.all(
       requestTypes.map((requestType) => getDoc(doc(firestore, this.topicName, requestType))),
     );
-    await Promise.all(requestTypes.map(async (requestType, index) => {
-      if (snapshots[index].exists()) return;
-      const ref = doc(firestore, this.topicName, requestType);
-      await setDoc(ref, {
-        requestType,
-        IS_Auto_Approve: false,
-        assignedToSource: '',
-      });
-    }));
+    await Promise.all(
+      requestTypes.map(async (requestType, index) => {
+        if (snapshots[index].exists()) return;
+        const ref = doc(firestore, this.topicName, requestType);
+        await setDoc(ref, {
+          requestType,
+          IS_Auto_Approve: false,
+          assignedToSource: '',
+        });
+      }),
+    );
   }
 }

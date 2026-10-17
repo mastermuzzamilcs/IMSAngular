@@ -139,9 +139,7 @@ export class WorkflowService {
         requests: pageDocs.map((item) => this.mapDoc(item.data(), item.id)),
         totalCount,
         hasMore,
-        ...(hasMore && last
-          ? { nextCursor: { all: last, consumedCount, totalCount } }
-          : {}),
+        ...(hasMore && last ? { nextCursor: { all: last, consumedCount, totalCount } } : {}),
       };
     }
 
@@ -186,9 +184,7 @@ export class WorkflowService {
     branchBuffer.push(...branchDocs);
     destinationBuffer.push(...destinationDocs);
     const merged = new Map<string, QueryDocumentSnapshot<DocumentData>>();
-    [...branchBuffer, ...destinationBuffer].forEach((item) =>
-      merged.set(item.id, item),
-    );
+    [...branchBuffer, ...destinationBuffer].forEach((item) => merged.set(item.id, item));
     const orderedDocs = [...merged.values()].sort((left, right) =>
       this.compareRequestDocs(left, right, sortField, sortDirection),
     );
@@ -196,15 +192,14 @@ export class WorkflowService {
     const consumedIds = new Set(pageDocs.map((item) => item.id));
     const remainingBranch = branchBuffer.filter((item) => !consumedIds.has(item.id));
     const remainingDestination = destinationBuffer.filter((item) => !consumedIds.has(item.id));
-    const totalCount = cursor?.totalCount ?? (counts
-      ? counts[0].data().count + counts[1].data().count - counts[2].data().count
-      : 0);
+    const totalCount =
+      cursor?.totalCount ??
+      (counts ? counts[0].data().count + counts[1].data().count - counts[2].data().count : 0);
     const consumedCount = (cursor?.consumedCount || 0) + pageDocs.length;
     const hasMore = consumedCount < totalCount;
     const nextCursor: WorkflowRequestPageCursor = {
       branchFetched: branchDocs[branchDocs.length - 1] || cursor?.branchFetched,
-      destinationFetched:
-        destinationDocs[destinationDocs.length - 1] || cursor?.destinationFetched,
+      destinationFetched: destinationDocs[destinationDocs.length - 1] || cursor?.destinationFetched,
       branchBuffer: remainingBranch,
       destinationBuffer: remainingDestination,
       consumedCount,
@@ -256,7 +251,10 @@ export class WorkflowService {
   async getPendingTransferCount(branchId: string): Promise<number> {
     if (!branchId) return 0;
     const ref = collection(firestore, this.topicName);
-    const base = [where('requestType', '==', RequestType.Transfer), where('status', '==', RequestStatus.Pending)];
+    const base = [
+      where('requestType', '==', RequestType.Transfer),
+      where('status', '==', RequestStatus.Pending),
+    ];
     if (branchId === '0') {
       return (await getCountFromServer(query(ref, ...base))).data().count;
     }
@@ -264,12 +262,7 @@ export class WorkflowService {
       getCountFromServer(query(ref, where('branchId', '==', branchId), ...base)),
       getCountFromServer(query(ref, where('toBranchId', '==', branchId), ...base)),
       getCountFromServer(
-        query(
-          ref,
-          where('branchId', '==', branchId),
-          where('toBranchId', '==', branchId),
-          ...base,
-        ),
+        query(ref, where('branchId', '==', branchId), where('toBranchId', '==', branchId), ...base),
       ),
     ]);
     return sourceCount.data().count + destinationCount.data().count - overlapCount.data().count;
@@ -284,7 +277,11 @@ export class WorkflowService {
       orderBy('requestedOn', 'desc'),
     ];
     const snapshot = await getDocs(
-      query(ref, ...(branchId && branchId !== '0' ? [where('branchId', '==', branchId)] : []), ...constraints),
+      query(
+        ref,
+        ...(branchId && branchId !== '0' ? [where('branchId', '==', branchId)] : []),
+        ...constraints,
+      ),
     );
     return this.mapSnapshot(snapshot);
   }
@@ -298,13 +295,9 @@ export class WorkflowService {
     const leftValue = left.data()[sortField];
     const rightValue = right.data()[sortField];
     const leftComparable =
-      sortField === 'requestedOn'
-        ? this.dateSortValue(leftValue)
-        : String(leftValue || '');
+      sortField === 'requestedOn' ? this.dateSortValue(leftValue) : String(leftValue || '');
     const rightComparable =
-      sortField === 'requestedOn'
-        ? this.dateSortValue(rightValue)
-        : String(rightValue || '');
+      sortField === 'requestedOn' ? this.dateSortValue(rightValue) : String(rightValue || '');
     if (leftComparable < rightComparable) return sortDirection === 'asc' ? -1 : 1;
     if (leftComparable > rightComparable) return sortDirection === 'asc' ? 1 : -1;
     return left.id.localeCompare(right.id);
@@ -445,5 +438,4 @@ export class WorkflowService {
       toBranchId: requestType === RequestType.Transfer ? data['toBranchId'] || '' : '',
     };
   }
-
 }
