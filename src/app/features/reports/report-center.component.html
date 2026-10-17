@@ -7,7 +7,7 @@
 
   <section class="filter-card">
     <div class="filter-title"><div><h2>Report filters</h2><span>Choose a report and narrow the results before loading.</span></div></div>
-    <div class="filters"><mx-report-parameter-window-host [windowId]="parameterWindowId" [initialValues]="parameterValues" (filtersChange)="onParameterFilters($event)"></mx-report-parameter-window-host><button mat-flat-button color="primary" (click)="load()" [disabled]="loading"><mat-spinner *ngIf="loading" diameter="18"></mat-spinner><mat-icon *ngIf="!loading">search</mat-icon> Load</button></div>
+    <div class="filters"><mx-report-parameter-window-host [windowId]="parameterWindowId" [initialValues]="parameterValues" (filtersChange)="onParameterFilters($event)"></mx-report-parameter-window-host><button mat-flat-button color="primary" (click)="load()" [disabled]="loading"><mat-icon>search</mat-icon> {{loading ? 'Loading…' : 'Load'}}</button></div>
   </section>
 
   <section class="cash-entry-card" *ngIf="selectedId === 'cash-flow'">
@@ -37,6 +37,5 @@
       <div class="empty-state" *ngIf="!loaded && !loading"><mat-icon>query_stats</mat-icon><strong>Choose your filters and load the report</strong><span>Results appear here and exports include every matching record.</span></div>
       <mat-paginator *ngIf="loaded" [length]="total" [pageIndex]="pageIndex" [pageSize]="pageSize" [pageSizeOptions]="[25,50,100]" (page)="page($event)" aria-label="Report pages"></mat-paginator>
     </div>
-    <div class="loading-cover" *ngIf="loading && rows.length === 0"><mat-spinner diameter="34"></mat-spinner><span>Loading report…</span></div>
   </section>
 </main>

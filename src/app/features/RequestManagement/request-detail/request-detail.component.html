@@ -1,6 +1,7 @@
 <h2 class="mx-dialog-title">Request #{{ displayedRequestId }}</h2>
 
-<div class="mx-dialog-body content" *ngIf="!loading; else spn">
+<div class="request-load-error" *ngIf="loadError">{{ loadError }}</div>
+<div class="mx-dialog-body content" *ngIf="!loading && !loadError">
   <mat-tab-group>
     <!-- ========== Overview TAB ========== -->
     <mat-tab label="Overview">
@@ -114,8 +115,3 @@
 >
   This request has already been {{ displayedRequestStatus }}.
 </mat-chip>
-<ng-template #spn>
-  <div class="spinner">
-    <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
-  </div>
-</ng-template>

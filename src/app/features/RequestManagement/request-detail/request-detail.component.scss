@@ -18,8 +18,7 @@
   padding-top: 16px;
 }
 
-.spinner {
-  display: flex;
-  justify-content: center;
-  padding: 24px 0;
+.request-load-error {
+  padding: 20px 24px;
+  color: var(--mx-danger, #b42318);
 }

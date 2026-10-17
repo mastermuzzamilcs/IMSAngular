@@ -14,7 +14,6 @@ import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { MxThemeService } from '@mesix/theme';
 import {
-  MxSpinnerComponent,
   MxToastHostComponent,
   MxDialogHostComponent,
 } from '@mesix/custom-control';
@@ -30,6 +29,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { LoadingService } from './core/services/Loading.service';
 import { NotificationInboxService } from './core/notifications/notification-inbox.service';
 import { NotificationSoundService } from './core/notifications/notification-sound.service';
@@ -59,7 +59,7 @@ import { ReportExportActivityService } from '@mesix/reporting';
     MatBadgeModule,
     MatExpansionModule,
     MatTooltipModule,
-    MxSpinnerComponent,
+    MatProgressSpinnerModule,
     MxToastHostComponent,
     MxDialogHostComponent,
     PrivilegeDirective,
@@ -73,6 +73,8 @@ export class AppComponent {
   title = 'IMSAngular';
   isHandset$: Observable<boolean>;
   session$;
+  readonly loading$: Observable<boolean>;
+  sidenavOpen = false;
   notifications$;
   unreadCount$;
   appTitle$;
@@ -90,6 +92,7 @@ export class AppComponent {
     private appSettings: AppSettingsService,
     readonly reportExports: ReportExportActivityService,
   ) {
+    this.loading$ = this.loadingService.loading$;
     this.darkMode = readStoredThemeId() === 'dark';
     this.session$ = this.auth.session$;
     this.notifications$ = this.inbox.items$;

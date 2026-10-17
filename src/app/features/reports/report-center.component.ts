@@ -8,7 +8,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { AuthService } from '../../core/services/auth.service';
 import { BranchService } from '../../core/services/branchservice.service';
@@ -16,13 +15,14 @@ import { ImsReportCatalogService } from '../../core/reporting/ims-report-catalog
 import { ReportExportActivityService, ReportDefinition, ReportFilters, ReportValue, ReportAggregate, ReportHeaderField, MesixReportRegistry, ReportParameterWindowRegistry, MESIX_REPORT_PARAMETER_WINDOWS, ReportParameterWindowId, MesixReportingModule } from '@mesix/reporting';
 import { CashTransactionInput, CashTransactionService, CashTransactionType } from '../../core/reporting/cash-transaction.service';
 import { ToastService } from '../../core/services/toast.service';
+import { LoadingService } from '../../core/services/Loading.service';
 import { AppSettingsService } from '../../core/services/app-settings.service';
 import { ActivatedRoute } from '@angular/router';
 import { AnalyticsReportParametersComponent, CashFlowReportParametersComponent } from './report-parameter-windows';
 
 @Component({
   selector: 'app-report-center', standalone: true,
-  imports: [CommonModule, FormsModule, MatButtonModule, MatDatepickerModule, MatFormFieldModule, MatIconModule, MatInputModule, MatMenuModule, MatPaginatorModule, MatProgressSpinnerModule, MatSelectModule, MesixReportingModule],
+  imports: [CommonModule, FormsModule, MatButtonModule, MatDatepickerModule, MatFormFieldModule, MatIconModule, MatInputModule, MatMenuModule, MatPaginatorModule, MatSelectModule, MesixReportingModule],
   providers: [
     ReportParameterWindowRegistry,
     { provide: MESIX_REPORT_PARAMETER_WINDOWS, multi: true, useValue: { id: ReportParameterWindowId.Inventory, component: AnalyticsReportParametersComponent } },
@@ -58,7 +58,7 @@ export class ReportCenterComponent implements OnInit {
   private parameterValuesKey = '';
   readonly cashTypes: CashTransactionType[] = ['Receipt', 'Payment', 'Other income', 'Expense', 'Owner contribution', 'Owner withdrawal'];
 
-  constructor(private catalog: ImsReportCatalogService, private auth: AuthService, private branchService: BranchService, readonly exports: ReportExportActivityService, private cashTransactions: CashTransactionService, private toast: ToastService, private route: ActivatedRoute, private registry: MesixReportRegistry, readonly settings: AppSettingsService) {
+  constructor(private catalog: ImsReportCatalogService, private auth: AuthService, private branchService: BranchService, readonly exports: ReportExportActivityService, private cashTransactions: CashTransactionService, private toast: ToastService, private loadingService: LoadingService, private route: ActivatedRoute, private registry: MesixReportRegistry, readonly settings: AppSettingsService) {
     for (const definition of catalog.definitions) {
       try { registry.register(definition); } catch { /* Preserve registrations when navigating back to the report center. */ }
     }
@@ -99,6 +99,7 @@ export class ReportCenterComponent implements OnInit {
     const invalidRange = this.invalidDateRange();
     if (invalidRange) { this.toast.warning(invalidRange); return; }
     this.loading = true; this.error = ''; this.pageIndex = pageIndex;
+    this.loadingService.show();
     this.rows = []; this.total = 0; this.aggregates = []; this.loaded = false;
     try {
       const [page, aggregates] = await Promise.all([
@@ -108,7 +109,7 @@ export class ReportCenterComponent implements OnInit {
       this.rows = page.rows; this.total = page.total; this.aggregates = aggregates; this.loaded = true;
     }
     catch (error) { this.error = error instanceof Error ? error.message : 'Unable to load this report.'; this.toast.error(this.error); this.rows = []; this.total = 0; this.aggregates = []; }
-    finally { this.loading = false; }
+    finally { this.loading = false; this.loadingService.hide(); }
   }
   async page(event: PageEvent): Promise<void> { this.pageSize = event.pageSize; await this.load(event.pageIndex); }
   async export(format: 'xlsx' | 'docx' | 'pdf'): Promise<void> {

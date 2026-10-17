@@ -1,8 +1,25 @@
-<mx-spinner></mx-spinner>
 <mx-toast-host></mx-toast-host>
 <mx-dialog-host></mx-dialog-host>
 
-<mat-sidenav-container class="sidenav-container">
+<div
+  class="global-loading-overlay"
+  *ngIf="loading$ | async"
+  [class.handset]="isHandset$ | async"
+  [class.nav-open]="sidenavOpen"
+  [class.signed-out]="(session$ | async) === null"
+  role="status"
+  aria-live="polite"
+  aria-label="Loading"
+>
+  <mat-spinner diameter="50"></mat-spinner>
+</div>
+
+<mat-sidenav-container
+  class="sidenav-container"
+  [class.handset]="isHandset$ | async"
+  [class.nav-open]="sidenavOpen"
+  [class.signed-out]="(session$ | async) === null"
+>
   <mat-sidenav
     *ngIf="session$ | async as session"
     #drawer
@@ -11,6 +28,7 @@
     [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
     [mode]="(isHandset$ | async) ? 'over' : 'side'"
     [opened]="(isHandset$ | async) === false"
+    (openedChange)="sidenavOpen = $event"
   >
     <mat-toolbar class="brand-toolbar">
       <img [src]="(appLogo$ | async) || 'assets/logo.png'" alt="App logo" class="logo" />
@@ -537,6 +555,10 @@
 
     <div class="content-container" [class.signed-out]="(session$ | async) === null">
       <router-outlet></router-outlet>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+
 <ng-container *ngIf="reportExports.activity$ | async as exportActivity">
   <aside class="report-export-card" *ngIf="exportActivity.state !== 'idle'" aria-live="polite">
     <div class="export-card-heading"><mat-icon>{{exportActivity.state === 'error' ? 'error_outline' : exportActivity.state === 'ready' ? 'check_circle' : 'file_download'}}</mat-icon><strong>{{exportActivity.reportTitle}}</strong><button mat-icon-button *ngIf="exportActivity.state !== 'loading'" (click)="reportExports.dismiss()" aria-label="Dismiss export"><mat-icon>close</mat-icon></button></div>
@@ -545,6 +567,3 @@
     <div class="export-card-actions" *ngIf="exportActivity.state === 'ready'"><button mat-button (click)="reportExports.open()">Open</button><button mat-flat-button color="primary" (click)="reportExports.save()">Save file</button></div>
   </aside>
 </ng-container>
-    </div>
-  </mat-sidenav-content>
-</mat-sidenav-container>

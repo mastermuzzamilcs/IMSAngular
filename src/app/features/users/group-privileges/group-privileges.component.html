@@ -31,7 +31,7 @@
           [checked]="isChecked(item)"
           (change)="toggle(item, $event.checked)"
         >
-          {{ item.action }} ({{ item.functionId }})
+          {{ privilegeLabel(item) }}
         </mat-checkbox>
       </div>
     </section>
