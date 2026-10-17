@@ -16,6 +16,12 @@ import { VendorService } from '../../core/services/vendor.service';
 import { UsersService } from '../../core/services/users.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ReportParameterWindowComponent } from '@mesix/reporting';
+import { SessionBranch } from '../../core/Models/AuthSession';
+import { Product } from '../../core/Models/ProductModel';
+import { Brand } from '../../core/Models/BrandModel';
+import { Customer } from '../../core/Models/CustomerModel';
+import { Vendor } from '../../core/Models/VendorModel';
+import { User } from '../../core/Models/UsersModel';
 
 const imports = [
   CommonModule,
@@ -251,8 +257,8 @@ abstract class ImsParameterWindowBase
   extends ReportParameterWindowComponent<Record<string, unknown>>
   implements OnChanges
 {
-  branches: any[];
-  values: any;
+  branches: SessionBranch[];
+  values: Record<string, unknown>;
 
   protected constructor(
     protected auth: AuthService,
@@ -304,7 +310,7 @@ abstract class ImsParameterWindowBase
 }
 
 @Component({
-  selector: 'ims-inventory-report-parameters',
+  selector: 'app-inventory-report-parameters',
   standalone: true,
   imports,
   template: ` <div class="report-parameters">
@@ -345,8 +351,8 @@ abstract class ImsParameterWindowBase
   styles: [windowStyles],
 })
 export class InventoryReportParametersComponent extends ImsParameterWindowBase implements OnInit {
-  products: any[] = [];
-  brands: any[] = [];
+  products: Product[] = [];
+  brands: Brand[] = [];
   private brandNames = new Map<string, string>();
   constructor(
     auth: AuthService,
@@ -380,7 +386,7 @@ export class InventoryReportParametersComponent extends ImsParameterWindowBase i
 }
 
 @Component({
-  selector: 'ims-sales-report-parameters',
+  selector: 'app-sales-report-parameters',
   standalone: true,
   imports,
   template: ` <div class="report-parameters">
@@ -434,7 +440,7 @@ export class InventoryReportParametersComponent extends ImsParameterWindowBase i
   styles: [windowStyles],
 })
 export class SalesReportParametersComponent extends ImsParameterWindowBase implements OnInit {
-  customers: any[] = [];
+  customers: Customer[] = [];
   constructor(
     auth: AuthService,
     branchService: BranchService,
@@ -459,7 +465,7 @@ export class SalesReportParametersComponent extends ImsParameterWindowBase imple
 }
 
 @Component({
-  selector: 'ims-purchase-report-parameters',
+  selector: 'app-purchase-report-parameters',
   standalone: true,
   imports,
   template: ` <div class="report-parameters">
@@ -512,7 +518,7 @@ export class SalesReportParametersComponent extends ImsParameterWindowBase imple
   styles: [windowStyles],
 })
 export class PurchaseReportParametersComponent extends ImsParameterWindowBase implements OnInit {
-  vendors: any[] = [];
+  vendors: Vendor[] = [];
   constructor(
     auth: AuthService,
     branchService: BranchService,
@@ -537,7 +543,7 @@ export class PurchaseReportParametersComponent extends ImsParameterWindowBase im
 }
 
 @Component({
-  selector: 'ims-cashflow-report-parameters',
+  selector: 'app-cashflow-report-parameters',
   standalone: true,
   imports,
   template: ` <div class="report-parameters">
@@ -641,7 +647,7 @@ export class CashFlowReportParametersComponent extends ImsParameterWindowBase im
 }
 
 @Component({
-  selector: 'ims-analytics-report-parameters',
+  selector: 'app-analytics-report-parameters',
   standalone: true,
   imports: [
     CommonModule,
@@ -695,7 +701,7 @@ export class AnalyticsReportParametersComponent
   implements OnInit, OnChanges
 {
   fields: AnalyticsFilter[] = [];
-  values: Record<string, any> = {};
+  values: Record<string, unknown> = {};
   branches: { id: string; label: string }[] = [];
   products: { id: string; label: string }[] = [];
   brands: { id: string; label: string }[] = [];
@@ -790,12 +796,12 @@ export class AnalyticsReportParametersComponent
       const get = <T>(index: number): T =>
         settled[index].status === 'fulfilled' ? (settled[index].value as T) : ([] as T);
       const [allBranches, products, brands, customers, vendors, users] = [
-        get<any[]>(0),
-        get<any[]>(1),
-        get<any[]>(2),
-        get<any[]>(3),
-        get<any[]>(4),
-        get<any[]>(5),
+        get<SessionBranch[]>(0),
+        get<Product[]>(1),
+        get<Brand[]>(2),
+        get<Customer[]>(3),
+        get<Vendor[]>(4),
+        get<User[]>(5),
       ];
       this.branches = (
         allBranches.length

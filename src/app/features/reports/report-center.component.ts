@@ -10,6 +10,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
 import { AuthService } from '../../core/services/auth.service';
+import { SessionBranch } from '../../core/Models/AuthSession';
 import { BranchService } from '../../core/services/branchservice.service';
 import { ImsReportCatalogService } from '../../core/reporting/ims-report-catalog.service';
 import {
@@ -114,7 +115,7 @@ import {
 })
 export class ReportCenterComponent implements OnInit {
   readonly reports: ReportDefinition[];
-  branches: any[];
+  branches: SessionBranch[];
   selectedId = 'inventory-on-hand';
   filters: ReportFilters = { branchId: '', fromDate: null, toDate: null, search: '' };
   rows: Record<string, ReportValue>[] = [];
