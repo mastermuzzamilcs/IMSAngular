@@ -1,6 +1,87 @@
 {
   "indexes": [
     {
+      "collectionGroup": "workflow_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "branchId", "order": "ASCENDING" },
+        { "fieldPath": "requestedOn", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "workflow_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "toBranchId", "order": "ASCENDING" },
+        { "fieldPath": "requestedOn", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "workflow_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "branchId", "order": "ASCENDING" },
+        { "fieldPath": "requestType", "order": "ASCENDING" },
+        { "fieldPath": "requestedOn", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "workflow_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "toBranchId", "order": "ASCENDING" },
+        { "fieldPath": "requestType", "order": "ASCENDING" },
+        { "fieldPath": "requestedOn", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "workflow_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "branchId", "order": "ASCENDING" },
+        { "fieldPath": "toBranchId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "workflow_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "requestType", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "requestedOn", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "workflow_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "branchId", "order": "ASCENDING" },
+        { "fieldPath": "requestType", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "requestedOn", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "workflow_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "toBranchId", "order": "ASCENDING" },
+        { "fieldPath": "requestType", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "requestedOn", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "workflow_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "branchId", "order": "ASCENDING" },
+        { "fieldPath": "toBranchId", "order": "ASCENDING" },
+        { "fieldPath": "requestType", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "inventory_stocks",
       "queryScope": "COLLECTION",
       "fields": [

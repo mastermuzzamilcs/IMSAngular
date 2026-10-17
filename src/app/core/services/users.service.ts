@@ -23,6 +23,10 @@ import { SYSTEM_USER_ID, SYSTEM_USER_NAME } from '../system-user';
 export class UsersService {
   constructor() {}
   private readonly topicName: string = 'Users';
+  private cachedUsers: User[] | null = null;
+  private usersLoadedAt = 0;
+  private usersLoading: Promise<User[]> | null = null;
+  private readonly cacheDurationMs = 15_000;
 
   async ensureSystemUser(): Promise<void> {
     const ref = doc(firestore, this.topicName, SYSTEM_USER_ID);
@@ -42,7 +46,26 @@ export class UsersService {
     });
   }
 
-  async getUsers(): Promise<User[]> {
+  async getUsers(forceRefresh = false): Promise<User[]> {
+    if (
+      !forceRefresh &&
+      this.cachedUsers &&
+      Date.now() - this.usersLoadedAt < this.cacheDurationMs
+    ) {
+      return this.cachedUsers;
+    }
+    if (this.usersLoading) return this.usersLoading;
+    this.usersLoading = this.fetchUsers();
+    try {
+      this.cachedUsers = await this.usersLoading;
+      this.usersLoadedAt = Date.now();
+      return this.cachedUsers;
+    } finally {
+      this.usersLoading = null;
+    }
+  }
+
+  private async fetchUsers(): Promise<User[]> {
     const querySnapshot = await getDocs(collection(firestore, this.topicName));
     return querySnapshot.docs.map((doc) => {
       const data = doc.data();
@@ -119,6 +142,7 @@ export class UsersService {
       ...this.storedFields(_user),
       passwordHash: await hashPassword(password),
     });
+    this.invalidateUsersCache();
   }
 
   async updateUser(_user: User): Promise<void> {
@@ -137,6 +161,7 @@ export class UsersService {
       ...this.storedFields(_user),
       passwordHash,
     });
+    this.invalidateUsersCache();
   }
 
   /** Sign in with an email or a username. An identifier containing '@' is treated as an email. */
@@ -170,6 +195,12 @@ export class UsersService {
   async deleteUser(_userid: string): Promise<void> {
     const branchRef = doc(firestore, this.topicName, _userid);
     await deleteDoc(branchRef);
+    this.invalidateUsersCache();
+  }
+
+  private invalidateUsersCache(): void {
+    this.cachedUsers = null;
+    this.usersLoadedAt = 0;
   }
 
   async getUsersByRole(roleId: string): Promise<User[]> {

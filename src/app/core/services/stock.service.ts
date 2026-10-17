@@ -258,21 +258,26 @@ export class StockService {
     const q = query(collection(firestore, this.DetailstopicName), where('stockid', '==', stockid));
 
     const snap = await getDocs(q);
-    const detailPromises = snap.docs.map(async (d) => {
+    const detailRows = snap.docs.map((d) => {
       const data = d.data();
-      const prod = await this._productService.getProductById(data['productid']);
       return {
         stockdetailsid: d.id,
         stockid: data['stockid'],
         productid: data['productid'],
-        productName: prod?.name ?? '',
         quantity: data['quantity'],
         unitprice: data['unitprice'],
         discount: data['discount'],
         total: data['total'],
-      } as StockDetails;
+      };
     });
-    return Promise.all(detailPromises);
+    const products = await this._productService.getProductsByIds(
+      detailRows.map((detail) => String(detail.productid || '')),
+    );
+    const productNames = new Map(products.map((product) => [product.id || '', product.name]));
+    return detailRows.map((detail) => ({
+      ...detail,
+      productName: productNames.get(String(detail.productid || '')) || '',
+    })) as StockDetails[];
   }
 
   /**
