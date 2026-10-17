@@ -119,8 +119,8 @@ export class AppSettingsService {
     if (!/^[A-Z]{3}$/.test(normalized.currencyCode)) {
       throw new Error('Currency code must contain three letters.');
     }
-    if (normalized.logo.length > 1_000_000) {
-      throw new Error('The selected logo is too large to share. Choose an image under 700 KB.');
+    if (normalized.logo.length > 280_000) {
+      throw new Error('The selected logo is too large to share. Choose an image under 200 KB.');
     }
     await setDoc(doc(firestore, ...SHARED_SETTINGS_PATH), normalized);
     this.applySharedSettings(normalized);
@@ -134,16 +134,15 @@ export class AppSettingsService {
     const currencyCode =
       typeof data['currencyCode'] === 'string' ? data['currencyCode'].trim().toUpperCase() : '';
     if (title) {
-      localStorage.setItem(TITLE_KEY, title);
+      writeLocal(TITLE_KEY, title);
       this.titleSubject.next(title);
     }
-    if (logo && logo.length <= 1_000_000) {
-      if (logo === DEFAULT_APP_LOGO) localStorage.removeItem(LOGO_KEY);
-      else localStorage.setItem(LOGO_KEY, logo);
+    if (logo && logo.length <= 280_000) {
+      localStorage.removeItem(LOGO_KEY);
       this.logoSubject.next(logo);
     }
     if (PAGE_SIZE_OPTIONS.includes(pageSize as (typeof PAGE_SIZE_OPTIONS)[number])) {
-      localStorage.setItem(PAGE_SIZE_KEY, String(pageSize));
+      writeLocal(PAGE_SIZE_KEY, String(pageSize));
       this.pageSizeSubject.next(pageSize);
     }
     if (currencyName && /^[A-Z]{3}$/.test(currencyCode)) {
@@ -152,8 +151,8 @@ export class AppSettingsService {
   }
 
   private applyCurrency(nextName: string, nextCode: string): void {
-    localStorage.setItem(CURRENCY_NAME_KEY, nextName);
-    localStorage.setItem(CURRENCY_CODE_KEY, nextCode);
+    writeLocal(CURRENCY_NAME_KEY, nextName);
+    writeLocal(CURRENCY_CODE_KEY, nextCode);
     this.currencyNameSubject.next(nextName);
     this.currencyCodeSubject.next(nextCode);
   }
@@ -193,4 +192,29 @@ export class AppSettingsService {
     const code = localStorage.getItem(CURRENCY_CODE_KEY)?.trim().toUpperCase();
     return code && /^[A-Z]{3}$/.test(code) ? code : DEFAULT_CURRENCY_CODE;
   }
+}
+
+function writeLocal(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch (error) {
+    if (isQuotaError(error)) {
+      localStorage.removeItem(LOGO_KEY);
+      try {
+        if (key !== LOGO_KEY) localStorage.setItem(key, value);
+      } catch {
+        /* Browser storage is full; keep the in-memory setting. */
+      }
+      return;
+    }
+    throw error;
+  }
+}
+
+function isQuotaError(error: unknown): boolean {
+  return (
+    (error instanceof DOMException &&
+      (error.name === 'QuotaExceededError' || error.code === 22)) ||
+    (error instanceof Error && /quota/i.test(error.message))
+  );
 }

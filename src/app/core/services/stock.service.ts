@@ -14,6 +14,7 @@ import {
   runTransaction,
 } from 'firebase/firestore';
 import { firestore } from '../../firebase-config';
+import { firestoreDoc } from '../firebase/firestore-write';
 import { asStatus, Status } from '../enums/status.enum';
 import { Stock, StockDetails, StockOverview } from '../Models/StockModel';
 import { BranchService } from './branchservice.service';
@@ -114,14 +115,17 @@ export class StockService {
       const referenceNumber =
         _stock.referenceNumber || `IMS-${year}-${String(nextNumber).padStart(6, '0')}`;
       transaction.set(counterRef, { nextNumber }, { merge: true });
-      transaction.set(resDocRef, { ..._stock, referenceNumber });
+      transaction.set(
+        resDocRef,
+        firestoreDoc({ ...(_stock as unknown as Record<string, unknown>), referenceNumber }),
+      );
     });
     this.cachedStocks = null;
     return resDocRef.id;
   }
   async addStockDetails(_stockDetails: StockDetails): Promise<void> {
     const branchRef = collection(firestore, this.DetailstopicName);
-    await addDoc(branchRef, _stockDetails);
+    await addDoc(branchRef, firestoreDoc(_stockDetails as unknown as Record<string, unknown>));
     this.cachedStocks = null;
   }
   async addStockEntity(_payload: StockEntityPayload): Promise<string> {

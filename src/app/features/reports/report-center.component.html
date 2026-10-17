@@ -8,10 +8,13 @@
     <button
       mat-flat-button
       color="primary"
+      class="export-trigger"
       [matMenuTriggerFor]="exportMenu"
       [disabled]="exports.busy || !loaded || loading"
     >
-      <mat-icon>file_download</mat-icon> Export <mat-icon>arrow_drop_down</mat-icon>
+      <mat-icon>file_download</mat-icon>
+      <span>Export</span>
+      <mat-icon>arrow_drop_down</mat-icon>
     </button>
     <mat-menu #exportMenu="matMenu"
       ><button mat-menu-item (click)="export('xlsx')">
@@ -36,8 +39,14 @@
         [windowId]="parameterWindowId"
         [initialValues]="parameterValues"
         (filtersChange)="onParameterFilters($event)"
-      ></mx-report-parameter-window-host
-      ><button mat-flat-button color="primary" (click)="load()" [disabled]="loading">
+      ></mx-report-parameter-window-host>
+      <button
+        mat-flat-button
+        color="primary"
+        class="load-report"
+        (click)="load()"
+        [disabled]="loading"
+      >
         <mat-icon>search</mat-icon> {{ loading ? 'Loading…' : 'Load' }}
       </button>
     </div>

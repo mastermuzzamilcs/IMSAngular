@@ -93,8 +93,8 @@ export class SettingsComponent implements OnInit {
       this.toast.warning('Choose an image file', 3000);
       return;
     }
-    if (file.size > 700 * 1024) {
-      this.toast.warning('Choose a logo smaller than 700 KB so it can be shared with everyone.', 4000);
+    if (file.size > 200 * 1024) {
+      this.toast.warning('Choose a logo smaller than 200 KB so it can be shared with everyone.', 4000);
       return;
     }
     const reader = new FileReader();

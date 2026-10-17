@@ -15,6 +15,7 @@ import {
   runTransaction,
 } from 'firebase/firestore';
 import { firestore } from '../../firebase-config';
+import { firestoreDoc } from '../firebase/firestore-write';
 import { RequestStatus, RequestType, WorkflowRequest } from '../Models/WorkflowModel';
 import { SYSTEM_USER_ID } from '../system-user';
 import { WorkflowExecutor } from '../workflow/workflow-executor';
@@ -59,7 +60,10 @@ export class WorkflowService {
       const nextNumber = Number(counter.data()?.['nextNumber'] || 0) + 1;
       const requestNumber = `REQ-${year}-${String(nextNumber).padStart(6, '0')}`;
       transaction.set(counterRef, { nextNumber }, { merge: true });
-      transaction.set(ref, { ...payload, requestNumber });
+      transaction.set(
+        ref,
+        firestoreDoc({ ...(payload as unknown as Record<string, unknown>), requestNumber }),
+      );
       payload.requestNumber = requestNumber;
     });
     const request = { ...payload, requestId: ref.id };
@@ -88,8 +92,12 @@ export class WorkflowService {
         request.requestedBy,
       );
     } catch (error) {
-      await deleteDoc(doc(firestore, this.topicName, requestId));
-      throw error;
+      console.error('Request follow-up actions failed', error);
+      this.toast.error(
+        error instanceof Error
+          ? `Request was created, but a follow-up action failed. ${error.message}`
+          : 'Request was created, but a follow-up action failed.',
+      );
     }
   }
 

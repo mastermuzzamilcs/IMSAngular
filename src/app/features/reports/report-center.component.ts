@@ -191,13 +191,17 @@ export class ReportCenterComponent implements OnInit {
     return this.report.parameterWindowId;
   }
   get parameterValues(): Record<string, unknown> {
-    const next = {
+    const next: Record<string, unknown> = {
       reportId: this.report.id,
       branchId: this.filters.branchId,
       fromDate: this.filters.fromDate || '',
       toDate: this.filters.toDate || '',
-      ...(this.filters.customValues || {}),
     };
+    for (const [entryKey, value] of Object.entries(this.filters.customValues || {})) {
+      if (entryKey === 'reportId' || entryKey === 'appliedFilters' || entryKey.endsWith('Label'))
+        continue;
+      next[entryKey] = value;
+    }
     const key = JSON.stringify(next);
     if (key !== this.parameterValuesKey) {
       this.parameterValuesKey = key;

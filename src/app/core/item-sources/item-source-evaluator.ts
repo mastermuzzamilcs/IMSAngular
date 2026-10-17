@@ -255,6 +255,10 @@ export class ItemSourceEvaluator {
     if (typeof value === 'object') {
       return '';
     }
-    return String(value);
+    const text = String(value);
+    if (text.startsWith('data:') || text.length > 500) {
+      return '';
+    }
+    return text;
   }
 }

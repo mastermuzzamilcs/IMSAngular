@@ -117,6 +117,28 @@ describe('ReportCenterComponent', () => {
     expect(component.display(12.5 as ReportValue, 'currency')).toBe('$12.50');
   });
 
+  it('keeps filter inputs stable when derived labels change', () => {
+    component.filters = {
+      branchId: 'branch-1',
+      fromDate: '2026-10-01',
+      toDate: '2026-10-17',
+      search: '',
+      customValues: {
+        brandId: 'brand-1',
+        brandIdLabel: 'Acer',
+        branchLabel: 'Main',
+        appliedFilters: 'Brand: Acer',
+      },
+    };
+
+    const values = component.parameterValues;
+
+    expect(values['brandId']).toBe('brand-1');
+    expect(values['brandIdLabel']).toBeUndefined();
+    expect(values['appliedFilters']).toBeUndefined();
+    expect(component.parameterValues).toBe(values);
+  });
+
   it('starts an export using the selected report and filters', async () => {
     await component.export('xlsx');
 

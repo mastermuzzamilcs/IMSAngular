@@ -33,7 +33,22 @@ const imports = [
   MatInputModule,
   MatSelectModule,
 ];
-const windowStyles = `.report-parameters{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:center}.report-parameters mat-form-field{width:100%}.report-parameters button{height:48px;white-space:nowrap}.filter-hint{font-size:11px;color:#64748b;grid-column:1/-1}@media(max-width:650px){.report-parameters{grid-template-columns:1fr 1fr}}`;
+const windowStyles = `:host{display:contents}.report-parameters{display:contents}.report-parameters mat-form-field{width:100%;margin:0}.report-parameters button{height:56px;min-width:148px;white-space:nowrap}.filter-hint{font-size:11px;color:#64748b;grid-column:1/-1}`;
+const stableDates = new Map<string, Date>();
+
+/** Return the same Date instance for a date string so ngModel does not retrigger change detection. */
+function stableDate(value: unknown): Date | null {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  const text = String(value).slice(0, 10);
+  const cached = stableDates.get(text);
+  if (cached) return cached;
+  const parts = text.split('-').map(Number);
+  if (parts.length !== 3 || parts.some((part) => !Number.isFinite(part))) return null;
+  const date = new Date(parts[0], parts[1] - 1, parts[2]);
+  stableDates.set(text, date);
+  return date;
+}
 
 interface AnalyticsFilter {
   key: string;
@@ -297,13 +312,7 @@ abstract class ImsParameterWindowBase
     this.values = { ...this.values, ...this.initialValues } as ParameterValues;
   }
   dateValue(value: unknown): Date | null {
-    if (!value) return null;
-    if (value instanceof Date) return value;
-    if (typeof value !== 'string') return null;
-    const parts = String(value).split('-').map(Number);
-    return parts.length === 3 && parts.every(Number.isFinite)
-      ? new Date(parts[0], parts[1] - 1, parts[2])
-      : null;
+    return stableDate(value);
   }
   dateChanged(key: 'fromDate' | 'toDate', value: Date | null): void {
     this.values[key] = value
@@ -489,6 +498,8 @@ export class AnalyticsReportParametersComponent
   vendors: { id: string; label: string }[] = [];
   users: { id: string; label: string }[] = [];
   private configuredReport = '';
+  private optionVersion = 0;
+  private optionLists = new Map<string, { version: number; options: { id: string; label: string }[] }>();
 
   constructor(
     private auth: AuthService,
@@ -509,6 +520,8 @@ export class AnalyticsReportParametersComponent
   }
   ngOnChanges(): void {
     const previousReport = this.configuredReport;
+    const reportId = String(this.initialValues['reportId'] || '');
+    if (previousReport && reportId && reportId !== previousReport) this.optionVersion++;
     this.configure();
     if (previousReport && previousReport !== this.configuredReport) void this.loadChoices();
   }
@@ -558,7 +571,6 @@ export class AnalyticsReportParametersComponent
       )
         this.values['status'] = 'Approved';
     }
-    if (this.branches.length || this.products.length || this.brands.length) this.apply();
   }
 
   private async loadChoices(): Promise<void> {
@@ -604,6 +616,7 @@ export class AnalyticsReportParametersComponent
       }));
       this.vendors = vendors.map((item) => ({ id: item.id || '', label: item.name }));
       this.users = users.map((item) => ({ id: item.userid || '', label: item.name }));
+      this.optionVersion++;
       this.configure();
       this.apply();
     } catch {
@@ -613,6 +626,14 @@ export class AnalyticsReportParametersComponent
   }
 
   optionsFor(field: AnalyticsFilter): { id: string; label: string }[] {
+    const cached = this.optionLists.get(field.key);
+    if (cached?.version === this.optionVersion) return cached.options;
+    const options = this.createOptions(field);
+    this.optionLists.set(field.key, { version: this.optionVersion, options });
+    return options;
+  }
+
+  private createOptions(field: AnalyticsFilter): { id: string; label: string }[] {
     const sources: Record<string, { id: string; label: string }[]> = {
       branches: this.branches,
       products: this.products,
@@ -651,12 +672,7 @@ export class AnalyticsReportParametersComponent
   }
 
   dateValue(value: unknown): Date | null {
-    if (!value) return null;
-    if (value instanceof Date) return value;
-    const parts = String(value).slice(0, 10).split('-').map(Number);
-    return parts.length === 3 && parts.every(Number.isFinite)
-      ? new Date(parts[0], parts[1] - 1, parts[2])
-      : null;
+    return stableDate(value);
   }
   dateChanged(key: string, value: Date | null): void {
     this.values[key] = value ? this.formatDate(value) : '';

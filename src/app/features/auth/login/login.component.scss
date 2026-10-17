@@ -9,10 +9,24 @@
   --ink: #17212d;
   --muted: #737f8d;
   --blue: #1687d4;
+  position: relative;
   display: grid;
   grid-template-columns: minmax(460px, 0.88fr) minmax(460px, 1.12fr);
   min-height: 100vh;
   background: #f1f4f7;
+}
+
+.powered-by {
+  position: absolute;
+  left: 22px;
+  bottom: 16px;
+  z-index: 2;
+  margin: 0;
+  color: #7b8794;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .login-panel {
@@ -261,6 +275,7 @@ h1 {
 
 @media (max-width: 700px) {
   .login-page { display: block; padding: 18px; background: #0b3c68; }
+  .powered-by { color: rgba(255, 255, 255, 0.72); left: 28px; bottom: 22px; }
   .login-panel { min-height: calc(100vh - 36px); padding: 22px 0; border-radius: 12px; background: transparent; }
   .login-card { padding: 30px 25px; }
   .brand { margin-bottom: 36px; }

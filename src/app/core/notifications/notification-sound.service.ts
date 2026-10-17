@@ -57,12 +57,20 @@ export class NotificationSoundService {
   }
 
   setEnabled(enabled: boolean): void {
-    localStorage.setItem(SOUND_KEY, enabled ? '1' : '0');
+    try {
+      localStorage.setItem(SOUND_KEY, enabled ? '1' : '0');
+    } catch {
+      /* Ignore browser storage quota; keep the in-memory preference. */
+    }
     this.enabledSubject.next(enabled);
   }
 
   setSound(id: NotificationSoundId, preview = false): void {
-    localStorage.setItem(SOUND_ID_KEY, id);
+    try {
+      localStorage.setItem(SOUND_ID_KEY, id);
+    } catch {
+      /* Ignore browser storage quota; keep the in-memory preference. */
+    }
     this.soundSubject.next(id);
     if (preview) {
       this.play(true);
@@ -92,12 +100,20 @@ export class NotificationSoundService {
   private applySharedSettings(settings: Record<string, unknown>): void {
     if (typeof settings['soundEnabled'] === 'boolean') {
       this.enabledSubject.next(settings['soundEnabled']);
-      localStorage.setItem(SOUND_KEY, settings['soundEnabled'] ? '1' : '0');
+      try {
+        localStorage.setItem(SOUND_KEY, settings['soundEnabled'] ? '1' : '0');
+      } catch {
+        /* Ignore browser storage quota; keep the in-memory preference. */
+      }
     }
     const soundId = settings['soundId'];
     if (typeof soundId === 'string' && notificationSounds.some((item) => item.id === soundId)) {
       this.soundSubject.next(soundId as NotificationSoundId);
-      localStorage.setItem(SOUND_ID_KEY, soundId);
+      try {
+        localStorage.setItem(SOUND_ID_KEY, soundId);
+      } catch {
+        /* Ignore browser storage quota; keep the in-memory preference. */
+      }
     }
   }
 
