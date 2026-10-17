@@ -140,7 +140,9 @@ export class RolesComponent implements OnInit, AfterViewInit {
               await this.loadRoles();
             } catch (error) {
               console.error('Error deleting role', error);
-              this.toast.error(error instanceof Error ? error.message : 'Could not delete the role');
+              this.toast.error(
+                error instanceof Error ? error.message : 'Could not delete the role',
+              );
             } finally {
               this._loadingService.hide();
             }

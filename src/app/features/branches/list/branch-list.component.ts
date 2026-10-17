@@ -178,7 +178,9 @@ export class BranchListComponent implements OnInit, AfterViewInit {
               await this.loadBranches();
             } catch (error) {
               console.error('Error deleting branch', error);
-              this.toast.error(error instanceof Error ? error.message : 'Could not delete the branch');
+              this.toast.error(
+                error instanceof Error ? error.message : 'Could not delete the branch',
+              );
             } finally {
               this.loadingService.hide();
             }

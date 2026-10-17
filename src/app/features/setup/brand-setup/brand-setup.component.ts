@@ -139,7 +139,9 @@ export class BrandSetupComponent implements OnInit, AfterViewInit {
               await this.loadBrands();
             } catch (error) {
               console.error('Error deleting brand', error);
-              this.toast.error(error instanceof Error ? error.message : 'Could not delete the brand');
+              this.toast.error(
+                error instanceof Error ? error.message : 'Could not delete the brand',
+              );
             } finally {
               this._loadingService.hide();
             }

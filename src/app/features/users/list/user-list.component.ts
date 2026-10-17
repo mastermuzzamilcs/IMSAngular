@@ -181,9 +181,7 @@ export class UserListComponent implements OnInit, AfterViewInit {
       const canSeeAllBranches = userBranchIds.has(ALL_BRANCHES_ID);
       const visibleUserIds = new Set(
         branchAssociations
-          .filter((association) =>
-            canSeeAllBranches || userBranchIds.has(association.branchid),
-          )
+          .filter((association) => canSeeAllBranches || userBranchIds.has(association.branchid))
           .map((association) => association.userid),
       );
       const visibleUsers = users.filter((user) => {

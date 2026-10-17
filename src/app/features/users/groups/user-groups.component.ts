@@ -120,7 +120,9 @@ export class UserGroupsComponent implements OnInit, AfterViewInit {
         await this.loadGroups();
       } catch (error) {
         console.error('Error updating user group', error);
-        this.toast.error(error instanceof Error ? error.message : 'Could not update the user group');
+        this.toast.error(
+          error instanceof Error ? error.message : 'Could not update the user group',
+        );
       } finally {
         this.loadingService.hide();
       }
@@ -146,7 +148,9 @@ export class UserGroupsComponent implements OnInit, AfterViewInit {
           await this.loadGroups();
         } catch (error) {
           console.error('Error deleting user group', error);
-          this.toast.error(error instanceof Error ? error.message : 'Could not delete the user group');
+          this.toast.error(
+            error instanceof Error ? error.message : 'Could not delete the user group',
+          );
         } finally {
           this.loadingService.hide();
         }

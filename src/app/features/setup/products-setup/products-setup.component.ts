@@ -153,7 +153,9 @@ export class ProductsSetupComponent implements OnInit, AfterViewInit {
               await this.loadProducts();
             } catch (error) {
               console.error('Error deleting product', error);
-              this.toast.error(error instanceof Error ? error.message : 'Could not delete the product');
+              this.toast.error(
+                error instanceof Error ? error.message : 'Could not delete the product',
+              );
             } finally {
               this._loadingService.hide();
             }

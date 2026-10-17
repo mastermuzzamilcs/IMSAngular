@@ -139,7 +139,9 @@ export class VendorSetupComponent implements OnInit, AfterViewInit {
               await this.loadVendors();
             } catch (error) {
               console.error('Error deleting vendor', error);
-              this.toast.error(error instanceof Error ? error.message : 'Could not delete the vendor');
+              this.toast.error(
+                error instanceof Error ? error.message : 'Could not delete the vendor',
+              );
             } finally {
               this._loadingService.hide();
             }

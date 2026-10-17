@@ -136,7 +136,9 @@ export class CustomerSetupComponent implements OnInit, AfterViewInit {
             await this.loadCustomers();
           } catch (error) {
             console.error('Error deleting customer', error);
-            this.toast.error(error instanceof Error ? error.message : 'Could not delete the customer');
+            this.toast.error(
+              error instanceof Error ? error.message : 'Could not delete the customer',
+            );
           } finally {
             this.loadingService.hide();
           }
