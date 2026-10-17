@@ -44,6 +44,7 @@ export class SettingsComponent implements OnInit {
   readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
   form!: FormGroup;
   logoPreview = DEFAULT_APP_LOGO;
+  saving = false;
   private pendingLogo: string | null = null;
 
   constructor(
@@ -60,6 +61,8 @@ export class SettingsComponent implements OnInit {
       pageSize: [this.settings.pageSize, Validators.required],
       soundEnabled: [this.sound.enabled],
       soundId: [this.sound.soundId],
+      currencyName: [this.settings.currencyName, [Validators.required, Validators.maxLength(60)]],
+      currencyCode: [this.settings.currencyCode, [Validators.required, Validators.pattern(/^[A-Za-z]{3}$/)]],
     });
   }
 
@@ -93,24 +96,32 @@ export class SettingsComponent implements OnInit {
     this.sound.setSound(id, true);
   }
 
-  save(): void {
+  async save(): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
     const value = this.form.getRawValue();
-    this.settings.setTitle(value.title);
-    this.settings.setPageSize(Number(value.pageSize));
-    if (this.pendingLogo !== null) {
-      if (this.pendingLogo === DEFAULT_APP_LOGO) {
-        this.settings.clearLogo();
-      } else {
-        this.settings.setLogoDataUrl(this.pendingLogo);
+    this.saving = true;
+    try {
+      await this.settings.setCurrency(value.currencyName, value.currencyCode);
+      this.settings.setTitle(value.title);
+      this.settings.setPageSize(Number(value.pageSize));
+      if (this.pendingLogo !== null) {
+        if (this.pendingLogo === DEFAULT_APP_LOGO) {
+          this.settings.clearLogo();
+        } else {
+          this.settings.setLogoDataUrl(this.pendingLogo);
+        }
+        this.pendingLogo = null;
       }
-      this.pendingLogo = null;
+      this.sound.setEnabled(!!value.soundEnabled);
+      this.sound.setSound(value.soundId as NotificationSoundId, false);
+      this.toast.success('Settings saved', 2500);
+    } catch (error) {
+      this.toast.error(error instanceof Error ? `Settings could not be saved: ${error.message}` : 'Settings could not be saved.');
+    } finally {
+      this.saving = false;
     }
-    this.sound.setEnabled(!!value.soundEnabled);
-    this.sound.setSound(value.soundId as NotificationSoundId, false);
-    this.toast.success('Settings saved', 2500);
   }
 }

@@ -1,0 +1,229 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "inventory_stocks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "stocktype", "order": "ASCENDING" },
+        { "fieldPath": "entrydate", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "inventory_stocks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "stocktype", "order": "ASCENDING" },
+        { "fieldPath": "customerid", "order": "ASCENDING" },
+        { "fieldPath": "entrydate", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "inventory_stocks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "stocktype", "order": "ASCENDING" },
+        { "fieldPath": "branchid", "order": "ASCENDING" },
+        { "fieldPath": "customerid", "order": "ASCENDING" },
+        { "fieldPath": "entrydate", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "inventory_stocks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "stocktype", "order": "ASCENDING" },
+        { "fieldPath": "vendorid", "order": "ASCENDING" },
+        { "fieldPath": "entrydate", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "inventory_stocks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "stocktype", "order": "ASCENDING" },
+        { "fieldPath": "branchid", "order": "ASCENDING" },
+        { "fieldPath": "vendorid", "order": "ASCENDING" },
+        { "fieldPath": "entrydate", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "inventory_stock_overview",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "branchid", "order": "ASCENDING" },
+        { "fieldPath": "productName", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "inventory_stock_overview",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "productid", "order": "ASCENDING" },
+        { "fieldPath": "branchid", "order": "ASCENDING" },
+        { "fieldPath": "productName", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "inventory_stock_overview",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "brandid", "order": "ASCENDING" },
+        { "fieldPath": "branchid", "order": "ASCENDING" },
+        { "fieldPath": "productName", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "financial_cash_transactions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "type", "order": "ASCENDING" },
+        { "fieldPath": "transactionDate", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "financial_cash_transactions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "party", "order": "ASCENDING" },
+        { "fieldPath": "transactionDate", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "financial_cash_transactions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "type", "order": "ASCENDING" },
+        { "fieldPath": "party", "order": "ASCENDING" },
+        { "fieldPath": "transactionDate", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "financial_cash_transactions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "branchId", "order": "ASCENDING" },
+        { "fieldPath": "party", "order": "ASCENDING" },
+        { "fieldPath": "transactionDate", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "financial_cash_transactions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "branchId", "order": "ASCENDING" },
+        { "fieldPath": "type", "order": "ASCENDING" },
+        { "fieldPath": "party", "order": "ASCENDING" },
+        { "fieldPath": "transactionDate", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "financial_cash_transactions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "branchId", "order": "ASCENDING" },
+        { "fieldPath": "transactionDate", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "financial_cash_transactions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "branchId", "order": "ASCENDING" },
+        { "fieldPath": "type", "order": "ASCENDING" },
+        { "fieldPath": "transactionDate", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "inventory_stocks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "branchid", "order": "ASCENDING" },
+        { "fieldPath": "stocktype", "order": "ASCENDING" },
+        { "fieldPath": "entrydate", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "inventory_stocks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "stocktype", "order": "ASCENDING" },
+        { "fieldPath": "entrydate", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "inventory_stocks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "branchid", "order": "ASCENDING" },
+        { "fieldPath": "entrydate", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "inventory_stock_overview",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "branchid", "order": "ASCENDING" },
+        { "fieldPath": "lastUpdated", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "inventory_stock_overview",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "branchid", "order": "ASCENDING" },
+        { "fieldPath": "productid", "order": "ASCENDING" },
+        { "fieldPath": "lastUpdated", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "inventory_stock_overview",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "branchid", "order": "ASCENDING" },
+        { "fieldPath": "brandid", "order": "ASCENDING" },
+        { "fieldPath": "lastUpdated", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "inventory_stock_overview",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "branchid", "order": "ASCENDING" },
+        { "fieldPath": "productid", "order": "ASCENDING" },
+        { "fieldPath": "brandid", "order": "ASCENDING" },
+        { "fieldPath": "lastUpdated", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "inventory_stock_overview",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "productid", "order": "ASCENDING" },
+        { "fieldPath": "lastUpdated", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "inventory_stock_overview",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "brandid", "order": "ASCENDING" },
+        { "fieldPath": "lastUpdated", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "inventory_stock_overview",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "productid", "order": "ASCENDING" },
+        { "fieldPath": "brandid", "order": "ASCENDING" },
+        { "fieldPath": "lastUpdated", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { collection, addDoc, getDocs, doc, setDoc, getDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, setDoc, getDoc, runTransaction } from 'firebase/firestore';
 import { firestore } from '../../firebase-config';
 import { Transfer } from '../Models/TransferModel';
 @Injectable({
@@ -20,7 +20,16 @@ export class TransferService {
     });
   }
   async addTransfer(transfer: Transfer): Promise<string> {
-    const ref = await addDoc(collection(firestore, this.topicName), transfer);
+    const ref = doc(collection(firestore, this.topicName));
+    const year = new Date().getFullYear();
+    const counterRef = doc(firestore, 'SystemCounters', `transfer-${year}`);
+    await runTransaction(firestore, async (transaction) => {
+      const counter = await transaction.get(counterRef);
+      const nextNumber = Number(counter.data()?.['nextNumber'] || 0) + 1;
+      const transferNumber = transfer.transferNumber || `TRF-${year}-${String(nextNumber).padStart(6, '0')}`;
+      transaction.set(counterRef, { nextNumber }, { merge: true });
+      transaction.set(ref, { ...transfer, transferNumber });
+    });
     return ref.id;
   }
   async updateTransfer(transfer: Transfer): Promise<void> {

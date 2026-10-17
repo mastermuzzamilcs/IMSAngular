@@ -46,9 +46,9 @@
             <span *ngIf="stockHdr?.customerPhone"> · {{ stockHdr?.customerPhone }}</span>
           </p>
           <p><strong>Date:</strong> {{ stockHdr?.entrydate | date: 'mediumDate' }}</p>
-          <p><strong>Sub‑total:</strong> {{ stockHdr?.subtotal | currency }}</p>
-          <p><strong>Discount:</strong> {{ stockHdr?.discountvalue | currency }}</p>
-          <p><strong>Net Total:</strong> {{ stockHdr?.NetTotal | currency }}</p>
+          <p><strong>Sub‑total:</strong> {{ stockHdr?.subtotal | appCurrency }}</p>
+          <p><strong>Discount:</strong> {{ stockHdr?.discountvalue | appCurrency }}</p>
+          <p><strong>Net Total:</strong> {{ stockHdr?.NetTotal | appCurrency }}</p>
         </div>
 
         <!-- details table -->
@@ -63,15 +63,15 @@
           </ng-container>
           <ng-container matColumnDef="price">
             <th mat-header-cell *matHeaderCellDef>Price</th>
-            <td mat-cell *matCellDef="let r">{{ r.unitprice | currency }}</td>
+            <td mat-cell *matCellDef="let r">{{ r.unitprice | appCurrency }}</td>
           </ng-container>
           <ng-container matColumnDef="disc">
             <th mat-header-cell *matHeaderCellDef>Disc.</th>
-            <td mat-cell *matCellDef="let r">{{ r.discount | currency }}</td>
+            <td mat-cell *matCellDef="let r">{{ r.discount | appCurrency }}</td>
           </ng-container>
           <ng-container matColumnDef="total">
             <th mat-header-cell *matHeaderCellDef>Total</th>
-            <td mat-cell *matCellDef="let r">{{ r.total | currency }}</td>
+            <td mat-cell *matCellDef="let r">{{ r.total | appCurrency }}</td>
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

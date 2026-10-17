@@ -11,6 +11,7 @@ import {
   query,
   Timestamp,
   updateDoc,
+  runTransaction,
 } from 'firebase/firestore';
 import { firestore } from '../../firebase-config';
 import { asStatus, Status } from '../enums/status.enum';
@@ -82,6 +83,7 @@ export class StockService {
       const data = doc.data();
       return {
         stockid: doc.id,
+        referenceNumber: data['referenceNumber'] || '',
         branchid: data['branchid'] || '',
         branchName: data['branchName'] || '',
         vendorid: data['vendorid'] || '',
@@ -102,7 +104,17 @@ export class StockService {
 
   async addStock(_stock: Stock): Promise<string> {
     const branchRef = collection(firestore, this.topicName);
-    const resDocRef = await addDoc(branchRef, _stock);
+    const resDocRef = doc(branchRef);
+    const entryDate = _stock.entrydate instanceof Date ? _stock.entrydate : new Date();
+    const year = entryDate.getFullYear();
+    const counterRef = doc(firestore, 'SystemCounters', `inventory-${year}`);
+    await runTransaction(firestore, async (transaction) => {
+      const counter = await transaction.get(counterRef);
+      const nextNumber = Number(counter.data()?.['nextNumber'] || 0) + 1;
+      const referenceNumber = _stock.referenceNumber || `IMS-${year}-${String(nextNumber).padStart(6, '0')}`;
+      transaction.set(counterRef, { nextNumber }, { merge: true });
+      transaction.set(resDocRef, { ..._stock, referenceNumber });
+    });
     this.cachedStocks = null;
     return resDocRef.id;
   }
@@ -199,6 +211,7 @@ export class StockService {
       ]);
       return {
         stockid: docSnap.id,
+        referenceNumber: data['referenceNumber'] || '',
         branchid: data['branchid'] || '',
         branchName: branch?.name || '',
         vendorid: data['vendorid'] || '',

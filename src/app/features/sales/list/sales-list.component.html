@@ -42,7 +42,7 @@
 
       <ng-container matColumnDef="total">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Total</th>
-        <td mat-cell *matCellDef="let sale">{{ sale.total | currency }}</td>
+        <td mat-cell *matCellDef="let sale">{{ sale.total | appCurrency }}</td>
       </ng-container>
 
       <ng-container matColumnDef="paymentMethod">

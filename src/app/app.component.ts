@@ -38,6 +38,7 @@ import { PrivilegeRef, privileges as privilegeAccess } from './core/auth/privile
 import { PrivilegeDirective } from './core/auth/privilege.directive';
 import { AuthService } from './core/services/auth.service';
 import { AppSettingsService } from './core/services/app-settings.service';
+import { ReportExportActivityService } from '@mesix/reporting';
 
 @Component({
   selector: 'app-root',
@@ -87,6 +88,7 @@ export class AppComponent {
     private inbox: NotificationInboxService,
     private sound: NotificationSoundService,
     private appSettings: AppSettingsService,
+    readonly reportExports: ReportExportActivityService,
   ) {
     this.darkMode = readStoredThemeId() === 'dark';
     this.session$ = this.auth.session$;
@@ -136,6 +138,7 @@ export class AppComponent {
   }
 
   logout(): void {
+    this.reportExports.cancelAndDismiss();
     this.auth.logout();
     void this.router.navigate(['/auth/login']);
   }

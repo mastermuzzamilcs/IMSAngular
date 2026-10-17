@@ -1,5 +1,6 @@
 import { Component, Inject, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AppCurrencyPipe } from '../../../core/pipes/app-currency.pipe';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTableModule } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -37,6 +38,7 @@ import { ToastService } from '../../../core/services/toast.service';
   styleUrls: ['./request-detail.component.scss'],
   imports: [
     CommonModule,
+    AppCurrencyPipe,
     MatTabsModule,
     MatTableModule,
     MatFormFieldModule,

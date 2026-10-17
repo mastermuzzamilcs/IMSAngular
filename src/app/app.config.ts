@@ -41,6 +41,10 @@ export function seedSystemRecords(
   };
 }
 
+export function loadSharedAppSettings(settings: AppSettingsService): () => Promise<void> {
+  return () => settings.loadSharedCurrency();
+}
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
@@ -72,6 +76,12 @@ export const appConfig: ApplicationConfig = {
       provide: APP_INITIALIZER,
       useFactory: seedSystemRecords,
       deps: [UsersService, RequestTypeService, RoleService],
+      multi: true,
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: loadSharedAppSettings,
+      deps: [AppSettingsService],
       multi: true,
     },
   ],
