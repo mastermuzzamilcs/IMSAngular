@@ -1,5 +1,6 @@
 import { Component, Inject, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AppCurrencyPipe } from '../../../core/pipes/app-currency.pipe';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTableModule } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -22,7 +23,6 @@ import { Stock, StockDetails } from '../../../core/Models/StockModel';
 import { RequestStatus, RequestType, WorkflowRequest } from '../../../core/Models/WorkflowModel';
 import { WorkflowTransitionOption } from '../../../core/Models/WorkflowStatusTransition';
 import { WorkflowTransitionService } from '../../../core/services/workflow-transition.service';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ProductService } from '../../../core/services/product.service';
 import { TransferService } from '../../../core/services/transfer.service';
 import { Transfer, TransferItem } from '../../../core/Models/TransferModel';
@@ -37,6 +37,7 @@ import { ToastService } from '../../../core/services/toast.service';
   styleUrls: ['./request-detail.component.scss'],
   imports: [
     CommonModule,
+    AppCurrencyPipe,
     MatTabsModule,
     MatTableModule,
     MatFormFieldModule,
@@ -45,7 +46,6 @@ import { ToastService } from '../../../core/services/toast.service';
     MatIconModule,
     MatChipsModule,
     FormsModule,
-    MatProgressSpinnerModule,
     MxButtonComponent,
     MxBadgeComponent,
   ],
@@ -68,6 +68,7 @@ export class RequestDetailComponent implements OnInit {
 
   // UI state
   loading = true;
+  loadError = '';
   request!: WorkflowRequest;
   stockHdr: Stock | null = null;
   stockRows: StockDetails[] = [];
@@ -115,33 +116,56 @@ export class RequestDetailComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
-    this.request = (await this.wfSvc.getById(this.data.requestId))!;
-    this.isTransfer = this.request.requestType === RequestType.Transfer;
-    if (this.isTransfer) {
-      this.transfer = await this.transferSvc.getTransferById(this.request.moduleId);
-      this.transferRows = this.transfer?.items || [];
-    } else {
-      this.stockHdr = await this.stockSvc.getStockById(this.request.moduleId);
-      this.stockRows = await this.stockSvc.getStockDetails(this.request.moduleId);
-    }
-    const status = this.isTransfer
-      ? this.transfer?.status || this.request.status
-      : this.request.status;
-    this.actions = await this.transitionService.getNext(this.request.requestType, status);
-    this.assignedToName = await this.resolveUserName(this.request.assignedTo || '');
-    this.canAct = await this.wfSvc.canCurrentUserAct(this.request, this.auth.currentUserId());
-    if (!this.canAct && this.actions.length > 0) {
-      if (!this.request.assignedTo) {
-        this.actionBlockedReason = 'This request has no assigned user, so no action can be taken.';
-      } else if (this.request.assignedTo !== this.auth.currentUserId()) {
-        this.actionBlockedReason = `Only the assigned user (${this.assignedToName || this.request.assignedTo}) can act on this request.`;
-      } else if (!this.auth.canApproveRequests()) {
-        this.actionBlockedReason = 'Your group is not allowed to approve requests.';
+    try {
+      const request = await this.wfSvc.getById(this.data.requestId);
+      if (!request) throw new Error('This request could not be found.');
+      this.request = request;
+      this.isTransfer = this.request.requestType === RequestType.Transfer;
+      if (this.isTransfer) {
+        const [transfer, assignedToName, canAct] = await Promise.all([
+          this.transferSvc.getTransferById(this.request.moduleId),
+          this.resolveUserName(this.request.assignedTo || ''),
+          this.wfSvc.canCurrentUserAct(this.request, this.auth.currentUserId()),
+        ]);
+        this.transfer = transfer;
+        this.transferRows = this.transfer?.items || [];
+        this.assignedToName = assignedToName;
+        this.canAct = canAct;
+        const status = this.transfer?.status || this.request.status;
+        this.actions = await this.transitionService.getNext(this.request.requestType, status);
       } else {
-        this.actionBlockedReason = 'You are not authorized to act on this request.';
+        const [stockHdr, stockRows, actions, assignedToName, canAct] = await Promise.all([
+          this.stockSvc.getStockById(this.request.moduleId),
+          this.stockSvc.getStockDetails(this.request.moduleId),
+          this.transitionService.getNext(this.request.requestType, this.request.status),
+          this.resolveUserName(this.request.assignedTo || ''),
+          this.wfSvc.canCurrentUserAct(this.request, this.auth.currentUserId()),
+        ]);
+        this.stockHdr = stockHdr;
+        this.stockRows = stockRows;
+        this.actions = actions;
+        this.assignedToName = assignedToName;
+        this.canAct = canAct;
       }
+      if (!this.canAct && this.actions.length > 0) {
+        if (!this.request.assignedTo) {
+          this.actionBlockedReason =
+            'This request has no assigned user, so no action can be taken.';
+        } else if (this.request.assignedTo !== this.auth.currentUserId()) {
+          this.actionBlockedReason = `Only the assigned user (${this.assignedToName || this.request.assignedTo}) can act on this request.`;
+        } else if (!this.auth.canApproveRequests()) {
+          this.actionBlockedReason = 'Your group is not allowed to approve requests.';
+        } else {
+          this.actionBlockedReason = 'You are not authorized to act on this request.';
+        }
+      }
+    } catch (error) {
+      this.loadError =
+        error instanceof Error ? error.message : 'Request details could not be loaded.';
+      this.toast.error(this.loadError);
+    } finally {
+      this.loading = false;
     }
-    this.loading = false;
   }
 
   private async resolveUserName(userId: string): Promise<string> {
@@ -151,8 +175,8 @@ export class RequestDetailComponent implements OnInit {
     if (userId === SYSTEM_USER_ID) {
       return 'system';
     }
-    const users = await this.usersService.getUsers();
-    return users.find((user) => user.userid === userId)?.name || userId;
+    const user = await this.usersService.getUserById(userId);
+    return user?.name || userId;
   }
 
   /** Submit approve / reject */
@@ -166,12 +190,14 @@ export class RequestDetailComponent implements OnInit {
         status,
         this.auth.currentUserId(),
         this.remarks,
+        false,
       );
       this.dialogRef.close({ updated: true });
     } catch (err) {
       console.error('Error updating workflow request:', err);
       this.toast.error(err instanceof Error ? err.message : 'Failed to update request');
+    } finally {
+      this.submitting = false;
     }
-    this.submitting = false;
   }
 }

@@ -94,9 +94,15 @@ export class BrandSetupComponent implements OnInit, AfterViewInit {
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
         this._loadingService.show();
-        await this._brandService.addBrand(result);
-        this._loadingService.hide();
-        this.loadBrands();
+        try {
+          await this._brandService.addBrand(result);
+          await this.loadBrands();
+        } catch (error) {
+          console.error('Error adding brand', error);
+          this.toast.error(error instanceof Error ? error.message : 'Could not add the brand');
+        } finally {
+          this._loadingService.hide();
+        }
       }
     });
   }
@@ -109,9 +115,15 @@ export class BrandSetupComponent implements OnInit, AfterViewInit {
       if (result) {
         this._loadingService.show();
         result.id = _brand.id;
-        await this._brandService.updateBrand(result);
-        this._loadingService.hide();
-        this.loadBrands();
+        try {
+          await this._brandService.updateBrand(result);
+          await this.loadBrands();
+        } catch (error) {
+          console.error('Error updating brand', error);
+          this.toast.error(error instanceof Error ? error.message : 'Could not update the brand');
+        } finally {
+          this._loadingService.hide();
+        }
       }
     });
   }
@@ -122,9 +134,17 @@ export class BrandSetupComponent implements OnInit, AfterViewInit {
         if (result) {
           if (_brand.id) {
             this._loadingService.show();
-            await this._brandService.deleteBrand(_brand.id);
-            this._loadingService.hide();
-            this.loadBrands();
+            try {
+              await this._brandService.deleteBrand(_brand.id);
+              await this.loadBrands();
+            } catch (error) {
+              console.error('Error deleting brand', error);
+              this.toast.error(
+                error instanceof Error ? error.message : 'Could not delete the brand',
+              );
+            } finally {
+              this._loadingService.hide();
+            }
           }
         }
       });

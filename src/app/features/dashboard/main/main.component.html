@@ -48,7 +48,7 @@
         </div>
         <div class="kpi-info">
           <h3>Today's Sales</h3>
-          <p class="kpi-value">{{ todaysSales | currency: 'PKR' : 'symbol' : '1.0-0' }}</p>
+          <p class="kpi-value">{{ todaysSales | appCurrency: '1.0-0' }}</p>
         </div>
       </div>
     </mx-card>

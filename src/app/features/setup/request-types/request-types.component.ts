@@ -64,8 +64,9 @@ export class RequestTypesComponent implements OnInit {
     } catch (error) {
       console.error('Error loading request types', error);
       this.toast.error('Error loading request types');
+    } finally {
+      this.loadingService.hide();
     }
-    this.loadingService.hide();
   }
 
   async setAutoApprove(setting: RequestTypeSetting, enabled: boolean): Promise<void> {
@@ -74,12 +75,14 @@ export class RequestTypesComponent implements OnInit {
     this.loadingService.show();
     try {
       await this.requestTypeService.setAutoApprove(setting.requestType, enabled);
+      this.toast.success('Auto-approve setting saved');
     } catch (error) {
       setting.IS_Auto_Approve = previous;
       console.error('Error saving auto approve', error);
       this.toast.error('Could not save auto approve');
+    } finally {
+      this.loadingService.hide();
     }
-    this.loadingService.hide();
   }
 
   async setAssignedToSource(setting: RequestTypeSetting, sourceCode: string): Promise<void> {
@@ -91,12 +94,14 @@ export class RequestTypesComponent implements OnInit {
         setting.requestType,
         setting.assignedToSource,
       );
+      this.toast.success('Assignment source saved');
     } catch (error) {
       setting.assignedToSource = previous;
       console.error('Error saving assigned to source', error);
       this.toast.error('Could not save Assigned to item source');
+    } finally {
+      this.loadingService.hide();
     }
-    this.loadingService.hide();
   }
 
   sourceLabel(code: string): string {

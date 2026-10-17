@@ -13,6 +13,7 @@ import { StockService } from '../../../core/services/stock.service';
 import { ItemSearchModalComponent } from '../item-search-modal/item-search-modal.component';
 import { CustomerSearchModalComponent } from '../../../shared/components/customer-search-modal/customer-search-modal.component';
 import { CommonModule } from '@angular/common';
+import { AppCurrencyPipe } from '../../../core/pipes/app-currency.pipe';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -31,7 +32,6 @@ import {
 import { WorkflowService } from '../../../core/services/Workflow.service';
 import { Status } from '../../../core/enums/status.enum';
 import { RequestType } from '../../../core/Models/WorkflowModel';
-import { LoadingService } from '../../../core/services/Loading.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
@@ -42,6 +42,7 @@ import { ToastService } from '../../../core/services/toast.service';
   standalone: true,
   imports: [
     CommonModule,
+    AppCurrencyPipe,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
@@ -85,11 +86,11 @@ export class SalesReturnComponent implements OnInit {
   discountType: 'amount' | 'percentage' = 'amount';
   discountValue = 0;
   netTotal = 0;
+  submitting = false;
   constructor(
     private fb: FormBuilder,
     private stockService: StockService,
     private _workflowService: WorkflowService,
-    private _loadingService: LoadingService,
     private auth: AuthService,
   ) {}
   async ngOnInit(): Promise<void> {
@@ -171,12 +172,12 @@ export class SalesReturnComponent implements OnInit {
       this.toast.warning('Choose a branch from the top bar before continuing.');
       return;
     }
-    this._loadingService.show();
     if (this.salesReturnForm.invalid || this.dataSource.data.length === 0) {
       this.salesReturnForm.markAllAsTouched();
-      this._loadingService.hide();
       return;
     }
+    if (this.submitting) return;
+    this.submitting = true;
     const payload = {
       ...this.salesReturnForm.value,
       branch,
@@ -217,8 +218,9 @@ export class SalesReturnComponent implements OnInit {
     } catch (err) {
       console.error('Error submitting sale return:', err);
       this.toast.error('Failed to submit sale-return');
+    } finally {
+      this.submitting = false;
     }
-    this._loadingService.hide();
   }
 
   private selectedCustomerId(): string {

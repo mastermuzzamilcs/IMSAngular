@@ -121,8 +121,9 @@ export class NotificationTemplatesComponent implements OnInit, AfterViewInit {
     } catch (error) {
       console.error('Error loading notification templates', error);
       this.toast.error('Error loading notification templates');
+    } finally {
+      this.tableLoading = false;
     }
-    this.tableLoading = false;
   }
 
   openAddDialog(): void {
@@ -139,7 +140,8 @@ export class NotificationTemplatesComponent implements OnInit, AfterViewInit {
           await this.loadTemplates();
         } catch (error) {
           console.error('Error adding notification template', error);
-          this.toast.error(error instanceof Error ? error.message : 'Could not save the template');
+          this.toastFailure(error, 'Could not save the template');
+        } finally {
           this.loadingService.hide();
         }
       });
@@ -161,7 +163,8 @@ export class NotificationTemplatesComponent implements OnInit, AfterViewInit {
           await this.loadTemplates();
         } catch (error) {
           console.error('Error updating notification template', error);
-          this.toast.error(error instanceof Error ? error.message : 'Could not save the template');
+          this.toastFailure(error, 'Could not save the template');
+        } finally {
           this.loadingService.hide();
         }
       });
@@ -184,8 +187,18 @@ export class NotificationTemplatesComponent implements OnInit, AfterViewInit {
         } catch (error) {
           console.error('Error deleting notification template', error);
           this.toast.error('Could not delete the template');
+        } finally {
           this.loadingService.hide();
         }
       });
+  }
+
+  private toastFailure(error: unknown, fallback: string): void {
+    const message = error instanceof Error ? error.message : fallback;
+    if (message.toLowerCase().includes('already exists')) {
+      this.toast.warning(message);
+    } else {
+      this.toast.error(message);
+    }
   }
 }

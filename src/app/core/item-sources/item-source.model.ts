@@ -100,6 +100,7 @@ export const sourceTables: ParameterTable[] = [
     fields: [
       { field: 'userid', label: 'User id' },
       { field: 'name', label: 'Name' },
+      { field: 'username', label: 'Username' },
       { field: 'email', label: 'Email' },
       { field: 'manager', label: 'Manager' },
       { field: 'branch', label: 'Branch' },

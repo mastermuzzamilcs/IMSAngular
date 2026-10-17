@@ -12,6 +12,7 @@ import {
   privileges as privilegeAccess,
 } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
+import { PrivilegeModule } from '../../../core/enums/privilege.enum';
 import { isStatus, Status } from '../../../core/enums/status.enum';
 import { UserGroup } from '../../../core/Models/UserGroupModel';
 import { AuthService } from '../../../core/services/auth.service';
@@ -78,8 +79,9 @@ export class GroupPrivilegesComponent implements OnInit {
     } catch (error) {
       console.error('Error loading group privileges', error);
       this.toast.error('Error loading group privileges');
+    } finally {
+      this.loadingService.hide();
     }
-    this.loadingService.hide();
   }
 
   async onGroupChange(): Promise<void> {
@@ -94,8 +96,9 @@ export class GroupPrivilegesComponent implements OnInit {
     } catch (error) {
       console.error('Error loading privileges for group', error);
       this.toast.error('Error loading privileges for this group');
+    } finally {
+      this.loadingService.hide();
     }
-    this.loadingService.hide();
   }
 
   isChecked(item: CatalogPrivilege): boolean {
@@ -109,6 +112,12 @@ export class GroupPrivilegesComponent implements OnInit {
       return;
     }
     this.selected.delete(key);
+  }
+
+  privilegeLabel(item: CatalogPrivilege): string {
+    if (this.isReportPrivilege(item))
+      return `${item.moduleName.replace(/^Report: /, '')} — ${item.action}`;
+    return `${item.action} (${item.functionId})`;
   }
 
   async save(): Promise<void> {
@@ -125,8 +134,9 @@ export class GroupPrivilegesComponent implements OnInit {
     } catch (error) {
       console.error('Error saving group privileges', error);
       this.toast.error('Could not save group privileges');
+    } finally {
+      this.loadingService.hide();
     }
-    this.loadingService.hide();
   }
 
   private async loadGroup(groupid: string): Promise<void> {
@@ -139,13 +149,21 @@ export class GroupPrivilegesComponent implements OnInit {
   private buildSections(): PrivilegeSection[] {
     const sections: PrivilegeSection[] = [];
     privilegeCatalog.forEach((item) => {
-      const current = sections.find((section) => section.name === item.moduleName);
+      const sectionName = this.isReportPrivilege(item) ? 'Reports' : item.moduleName;
+      const current = sections.find((section) => section.name === sectionName);
       if (current) {
         current.items.push(item);
         return;
       }
-      sections.push({ name: item.moduleName, items: [item] });
+      sections.push({ name: sectionName, items: [item] });
     });
     return sections;
+  }
+
+  private isReportPrivilege(item: CatalogPrivilege): boolean {
+    return (
+      item.moduleId >= PrivilegeModule.ReportInventoryOnHand &&
+      item.moduleId <= PrivilegeModule.ReportApproverThroughput
+    );
   }
 }

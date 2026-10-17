@@ -64,6 +64,7 @@ export class RequestAssigneeService {
         if (
           userid === part ||
           user.email.trim().toLowerCase() === lower ||
+          (user.username || '').trim().toLowerCase() === lower ||
           user.name.trim().toLowerCase() === lower
         ) {
           seen.add(userid);

@@ -12,6 +12,7 @@ import { RoleService } from './core/services/role.service';
 import { UsersService } from './core/services/users.service';
 import { WorkflowActionBootstrap } from './workflow-functions/workflow-actions';
 import { initializeMesixTheme } from './core/theme/mesix-theme.initializer';
+import { NotificationSoundService } from './core/notifications/notification-sound.service';
 
 export function registerWorkflowActions(
   bootstrap: WorkflowActionBootstrap,
@@ -38,6 +39,15 @@ export function seedSystemRecords(
     } catch (error) {
       console.error('System seed failed', error);
     }
+  };
+}
+
+export function loadSharedAppSettings(
+  settings: AppSettingsService,
+  notificationSound: NotificationSoundService,
+): () => void {
+  return () => {
+    void Promise.all([settings.loadSharedCurrency(), notificationSound.loadSharedSettings()]);
   };
 }
 
@@ -72,6 +82,12 @@ export const appConfig: ApplicationConfig = {
       provide: APP_INITIALIZER,
       useFactory: seedSystemRecords,
       deps: [UsersService, RequestTypeService, RoleService],
+      multi: true,
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: loadSharedAppSettings,
+      deps: [AppSettingsService, NotificationSoundService],
       multi: true,
     },
   ],

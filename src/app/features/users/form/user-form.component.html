@@ -12,6 +12,28 @@
 
     <div class="form-row">
       <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Username</mat-label>
+        <input
+          matInput
+          formControlName="username"
+          placeholder="Enter Username"
+          autocomplete="off"
+        />
+        <mat-hint>3-30 characters: letters, numbers, . _ -</mat-hint>
+        <mat-error *ngIf="userForm.get('username')?.hasError('required')">
+          Username is required
+        </mat-error>
+        <mat-error *ngIf="userForm.get('username')?.hasError('pattern')">
+          Use 3-30 letters, numbers, dot, underscore or hyphen (no spaces or &#64;)
+        </mat-error>
+        <mat-error *ngIf="userForm.get('username')?.hasError('taken')">
+          This username is already taken
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="full-width">
         <mat-label>Email</mat-label>
         <input matInput formControlName="email" placeholder="Email" />
         <mat-error *ngIf="userForm.get('email')?.hasError('required')">
@@ -23,7 +45,21 @@
     <div class="form-row">
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Password</mat-label>
-        <input matInput type="password" formControlName="password" autocomplete="new-password" />
+        <input
+          matInput
+          [type]="showPassword ? 'text' : 'password'"
+          formControlName="password"
+          autocomplete="new-password"
+        />
+        <button
+          mat-icon-button
+          matSuffix
+          type="button"
+          (click)="showPassword = !showPassword"
+          [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+        >
+          <mat-icon>{{ showPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
         <mat-hint *ngIf="data.mode === 'edit'">Leave blank to keep the current password</mat-hint>
         <mat-error *ngIf="userForm.get('password')?.hasError('required')">
           Password is required

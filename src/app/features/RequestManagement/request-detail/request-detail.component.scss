@@ -18,8 +18,30 @@
   padding-top: 16px;
 }
 
-.spinner {
+.request-load-error {
+  padding: 20px 24px;
+  color: var(--mx-danger, #b42318);
+}
+.request-loading {
   display: flex;
+  min-height: 180px;
+  align-items: center;
   justify-content: center;
-  padding: 24px 0;
+  gap: 12px;
+  color: var(--mx-text-muted, #667085);
+}
+
+.loading-indicator {
+  width: 22px;
+  height: 22px;
+  border: 3px solid color-mix(in srgb, var(--mx-primary, #1687d4) 18%, transparent);
+  border-top-color: var(--mx-primary, #1687d4);
+  border-radius: 50%;
+  animation: request-spin 0.8s linear infinite;
+}
+
+@keyframes request-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

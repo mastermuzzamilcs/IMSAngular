@@ -83,8 +83,9 @@ export class RolesComponent implements OnInit, AfterViewInit {
     } catch (err) {
       console.error('Error loading User Roles', err);
       this.toast.error('Error loading User Roles');
+    } finally {
+      this.tableLoading = false;
     }
-    this.tableLoading = false;
   }
 
   openAddDialog() {
@@ -94,9 +95,15 @@ export class RolesComponent implements OnInit, AfterViewInit {
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
         this._loadingService.show();
-        await this.roleService.addRole(result);
-        this._loadingService.hide();
-        this.loadRoles();
+        try {
+          await this.roleService.addRole(result);
+          await this.loadRoles();
+        } catch (error) {
+          console.error('Error adding role', error);
+          this.toast.error(error instanceof Error ? error.message : 'Could not add the role');
+        } finally {
+          this._loadingService.hide();
+        }
       }
     });
   }
@@ -109,9 +116,15 @@ export class RolesComponent implements OnInit, AfterViewInit {
       if (result) {
         this._loadingService.show();
         result.id = role.id;
-        await this.roleService.updateRole(result);
-        this._loadingService.hide();
-        this.loadRoles();
+        try {
+          await this.roleService.updateRole(result);
+          await this.loadRoles();
+        } catch (error) {
+          console.error('Error updating role', error);
+          this.toast.error(error instanceof Error ? error.message : 'Could not update the role');
+        } finally {
+          this._loadingService.hide();
+        }
       }
     });
   }
@@ -122,9 +135,17 @@ export class RolesComponent implements OnInit, AfterViewInit {
         if (result) {
           if (role.id) {
             this._loadingService.show();
-            await this.roleService.deleteRole(role.id);
-            this._loadingService.hide();
-            this.loadRoles();
+            try {
+              await this.roleService.deleteRole(role.id);
+              await this.loadRoles();
+            } catch (error) {
+              console.error('Error deleting role', error);
+              this.toast.error(
+                error instanceof Error ? error.message : 'Could not delete the role',
+              );
+            } finally {
+              this._loadingService.hide();
+            }
           }
         }
       });
