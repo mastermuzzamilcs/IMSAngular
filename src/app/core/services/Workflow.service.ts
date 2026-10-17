@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import {
   collection,
-  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -68,7 +67,12 @@ export class WorkflowService {
     });
     const request = { ...payload, requestId: ref.id };
     this.runFollowUpInBackground(
-      this.processCreatedRequest(ref.id, request, autoApprovePromise, partial.remarks || 'Auto approved'),
+      this.processCreatedRequest(
+        ref.id,
+        request,
+        autoApprovePromise,
+        partial.remarks || 'Auto approved',
+      ),
       'Request was created, but one or more follow-up actions failed.',
     );
     return ref.id;

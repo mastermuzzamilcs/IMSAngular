@@ -130,7 +130,8 @@ export class AppSettingsService {
     const title = typeof data['title'] === 'string' ? data['title'].trim() : '';
     const logo = typeof data['logo'] === 'string' ? data['logo'].trim() : '';
     const pageSize = Number(data['pageSize']);
-    const currencyName = typeof data['currencyName'] === 'string' ? data['currencyName'].trim() : '';
+    const currencyName =
+      typeof data['currencyName'] === 'string' ? data['currencyName'].trim() : '';
     const currencyCode =
       typeof data['currencyCode'] === 'string' ? data['currencyCode'].trim().toUpperCase() : '';
     if (title) {
@@ -213,8 +214,7 @@ function writeLocal(key: string, value: string): void {
 
 function isQuotaError(error: unknown): boolean {
   return (
-    (error instanceof DOMException &&
-      (error.name === 'QuotaExceededError' || error.code === 22)) ||
+    (error instanceof DOMException && (error.name === 'QuotaExceededError' || error.code === 22)) ||
     (error instanceof Error && /quota/i.test(error.message))
   );
 }

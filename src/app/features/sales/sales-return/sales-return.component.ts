@@ -218,8 +218,7 @@ export class SalesReturnComponent implements OnInit {
     } catch (err) {
       console.error('Error submitting sale return:', err);
       this.toast.error('Failed to submit sale-return');
-    }
-    finally {
+    } finally {
       this.submitting = false;
     }
   }

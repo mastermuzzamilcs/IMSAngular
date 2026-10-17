@@ -247,9 +247,7 @@ export class SalesComponent implements OnInit {
     } catch (err) {
       console.error('Error submitting sale:', err);
       this.toast.error(userFacingWriteError(err, 'Failed to submit sale'));
-    }
-
-    finally {
+    } finally {
       this.submitting = false;
     }
   }

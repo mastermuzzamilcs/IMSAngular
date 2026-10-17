@@ -336,5 +336,7 @@ mat-paginator {
   animation: report-spin 0.8s linear infinite;
 }
 @keyframes report-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }

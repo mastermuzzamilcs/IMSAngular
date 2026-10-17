@@ -21,12 +21,12 @@ export class WorkflowExecutor {
     const links = await this.linkService.getForEvent(request.requestType, status);
     const actions = await Promise.all(
       links.map(async (link) => {
-      const definition = link.functionKey
-        ? await this.definitionService.getByCode(link.functionKey)
-        : null;
-      const action = definition?.className
-        ? this.registry.resolve(definition.className)
-        : undefined;
+        const definition = link.functionKey
+          ? await this.definitionService.getByCode(link.functionKey)
+          : null;
+        const action = definition?.className
+          ? this.registry.resolve(definition.className)
+          : undefined;
         return action;
       }),
     );

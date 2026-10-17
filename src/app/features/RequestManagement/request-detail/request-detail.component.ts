@@ -187,8 +187,7 @@ export class RequestDetailComponent implements OnInit {
     } catch (err) {
       console.error('Error updating workflow request:', err);
       this.toast.error(err instanceof Error ? err.message : 'Failed to update request');
-    }
-    finally {
+    } finally {
       this.submitting = false;
     }
   }

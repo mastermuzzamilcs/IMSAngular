@@ -499,7 +499,10 @@ export class AnalyticsReportParametersComponent
   users: { id: string; label: string }[] = [];
   private configuredReport = '';
   private optionVersion = 0;
-  private optionLists = new Map<string, { version: number; options: { id: string; label: string }[] }>();
+  private optionLists = new Map<
+    string,
+    { version: number; options: { id: string; label: string }[] }
+  >();
 
   constructor(
     private auth: AuthService,

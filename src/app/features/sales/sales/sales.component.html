@@ -174,7 +174,7 @@
         tone="primary"
         *appPrivilege="privileges.sales.create"
         (pressed)="submitSale()"
-          [disabled]="submitting || dataSource.data.length <= 0 || salesForm.invalid || netTotal <= 0"
+        [disabled]="submitting || dataSource.data.length <= 0 || salesForm.invalid || netTotal <= 0"
       >
         Generate Request
       </mx-button>

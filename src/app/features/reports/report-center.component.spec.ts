@@ -53,9 +53,13 @@ describe('ReportCenterComponent', () => {
         currentSession: () => ({ branches: [] }),
         currentBranchId: () => 'branch-1',
       } as unknown as AuthService,
-      { getBranches: jasmine.createSpy('getBranches').and.resolveTo([]) } as unknown as BranchService,
+      {
+        getBranches: jasmine.createSpy('getBranches').and.resolveTo([]),
+      } as unknown as BranchService,
       { busy: false, start: exportsStart } as never,
-      { record: jasmine.createSpy('record').and.resolveTo(undefined) } as unknown as CashTransactionService,
+      {
+        record: jasmine.createSpy('record').and.resolveTo(undefined),
+      } as unknown as CashTransactionService,
       {
         warning: warnings,
         error: jasmine.createSpy('error'),

@@ -21,7 +21,12 @@
         </p>
       </div>
 
-      <form *ngIf="!choosingBranch" [formGroup]="loginForm" (ngSubmit)="submit()" class="login-form">
+      <form
+        *ngIf="!choosingBranch"
+        [formGroup]="loginForm"
+        (ngSubmit)="submit()"
+        class="login-form"
+      >
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Email or Username</mat-label>
           <input matInput type="text" formControlName="identifier" autocomplete="username" />
@@ -51,12 +56,23 @@
           </mat-error>
         </mat-form-field>
         <p class="login-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
-        <button mat-raised-button color="primary" type="submit" [disabled]="submitting" class="submit-button">
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="submitting"
+          class="submit-button"
+        >
           {{ submitting ? 'Signing in…' : 'Sign in' }}
         </button>
       </form>
 
-      <form *ngIf="choosingBranch" [formGroup]="branchForm" (ngSubmit)="confirmBranch()" class="login-form">
+      <form
+        *ngIf="choosingBranch"
+        [formGroup]="branchForm"
+        (ngSubmit)="confirmBranch()"
+        class="login-form"
+      >
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Branch</mat-label>
           <mat-select formControlName="branchid">
@@ -69,7 +85,9 @@
           </mat-error>
         </mat-form-field>
         <p class="login-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
-        <button mat-raised-button color="primary" type="submit" class="submit-button">Continue</button>
+        <button mat-raised-button color="primary" type="submit" class="submit-button">
+          Continue
+        </button>
       </form>
 
       <p class="card-footnote">Secure access to your inventory workspace.</p>

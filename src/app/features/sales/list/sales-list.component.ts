@@ -91,5 +91,4 @@ export class SalesListComponent implements AfterViewInit {
     this.dateRange = range;
     // Filter data based on date range
   }
-
 }

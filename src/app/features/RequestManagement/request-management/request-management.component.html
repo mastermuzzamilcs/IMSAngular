@@ -42,10 +42,15 @@
         <th mat-header-cell *matHeaderCellDef>Status</th>
         <td mat-cell *matCellDef="let r">
           <mx-badge
-            [tone]="r.status === Status.Rejected ? 'danger' : r.status === Status.Pending ? 'warning' : 'primary'"
-          >{{
-            r.status
-          }}</mx-badge>
+            [tone]="
+              r.status === Status.Rejected
+                ? 'danger'
+                : r.status === Status.Pending
+                  ? 'warning'
+                  : 'primary'
+            "
+            >{{ r.status }}</mx-badge
+          >
         </td>
       </ng-container>
 

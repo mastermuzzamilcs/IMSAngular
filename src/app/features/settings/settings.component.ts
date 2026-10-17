@@ -94,7 +94,10 @@ export class SettingsComponent implements OnInit {
       return;
     }
     if (file.size > 200 * 1024) {
-      this.toast.warning('Choose a logo smaller than 200 KB so it can be shared with everyone.', 4000);
+      this.toast.warning(
+        'Choose a logo smaller than 200 KB so it can be shared with everyone.',
+        4000,
+      );
       return;
     }
     const reader = new FileReader();

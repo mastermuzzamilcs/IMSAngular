@@ -24,11 +24,18 @@
             <img [src]="logoPreview" alt="App logo preview" />
           </div>
           <div class="logo-actions">
-            <button mat-stroked-button type="button" (click)="logoInput.click()" [disabled]="!canEdit">
+            <button
+              mat-stroked-button
+              type="button"
+              (click)="logoInput.click()"
+              [disabled]="!canEdit"
+            >
               <mat-icon>image</mat-icon>
               Choose image
             </button>
-            <button mat-button type="button" (click)="clearLogo()" [disabled]="!canEdit">Reset to default</button>
+            <button mat-button type="button" (click)="clearLogo()" [disabled]="!canEdit">
+              Reset to default
+            </button>
             <input
               #logoInput
               type="file"
