@@ -433,10 +433,17 @@
       </button>
       <mat-menu #notificationMenu="matMenu" class="notification-menu" xPosition="before">
         <div class="notification-menu-head" (click)="$event.stopPropagation()">
-          <span>Notifications</span>
+          <span class="notification-heading">
+            <span class="notification-heading-icon"><mat-icon>notifications</mat-icon></span>
+            <span class="notification-heading-copy">
+              <strong>Notifications</strong>
+              <small>{{ (unreadCount$ | async) || 0 }} unread</small>
+            </span>
+          </span>
           <button
             mat-button
             type="button"
+            class="mark-all-read"
             *ngIf="((unreadCount$ | async) || 0) > 0"
             (click)="markAllRead()"
           >
@@ -447,6 +454,7 @@
           mat-menu-item
           type="button"
           class="notification-item"
+          [class.unread]="!item.read"
           *ngFor="let item of (notifications$ | async) || []"
           (click)="openNotification(item)"
         >
