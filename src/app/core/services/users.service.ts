@@ -87,20 +87,7 @@ export class UsersService {
   async getUserById(userId: string): Promise<User | null> {
     if (!userId) return null;
     const snapshot = await getDoc(doc(firestore, this.topicName, userId));
-    if (!snapshot.exists()) return null;
-    const data = snapshot.data();
-    return {
-      userid: snapshot.id,
-      name: String(data['name'] || ''),
-      username: String(data['username'] || ''),
-      email: String(data['email'] || ''),
-      roleid: String(data['role'] || ''),
-      role: '',
-      manager: String(data['manager'] || ''),
-      branchid: String(data['branch'] || ''),
-      branch: '',
-      status: asStatus(data['status']),
-    };
+    return snapshot.exists() ? this.mapUser(snapshot.id, snapshot.data()) : null;
   }
 
   async searchUsers(name?: string, email?: string, username?: string): Promise<User[]> {

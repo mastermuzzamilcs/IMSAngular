@@ -28,6 +28,7 @@ export class UserFormComponent implements OnInit {
   userForm!: FormGroup;
   dialogTitle: string = 'Add User';
   _roles: Role[] | null = null;
+  showPassword = false;
 
   constructor(
     private fb: FormBuilder,

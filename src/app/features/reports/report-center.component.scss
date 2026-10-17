@@ -14,11 +14,20 @@
 .filter-title {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 20px;
 }
 .page-heading {
   margin-bottom: 24px;
+  align-items: center;
+}
+.page-heading button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 .page-heading h1 {
   margin: 5px 0;
@@ -63,16 +72,32 @@
 }
 .filters {
   display: grid;
-  grid-template-columns: 1.35fr 1fr 0.85fr 0.85fr 1.35fr auto;
-  align-items: center;
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  align-items: end;
+  gap: 12px 14px;
 }
-.filters mat-form-field {
+.filters mx-report-parameter-window-host,
+:host ::ng-deep .filters .report-parameters,
+:host ::ng-deep .filters app-analytics-report-parameters,
+:host ::ng-deep .filters app-cashflow-report-parameters {
+  display: contents;
+}
+:host ::ng-deep .filters mat-form-field {
   width: 100%;
+  margin: 0;
 }
-.filters button {
-  height: 48px;
-  min-width: 110px;
+:host ::ng-deep .filters .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+.filters button,
+:host ::ng-deep .filters button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  min-width: 148px;
+  margin: 0;
+  align-self: end;
 }
 .filters button mat-spinner {
   display: inline-block;
@@ -292,4 +317,26 @@ mat-paginator {
 .aggregate-card small {
   font-size: 11px;
   color: #7b8798;
+}
+.loading-state {
+  display: flex;
+  min-height: 120px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--mx-text-muted, #667085);
+}
+.loading-indicator {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  border: 3px solid color-mix(in srgb, var(--mx-primary, #1687d4) 18%, transparent);
+  border-top-color: var(--mx-primary, #1687d4);
+  border-radius: 50%;
+  animation: report-spin 0.8s linear infinite;
+}
+@keyframes report-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

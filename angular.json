@@ -27,6 +27,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "report-export.worker.js",
+                "input": "CustomPackages/@mesix/reporting/fesm2022",
+                "output": "/mesix-reporting"
               }
             ],
             "styles": [

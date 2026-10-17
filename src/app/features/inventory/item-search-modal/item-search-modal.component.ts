@@ -83,6 +83,7 @@ export class ItemSearchModalComponent {
 
   selectRow(row: Product) {
     this.selectedProduct = row;
+    this.selection.select(row);
   }
   selectItem(row: Product) {
     this.dialogRef.close(row);
@@ -103,6 +104,13 @@ export class ItemSearchModalComponent {
     this.productList.forEach((row) => this.selection.select(row));
   }
   onConfirm(): void {
-    this.dialogRef.close(this.selection.selected);
+    const products = new Map<string, Product>();
+    for (const product of [
+      ...this.selection.selected,
+      ...(this.selectedProduct ? [this.selectedProduct] : []),
+    ]) {
+      if (product.id) products.set(product.id, product);
+    }
+    this.dialogRef.close([...products.values()]);
   }
 }

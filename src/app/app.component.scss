@@ -189,41 +189,6 @@
   margin-left: 12px;
 }
 
-.notification-menu-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.5rem 1rem;
-  font-weight: 600;
-}
-
-.notification-copy {
-  display: flex;
-  flex-direction: column;
-  white-space: normal;
-  line-height: 1.3;
-  padding: 0.35rem 0;
-}
-
-.notification-copy small {
-  color: var(--mx-text-muted, #5f6368);
-}
-
-.notification-copy.unread strong {
-  font-weight: 700;
-}
-
-:host ::ng-deep .notification-menu.mat-mdc-menu-panel {
-  max-width: 24rem;
-  min-width: 18rem;
-}
-
-:host ::ng-deep .notification-item.mat-mdc-menu-item {
-  height: auto;
-  min-height: 3rem;
-}
-
 .content-container {
   padding: 24px;
   background: var(--mx-bg, #f8f9fa);

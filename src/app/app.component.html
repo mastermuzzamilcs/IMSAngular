@@ -597,33 +597,56 @@
           >notifications</mat-icon
         >
       </button>
-      <mat-menu #notificationMenu="matMenu" class="notification-menu" xPosition="before">
+      <mat-menu
+        #notificationMenu="matMenu"
+        class="notification-menu"
+        panelClass="notification-menu"
+        xPosition="before"
+      >
         <div class="notification-menu-head" (click)="$event.stopPropagation()">
-          <span>Notifications</span>
+          <span class="notification-heading">
+            <span class="notification-heading-icon"><mat-icon>notifications</mat-icon></span>
+            <span class="notification-heading-copy">
+              <strong>Notifications</strong>
+              <small>{{ (unreadCount$ | async) || 0 }} unread</small>
+            </span>
+          </span>
           <button
             mat-button
             type="button"
+            class="mark-all-read"
             *ngIf="((unreadCount$ | async) || 0) > 0"
             (click)="markAllRead()"
           >
             Mark all read
           </button>
         </div>
-        <button
-          mat-menu-item
-          type="button"
-          class="notification-item"
-          *ngFor="let item of (notifications$ | async) || []"
-          (click)="openNotification(item)"
-        >
-          <span class="notification-copy" [class.unread]="!item.read">
-            <strong>{{ item.subject }}</strong>
-            <small>{{ item.summary }}</small>
-          </span>
-        </button>
-        <button mat-menu-item disabled *ngIf="((notifications$ | async) || []).length === 0">
-          No notifications
-        </button>
+        <div class="notification-list" (click)="$event.stopPropagation()">
+          <button
+            type="button"
+            class="notification-item"
+            [class.unread]="!item.read"
+            *ngFor="let item of (notifications$ | async) || []"
+            (click)="openNotification(item)"
+          >
+            <span class="notification-item-icon" [attr.data-kind]="notificationKind(item)">
+              <mat-icon>{{ notificationIcon(item) }}</mat-icon>
+            </span>
+            <span class="notification-copy" [class.unread]="!item.read">
+              <span class="notification-meta">
+                <span class="notification-kind">{{ notificationKind(item) }}</span>
+                <time>{{ notificationTime(item.createdAtMs) }}</time>
+              </span>
+              <strong>{{ item.subject }}</strong>
+              <small>{{ item.summary || item.body }}</small>
+            </span>
+          </button>
+          <div class="notification-empty" *ngIf="((notifications$ | async) || []).length === 0">
+            <mat-icon>notifications_none</mat-icon>
+            <strong>You're all caught up</strong>
+            <span>New workflow updates will appear here.</span>
+          </div>
+        </div>
       </mat-menu>
       <button
         mat-button
@@ -649,6 +672,7 @@
         mat-icon-button
         type="button"
         routerLink="/settings"
+        *appPrivilege="privileges.settings.page"
         aria-label="Settings"
         matTooltip="Settings"
       >

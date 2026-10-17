@@ -45,20 +45,40 @@ class ReportParameterWindowHostComponent {
     filtersChange = new EventEmitter();
     host;
     ready = false;
+    componentRef;
+    componentType;
+    filtersSubscription;
     constructor(registry) {
         this.registry = registry;
     }
-    ngAfterViewInit() { this.ready = true; this.render(); }
-    ngOnChanges(changes) { if (this.ready && (changes['windowId'] || changes['initialValues']))
-        this.render(); }
-    render() {
+    ngAfterViewInit() {
+        this.ready = true;
+        this.render();
+    }
+    ngOnChanges(changes) {
+        if (!this.ready || (!changes['windowId'] && !changes['initialValues']))
+            return;
+        this.render(changes['windowId'] !== undefined);
+    }
+    ngOnDestroy() {
+        this.filtersSubscription?.unsubscribe();
+    }
+    render(recreate = false) {
         if (!this.host || !this.windowId)
             return;
-        this.host.clear();
         const component = this.registry.resolve(this.windowId);
-        const ref = this.host.createComponent(component);
-        ref.setInput('initialValues', this.initialValues);
-        ref.instance.filtersChange.subscribe((filters) => this.filtersChange.emit(filters));
+        if (!recreate && this.componentRef && this.componentType === component) {
+            // Filter components emit values while initializing. Updating the input in place prevents
+            // that emission from destroying and recreating the component in a feedback loop.
+            this.componentRef.setInput('initialValues', this.initialValues);
+            return;
+        }
+        this.filtersSubscription?.unsubscribe();
+        this.host.clear();
+        this.componentType = component;
+        this.componentRef = this.host.createComponent(component);
+        this.componentRef.setInput('initialValues', this.initialValues);
+        this.filtersSubscription = this.componentRef.instance.filtersChange.subscribe((filters) => this.filtersChange.emit(filters));
     }
     static ɵfac = i0.ɵɵngDeclareFactory({ minVersion: "12.0.0", version: "19.2.25", ngImport: i0, type: ReportParameterWindowHostComponent, deps: [{ token: ReportParameterWindowRegistry }], target: i0.ɵɵFactoryTarget.Component });
     static ɵcmp = i0.ɵɵngDeclareComponent({ minVersion: "14.0.0", version: "19.2.25", type: ReportParameterWindowHostComponent, isStandalone: true, selector: "mx-report-parameter-window-host", inputs: { windowId: "windowId", initialValues: "initialValues" }, outputs: { filtersChange: "filtersChange" }, viewQueries: [{ propertyName: "host", first: true, predicate: ["host"], descendants: true, read: ViewContainerRef }], usesOnChanges: true, ngImport: i0, template: '<ng-container #host></ng-container>', isInline: true });
@@ -159,39 +179,6 @@ i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "19.2.25", ngImpo
                 type: Output
             }] } });
 
-class ReportExportService {
-    activeWorker = null;
-    async export(title, columns, rows, format, context = { header: [], aggregates: [] }) {
-        if (typeof Worker !== 'undefined') {
-            return new Promise((resolve, reject) => {
-                const worker = new Worker(new URL('./report-export.worker.js', import.meta.url), { type: 'module' });
-                this.activeWorker = worker;
-                worker.onmessage = ({ data }) => {
-                    worker.terminate();
-                    if (this.activeWorker === worker)
-                        this.activeWorker = null;
-                    data.blob ? resolve(data.blob) : reject(new Error(data.error || 'Could not create the report file.'));
-                };
-                worker.onerror = (event) => { worker.terminate(); if (this.activeWorker === worker)
-                    this.activeWorker = null; reject(new Error(event.message || 'Report export worker failed.')); };
-                worker.postMessage({ title, columns, rows, format, context });
-            });
-        }
-        const { createReportFile } = await Promise.resolve().then(function () { return reportExport_generator; });
-        return createReportFile(title, columns, rows, format, context);
-    }
-    cancel() {
-        this.activeWorker?.terminate();
-        this.activeWorker = null;
-    }
-    static ɵfac = i0.ɵɵngDeclareFactory({ minVersion: "12.0.0", version: "19.2.25", ngImport: i0, type: ReportExportService, deps: [], target: i0.ɵɵFactoryTarget.Injectable });
-    static ɵprov = i0.ɵɵngDeclareInjectable({ minVersion: "12.0.0", version: "19.2.25", ngImport: i0, type: ReportExportService, providedIn: 'root' });
-}
-i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "19.2.25", ngImport: i0, type: ReportExportService, decorators: [{
-            type: Injectable,
-            args: [{ providedIn: 'root' }]
-        }] });
-
 async function createReportFile(title, columns, rows, format, context = { header: [], aggregates: [] }) {
     const body = rows.map((row) => columns.map((column) => display(row[column.key], column.format, context.currencyCode)));
     const metadata = [
@@ -245,10 +232,81 @@ function display(value, format, currencyCode) {
     return String(value);
 }
 
-var reportExport_generator = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    createReportFile: createReportFile
-});
+class ReportExportService {
+    activeWorker = null;
+    rejectActiveExport;
+    async export(title, columns, rows, format, context = { header: [], aggregates: [] }) {
+        if (typeof Worker !== 'undefined') {
+            try {
+                return await this.exportWithWorker(title, columns, rows, format, context);
+            }
+            catch (error) {
+                console.warn('Report export worker failed; creating the file in the page instead.', error);
+            }
+        }
+        return createReportFile(title, columns, rows, format, context);
+    }
+    cancel() {
+        const reject = this.rejectActiveExport;
+        const worker = this.activeWorker;
+        this.rejectActiveExport = undefined;
+        this.activeWorker = null;
+        if (reject)
+            reject(new Error('Report export was cancelled.'));
+        else
+            worker?.terminate();
+    }
+    exportWithWorker(title, columns, rows, format, context) {
+        return new Promise((resolve, reject) => {
+            const worker = new Worker(this.workerHref(), { type: 'module' });
+            this.activeWorker = worker;
+            let settled = false;
+            const finish = (error, blob) => {
+                if (settled)
+                    return;
+                settled = true;
+                worker.terminate();
+                if (this.activeWorker === worker) {
+                    this.activeWorker = null;
+                    this.rejectActiveExport = undefined;
+                }
+                if (error)
+                    reject(error);
+                else if (blob)
+                    resolve(blob);
+                else
+                    reject(new Error('Could not create the report file.'));
+            };
+            this.rejectActiveExport = (error) => finish(error);
+            worker.onmessage = ({ data }) => {
+                data.blob
+                    ? finish(undefined, data.blob)
+                    : finish(new Error(data.error || 'Could not create the report file.'));
+            };
+            worker.onerror = (event) => finish(new Error(event.message || 'Report export worker failed.'));
+            worker.onmessageerror = () => finish(new Error('The report export worker returned unreadable data.'));
+            try {
+                worker.postMessage({ title, columns, rows, format, context });
+            }
+            catch (error) {
+                finish(error instanceof Error
+                    ? error
+                    : new Error('Could not send report data to the export worker.'));
+            }
+        });
+    }
+    /** Served from the host app's `/mesix-reporting` assets folder, not from the library bundle URL. */
+    workerHref() {
+        const base = typeof document !== 'undefined' ? document.baseURI : 'http://localhost/';
+        return new URL('mesix-reporting/report-export.worker.js', base).href;
+    }
+    static ɵfac = i0.ɵɵngDeclareFactory({ minVersion: "12.0.0", version: "19.2.25", ngImport: i0, type: ReportExportService, deps: [], target: i0.ɵɵFactoryTarget.Injectable });
+    static ɵprov = i0.ɵɵngDeclareInjectable({ minVersion: "12.0.0", version: "19.2.25", ngImport: i0, type: ReportExportService, providedIn: 'root' });
+}
+i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "19.2.25", ngImport: i0, type: ReportExportService, decorators: [{
+            type: Injectable,
+            args: [{ providedIn: 'root' }]
+        }] });
 
 class ReportExportActivityService {
     exporter;

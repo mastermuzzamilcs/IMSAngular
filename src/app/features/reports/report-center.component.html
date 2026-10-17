@@ -8,10 +8,13 @@
     <button
       mat-flat-button
       color="primary"
+      class="export-trigger"
       [matMenuTriggerFor]="exportMenu"
       [disabled]="exports.busy || !loaded || loading"
     >
-      <mat-icon>file_download</mat-icon> Export <mat-icon>arrow_drop_down</mat-icon>
+      <mat-icon>file_download</mat-icon>
+      <span>Export</span>
+      <mat-icon>arrow_drop_down</mat-icon>
     </button>
     <mat-menu #exportMenu="matMenu"
       ><button mat-menu-item (click)="export('xlsx')">
@@ -36,8 +39,14 @@
         [windowId]="parameterWindowId"
         [initialValues]="parameterValues"
         (filtersChange)="onParameterFilters($event)"
-      ></mx-report-parameter-window-host
-      ><button mat-flat-button color="primary" (click)="load()" [disabled]="loading">
+      ></mx-report-parameter-window-host>
+      <button
+        mat-flat-button
+        color="primary"
+        class="load-report"
+        (click)="load()"
+        [disabled]="loading"
+      >
         <mat-icon>search</mat-icon> {{ loading ? 'Loading…' : 'Load' }}
       </button>
     </div>
@@ -150,6 +159,10 @@
       </article>
     </div>
     <div class="error-banner" *ngIf="error"><mat-icon>error_outline</mat-icon>{{ error }}</div>
+    <div class="loading-state" *ngIf="loading" role="status" aria-live="polite">
+      <span class="loading-indicator" aria-hidden="true"></span>
+      <span>Loading report data… You can continue using the rest of the app.</span>
+    </div>
     <div class="table-wrap" *ngIf="!loading || rows.length">
       <table *ngIf="loaded">
         <thead>

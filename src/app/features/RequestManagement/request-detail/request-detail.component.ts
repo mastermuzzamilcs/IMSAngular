@@ -29,7 +29,6 @@ import { Transfer, TransferItem } from '../../../core/Models/TransferModel';
 import { UsersService } from '../../../core/services/users.service';
 import { SYSTEM_USER_ID } from '../../../core/system-user';
 import { ToastService } from '../../../core/services/toast.service';
-import { LoadingService } from '../../../core/services/Loading.service';
 
 @Component({
   selector: 'app-request-detail',
@@ -53,7 +52,6 @@ import { LoadingService } from '../../../core/services/Loading.service';
 })
 export class RequestDetailComponent implements OnInit {
   private readonly toast = inject(ToastService);
-  private readonly loadingService = inject(LoadingService);
 
   /** ---- Data coming from parent ---- */
   constructor(
@@ -118,7 +116,6 @@ export class RequestDetailComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
-    this.loadingService.show();
     try {
       const request = await this.wfSvc.getById(this.data.requestId);
       if (!request) throw new Error('This request could not be found.');
@@ -168,7 +165,6 @@ export class RequestDetailComponent implements OnInit {
       this.toast.error(this.loadError);
     } finally {
       this.loading = false;
-      this.loadingService.hide();
     }
   }
 
@@ -187,7 +183,6 @@ export class RequestDetailComponent implements OnInit {
   async submit(): Promise<void> {
     if (!this.action || !this.request.requestId) return;
     this.submitting = true;
-    this.loadingService.show();
     try {
       const status = this.action as RequestStatus;
       await this.wfSvc.updateStatus(
@@ -195,13 +190,14 @@ export class RequestDetailComponent implements OnInit {
         status,
         this.auth.currentUserId(),
         this.remarks,
+        false,
       );
       this.dialogRef.close({ updated: true });
     } catch (err) {
       console.error('Error updating workflow request:', err);
       this.toast.error(err instanceof Error ? err.message : 'Failed to update request');
+    } finally {
+      this.submitting = false;
     }
-    this.submitting = false;
-    this.loadingService.hide();
   }
 }

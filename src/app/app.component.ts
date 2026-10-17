@@ -156,4 +156,32 @@ export class AppComponent {
   markAllRead(): void {
     void this.inbox.markAllRead();
   }
+
+  notificationKind(item: InboxNotification): string {
+    const type = String(item.requestType || 'Update').replace(/([a-z])([A-Z])/g, '$1 $2');
+    const status = String(item.status || '').trim();
+    return status ? `${type} · ${status}` : type;
+  }
+
+  notificationIcon(item: InboxNotification): string {
+    const type = String(item.requestType || '').toLowerCase();
+    if (type.includes('sale')) return 'point_of_sale';
+    if (type.includes('transfer')) return 'local_shipping';
+    if (type.includes('stockin') || type.includes('stock-in')) return 'move_to_inbox';
+    if (type.includes('stockout') || type.includes('stock-out')) return 'outbox';
+    if (type.includes('return')) return 'assignment_return';
+    return 'notifications';
+  }
+
+  notificationTime(value: number): string {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleString([], {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  }
 }

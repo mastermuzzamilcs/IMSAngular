@@ -4,6 +4,10 @@
     subtitle="App appearance, tables, and notification sound"
   ></mx-page-header>
 
+  <p class="hint" *ngIf="!canEdit" role="status">
+    You can view application settings. A user with the Settings Edit privilege must make changes.
+  </p>
+
   <mat-card>
     <mat-card-content>
       <form [formGroup]="form" (ngSubmit)="save()">
@@ -20,19 +24,27 @@
             <img [src]="logoPreview" alt="App logo preview" />
           </div>
           <div class="logo-actions">
-            <button mat-stroked-button type="button" (click)="logoInput.click()">
+            <button
+              mat-stroked-button
+              type="button"
+              (click)="logoInput.click()"
+              [disabled]="!canEdit"
+            >
               <mat-icon>image</mat-icon>
               Choose image
             </button>
-            <button mat-button type="button" (click)="clearLogo()">Reset to default</button>
+            <button mat-button type="button" (click)="clearLogo()" [disabled]="!canEdit">
+              Reset to default
+            </button>
             <input
               #logoInput
               type="file"
               accept="image/*"
               hidden
+              [disabled]="!canEdit"
               (change)="onLogoSelected($event)"
             />
-            <p class="hint">Uploaded image is stored locally and used as the IMS logo.</p>
+            <p class="hint">Uploaded image is shared with every user of this application.</p>
           </div>
         </div>
 
@@ -79,14 +91,20 @@
               </mat-option>
             </mat-select>
           </mat-form-field>
-          <button mat-stroked-button type="button" (click)="previewSound()">
+          <button mat-stroked-button type="button" (click)="previewSound()" [disabled]="!canEdit">
             <mat-icon>play_arrow</mat-icon>
             Preview
           </button>
         </div>
 
         <div class="actions">
-          <button mat-raised-button color="primary" type="submit" [disabled]="saving">
+          <button
+            mat-raised-button
+            color="primary"
+            type="submit"
+            *appPrivilege="privileges.settings.edit"
+            [disabled]="saving"
+          >
             {{ saving ? 'Saving…' : 'Save' }}
           </button>
         </div>

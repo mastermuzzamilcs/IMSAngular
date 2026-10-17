@@ -33,7 +33,6 @@ import { WorkflowService } from '../../../core/services/Workflow.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
-import { LoadingService } from '../../../core/services/Loading.service';
 import { Transfer } from '../../../core/Models/TransferModel';
 import { Branch } from '../../../core/Models/BranchModel';
 import { Product } from '../../../core/Models/ProductModel';
@@ -84,6 +83,7 @@ export class NewTransferRequestComponent implements OnInit {
   searchedUser: User | null = null;
   private itemDialogRef: MxDialogRef<Product | Product[] | null> | null = null;
   private addItemOpen = false;
+  submitting = false;
 
   constructor(
     private fb: FormBuilder,
@@ -93,7 +93,6 @@ export class NewTransferRequestComponent implements OnInit {
     private stockService: StockService,
     private transferService: TransferService,
     private workflowService: WorkflowService,
-    private loadingService: LoadingService,
     private auth: AuthService,
   ) {}
 
@@ -200,9 +199,10 @@ export class NewTransferRequestComponent implements OnInit {
       this.itemDialogRef.afterClosed().subscribe((result) => {
         this.itemDialogRef = null;
         this.addItemOpen = false;
-        if (Array.isArray(result) && result.length) {
+        const products = Array.isArray(result) ? result : result ? [result] : [];
+        if (products.length) {
           const updatedData = [...this.dataSource.data];
-          result.forEach((product) => {
+          products.forEach((product) => {
             if (!product.id || !allowedIds.has(product.id)) {
               return;
             }
@@ -238,8 +238,9 @@ export class NewTransferRequestComponent implements OnInit {
     if (this.transferForm.invalid || this.dataSource.data.length === 0) {
       return;
     }
+    if (this.submitting) return;
 
-    this.loadingService.show();
+    this.submitting = true;
     const formValue = this.transferForm.value;
     const fromBranch = this.branches.find((item) => item.branchid === fromBranchId);
     const toBranch = this.branches.find((item) => item.branchid === formValue.toBranch);
@@ -281,7 +282,8 @@ export class NewTransferRequestComponent implements OnInit {
     } catch (err) {
       console.error('Error submitting transfer request:', err);
       this.toast.error(err instanceof Error ? err.message : 'Failed to submit transfer request');
+    } finally {
+      this.submitting = false;
     }
-    this.loadingService.hide();
   }
 }

@@ -45,7 +45,21 @@
     <div class="form-row">
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Password</mat-label>
-        <input matInput type="password" formControlName="password" autocomplete="new-password" />
+        <input
+          matInput
+          [type]="showPassword ? 'text' : 'password'"
+          formControlName="password"
+          autocomplete="new-password"
+        />
+        <button
+          mat-icon-button
+          matSuffix
+          type="button"
+          (click)="showPassword = !showPassword"
+          [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+        >
+          <mat-icon>{{ showPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
         <mat-hint *ngIf="data.mode === 'edit'">Leave blank to keep the current password</mat-hint>
         <mat-error *ngIf="userForm.get('password')?.hasError('required')">
           Password is required

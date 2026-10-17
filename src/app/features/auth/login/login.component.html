@@ -1,37 +1,78 @@
-<div class="login-page">
-  <mat-card class="login-card">
-    <mat-card-header>
-      <mat-card-title>Sign in</mat-card-title>
-      <mat-card-subtitle>Use your email or username, and your password</mat-card-subtitle>
-    </mat-card-header>
-    <mat-card-content>
-      <form *ngIf="!choosingBranch" [formGroup]="loginForm" (ngSubmit)="submit()">
+<main class="login-page">
+  <p class="powered-by">Powered by Mesix</p>
+  <section class="login-panel" aria-label="Sign in">
+    <div class="login-card">
+      <header class="brand">
+        <div class="brand-mark" aria-hidden="true">IMS</div>
+        <div class="brand-copy">
+          <span class="brand-name">IMS</span>
+          <span class="brand-caption">Inventory Management Solutions</span>
+        </div>
+      </header>
+
+      <div class="form-heading">
+        <p class="eyebrow">Welcome back</p>
+        <h1>{{ choosingBranch ? 'Choose your branch' : 'Nice to see you again' }}</h1>
+        <p class="form-subtitle" *ngIf="!choosingBranch">
+          Sign in to continue to your inventory workspace.
+        </p>
+        <p class="form-subtitle" *ngIf="choosingBranch">
+          This user can access more than one branch. Choose the branch for this session.
+        </p>
+      </div>
+
+      <form
+        *ngIf="!choosingBranch"
+        [formGroup]="loginForm"
+        (ngSubmit)="submit()"
+        class="login-form"
+      >
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Email or Username</mat-label>
           <input matInput type="text" formControlName="identifier" autocomplete="username" />
-          <mat-error *ngIf="loginForm.get('identifier')?.hasError('required')"
-            >Email or username is required</mat-error
-          >
+          <mat-error *ngIf="loginForm.get('identifier')?.hasError('required')">
+            Email or username is required
+          </mat-error>
         </mat-form-field>
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Password</mat-label>
           <input
             matInput
-            type="password"
+            [type]="showPassword ? 'text' : 'password'"
             formControlName="password"
             autocomplete="current-password"
           />
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="showPassword = !showPassword"
+            [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+          >
+            <mat-icon>{{ showPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
           <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
             Password is required
           </mat-error>
         </mat-form-field>
-        <p class="login-error" *ngIf="errorMessage">{{ errorMessage }}</p>
-        <button mat-raised-button color="primary" type="submit" [disabled]="submitting">
-          Sign in
+        <p class="login-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="submitting"
+          class="submit-button"
+        >
+          {{ submitting ? 'Signing in…' : 'Sign in' }}
         </button>
       </form>
-      <form *ngIf="choosingBranch" [formGroup]="branchForm" (ngSubmit)="confirmBranch()">
-        <p>This user can sign in to more than one branch. Choose the branch for this session.</p>
+
+      <form
+        *ngIf="choosingBranch"
+        [formGroup]="branchForm"
+        (ngSubmit)="confirmBranch()"
+        class="login-form"
+      >
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Branch</mat-label>
           <mat-select formControlName="branchid">
@@ -43,9 +84,36 @@
             Branch is required
           </mat-error>
         </mat-form-field>
-        <p class="login-error" *ngIf="errorMessage">{{ errorMessage }}</p>
-        <button mat-raised-button color="primary" type="submit">Continue</button>
+        <p class="login-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
+        <button mat-raised-button color="primary" type="submit" class="submit-button">
+          Continue
+        </button>
       </form>
-    </mat-card-content>
-  </mat-card>
-</div>
+
+      <p class="card-footnote">Secure access to your inventory workspace.</p>
+    </div>
+  </section>
+
+  <aside class="welcome-panel" aria-label="Inventory management">
+    <div class="panel-brand" aria-hidden="true">
+      <span class="panel-brand-name">IMS</span>
+      <span>Inventory Management Solutions</span>
+    </div>
+    <div class="artwork" aria-hidden="true">
+      <div class="orbit orbit-one"></div>
+      <div class="orbit orbit-two"></div>
+      <div class="device device-laptop"><span></span></div>
+      <div class="device device-tablet"><span></span></div>
+      <div class="device device-phone"><span></span></div>
+      <div class="art-dot dot-one"></div>
+      <div class="art-dot dot-two"></div>
+      <div class="art-dot dot-three"></div>
+    </div>
+    <div class="panel-message">
+      <p class="panel-kicker">One clear view of your operation</p>
+      <h2>Manage your inventory<br />with confidence.</h2>
+      <p>Track stock, coordinate branches, and keep your business moving.</p>
+    </div>
+    <div class="panel-footer"><span class="footer-rule"></span> Inventory, connected.</div>
+  </aside>
+</main>

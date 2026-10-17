@@ -1,7 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   collection,
-  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -19,11 +18,13 @@ import {
   QueryDocumentSnapshot,
 } from 'firebase/firestore';
 import { firestore } from '../../firebase-config';
+import { firestoreDoc } from '../firebase/firestore-write';
 import { RequestStatus, RequestType, WorkflowRequest } from '../Models/WorkflowModel';
 import { SYSTEM_USER_ID } from '../system-user';
 import { WorkflowExecutor } from '../workflow/workflow-executor';
 import { RequestAssigneeService } from './request-assignee.service';
 import { RequestTypeService } from './request-type.service';
+import { ToastService } from './toast.service';
 
 export interface WorkflowRequestPageCursor {
   all?: QueryDocumentSnapshot<DocumentData>;
@@ -44,6 +45,7 @@ export interface WorkflowRequestPage {
 
 @Injectable({ providedIn: 'root' })
 export class WorkflowService {
+  private readonly toast = inject(ToastService);
   private readonly topicName = 'workflow_requests';
 
   constructor(
@@ -80,29 +82,59 @@ export class WorkflowService {
       const nextNumber = Number(counter.data()?.['nextNumber'] || 0) + 1;
       const requestNumber = `REQ-${year}-${String(nextNumber).padStart(6, '0')}`;
       transaction.set(counterRef, { nextNumber }, { merge: true });
-      transaction.set(ref, { ...payload, requestNumber });
+      transaction.set(
+        ref,
+        firestoreDoc({ ...(payload as unknown as Record<string, unknown>), requestNumber }),
+      );
       payload.requestNumber = requestNumber;
     });
+    const request = { ...payload, requestId: ref.id };
+    this.runFollowUpInBackground(
+      this.processCreatedRequest(ref.id, request, autoApprove, partial.remarks || 'Auto approved'),
+      'Request was created, but one or more follow-up actions failed.',
+    );
+    return ref.id;
+  }
+
+  private async processCreatedRequest(
+    requestId: string,
+    request: WorkflowRequest,
+    autoApprove: boolean,
+    autoApproveRemarks: string,
+  ): Promise<void> {
     try {
+      if (autoApprove) {
+        await this.completeAutoApproval(requestId, request, autoApproveRemarks);
+        return;
+      }
       await this.executor.run(
-        { ...payload, requestId: ref.id },
+        request,
         RequestStatus.Pending,
-        payload.remarks || '',
-        payload.requestedBy,
+        request.remarks || '',
+        request.requestedBy,
       );
     } catch (error) {
-      await deleteDoc(ref);
-      throw error;
-    }
-    if (autoApprove) {
-      await this.updateStatus(
-        ref.id,
-        RequestStatus.Approved,
-        SYSTEM_USER_ID,
-        partial.remarks || 'Auto approved',
+      console.error('Request follow-up actions failed', error);
+      this.toast.error(
+        error instanceof Error
+          ? `Request was created, but a follow-up action failed. ${error.message}`
+          : 'Request was created, but a follow-up action failed.',
       );
     }
-    return ref.id;
+  }
+
+  private async completeAutoApproval(
+    requestId: string,
+    request: WorkflowRequest,
+    remarks: string,
+  ): Promise<void> {
+    await this.executor.run(
+      request,
+      RequestStatus.Pending,
+      request.remarks || '',
+      request.requestedBy,
+    );
+    await this.updateStatus(requestId, RequestStatus.Approved, SYSTEM_USER_ID, remarks);
   }
 
   async getForBranchPage(
@@ -339,6 +371,7 @@ export class WorkflowService {
     status: RequestStatus,
     approver: string,
     remarks: string = '',
+    waitForFollowUpActions = true,
   ): Promise<void> {
     const current = await this.getById(requestId);
     if (!current) {
@@ -352,14 +385,29 @@ export class WorkflowService {
       approvedOn: Timestamp.now(),
       remarks,
     });
-    const updatedRequest: WorkflowRequest = {
-      ...current,
+    const followUp = this.executor.run(
+      { ...current, status, approvedBy: approver, approvedOn: new Date(), remarks },
       status,
-      approvedBy: approver,
-      approvedOn: new Date(),
       remarks,
-    };
-    await this.executor.run(updatedRequest, status, remarks, approver);
+      approver,
+    );
+    if (waitForFollowUpActions) {
+      await followUp;
+    } else {
+      this.runFollowUpInBackground(
+        followUp,
+        'Status was updated, but one or more follow-up actions failed.',
+      );
+    }
+  }
+
+  private runFollowUpInBackground(task: Promise<void>, failureMessage: string): void {
+    void task.catch((error: unknown) => {
+      console.error(failureMessage, error);
+      this.toast.error(
+        error instanceof Error ? `${failureMessage} ${error.message}` : failureMessage,
+      );
+    });
   }
 
   /* ---------- Get request by ID ------------------- */

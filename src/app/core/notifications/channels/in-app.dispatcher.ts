@@ -5,7 +5,8 @@ import { NotificationDispatcher } from '../notification-dispatcher';
 import { NotificationDispatcherRegistry } from '../notification-dispatcher.registry';
 import { NotificationChannel, NotificationDispatch } from '../notification.model';
 
-const chunkSize = 400;
+const chunkSize = 80;
+const maxText = 8_000;
 
 @Injectable({ providedIn: 'root' })
 export class InAppNotificationDispatcher implements NotificationDispatcher {
@@ -28,9 +29,9 @@ export class InAppNotificationDispatcher implements NotificationDispatcher {
           channel: message.channel,
           audience: message.audience,
           templateCode: message.templateCode,
-          subject: message.subject,
-          body: message.body,
-          summary: message.summary,
+          subject: clip(message.subject, 500),
+          body: clip(message.body, maxText),
+          summary: clip(message.summary, 1_000),
           requestId: message.requestId,
           requestType: message.requestType,
           status: message.status,
@@ -42,4 +43,8 @@ export class InAppNotificationDispatcher implements NotificationDispatcher {
       await batch.commit();
     }
   }
+}
+
+function clip(value: string, limit: number): string {
+  return value.length > limit ? `${value.slice(0, limit)}…` : value;
 }

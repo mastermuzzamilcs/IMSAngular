@@ -52,4 +52,5 @@ export enum PrivilegeModule {
   ReportWorkflowAging = 39,
   ReportBranchComparison = 40,
   ReportApproverThroughput = 41,
+  Settings = 42,
 }
