@@ -13,6 +13,7 @@ export interface TransferItem {
 export interface Transfer {
   id?: string; // Firestore document ID
   transferId?: string;
+  transferNumber?: string;
 
   fromBranch?: string;
   fromBranchName?: string; // Added for display

@@ -13,6 +13,7 @@ import { StockService } from '../../../core/services/stock.service';
 import { ItemSearchModalComponent } from '../item-search-modal/item-search-modal.component';
 import { CustomerSearchModalComponent } from '../../../shared/components/customer-search-modal/customer-search-modal.component';
 import { CommonModule } from '@angular/common';
+import { AppCurrencyPipe } from '../../../core/pipes/app-currency.pipe';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -42,6 +43,7 @@ import { ToastService } from '../../../core/services/toast.service';
   standalone: true,
   imports: [
     CommonModule,
+    AppCurrencyPipe,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,

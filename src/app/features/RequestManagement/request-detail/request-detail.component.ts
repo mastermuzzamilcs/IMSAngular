@@ -1,5 +1,6 @@
 import { Component, Inject, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AppCurrencyPipe } from '../../../core/pipes/app-currency.pipe';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTableModule } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -22,13 +23,13 @@ import { Stock, StockDetails } from '../../../core/Models/StockModel';
 import { RequestStatus, RequestType, WorkflowRequest } from '../../../core/Models/WorkflowModel';
 import { WorkflowTransitionOption } from '../../../core/Models/WorkflowStatusTransition';
 import { WorkflowTransitionService } from '../../../core/services/workflow-transition.service';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ProductService } from '../../../core/services/product.service';
 import { TransferService } from '../../../core/services/transfer.service';
 import { Transfer, TransferItem } from '../../../core/Models/TransferModel';
 import { UsersService } from '../../../core/services/users.service';
 import { SYSTEM_USER_ID } from '../../../core/system-user';
 import { ToastService } from '../../../core/services/toast.service';
+import { LoadingService } from '../../../core/services/Loading.service';
 
 @Component({
   selector: 'app-request-detail',
@@ -37,6 +38,7 @@ import { ToastService } from '../../../core/services/toast.service';
   styleUrls: ['./request-detail.component.scss'],
   imports: [
     CommonModule,
+    AppCurrencyPipe,
     MatTabsModule,
     MatTableModule,
     MatFormFieldModule,
@@ -45,13 +47,13 @@ import { ToastService } from '../../../core/services/toast.service';
     MatIconModule,
     MatChipsModule,
     FormsModule,
-    MatProgressSpinnerModule,
     MxButtonComponent,
     MxBadgeComponent,
   ],
 })
 export class RequestDetailComponent implements OnInit {
   private readonly toast = inject(ToastService);
+  private readonly loadingService = inject(LoadingService);
 
   /** ---- Data coming from parent ---- */
   constructor(
@@ -68,6 +70,7 @@ export class RequestDetailComponent implements OnInit {
 
   // UI state
   loading = true;
+  loadError = '';
   request!: WorkflowRequest;
   stockHdr: Stock | null = null;
   stockRows: StockDetails[] = [];
@@ -115,33 +118,45 @@ export class RequestDetailComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
-    this.request = (await this.wfSvc.getById(this.data.requestId))!;
-    this.isTransfer = this.request.requestType === RequestType.Transfer;
-    if (this.isTransfer) {
-      this.transfer = await this.transferSvc.getTransferById(this.request.moduleId);
-      this.transferRows = this.transfer?.items || [];
-    } else {
-      this.stockHdr = await this.stockSvc.getStockById(this.request.moduleId);
-      this.stockRows = await this.stockSvc.getStockDetails(this.request.moduleId);
-    }
-    const status = this.isTransfer
-      ? this.transfer?.status || this.request.status
-      : this.request.status;
-    this.actions = await this.transitionService.getNext(this.request.requestType, status);
-    this.assignedToName = await this.resolveUserName(this.request.assignedTo || '');
-    this.canAct = await this.wfSvc.canCurrentUserAct(this.request, this.auth.currentUserId());
-    if (!this.canAct && this.actions.length > 0) {
-      if (!this.request.assignedTo) {
-        this.actionBlockedReason = 'This request has no assigned user, so no action can be taken.';
-      } else if (this.request.assignedTo !== this.auth.currentUserId()) {
-        this.actionBlockedReason = `Only the assigned user (${this.assignedToName || this.request.assignedTo}) can act on this request.`;
-      } else if (!this.auth.canApproveRequests()) {
-        this.actionBlockedReason = 'Your group is not allowed to approve requests.';
+    this.loadingService.show();
+    try {
+      const request = await this.wfSvc.getById(this.data.requestId);
+      if (!request) throw new Error('This request could not be found.');
+      this.request = request;
+      this.isTransfer = this.request.requestType === RequestType.Transfer;
+      if (this.isTransfer) {
+        this.transfer = await this.transferSvc.getTransferById(this.request.moduleId);
+        this.transferRows = this.transfer?.items || [];
       } else {
-        this.actionBlockedReason = 'You are not authorized to act on this request.';
+        this.stockHdr = await this.stockSvc.getStockById(this.request.moduleId);
+        this.stockRows = await this.stockSvc.getStockDetails(this.request.moduleId);
       }
+      const status = this.isTransfer
+        ? this.transfer?.status || this.request.status
+        : this.request.status;
+      this.actions = await this.transitionService.getNext(this.request.requestType, status);
+      this.assignedToName = await this.resolveUserName(this.request.assignedTo || '');
+      this.canAct = await this.wfSvc.canCurrentUserAct(this.request, this.auth.currentUserId());
+      if (!this.canAct && this.actions.length > 0) {
+        if (!this.request.assignedTo) {
+          this.actionBlockedReason =
+            'This request has no assigned user, so no action can be taken.';
+        } else if (this.request.assignedTo !== this.auth.currentUserId()) {
+          this.actionBlockedReason = `Only the assigned user (${this.assignedToName || this.request.assignedTo}) can act on this request.`;
+        } else if (!this.auth.canApproveRequests()) {
+          this.actionBlockedReason = 'Your group is not allowed to approve requests.';
+        } else {
+          this.actionBlockedReason = 'You are not authorized to act on this request.';
+        }
+      }
+    } catch (error) {
+      this.loadError =
+        error instanceof Error ? error.message : 'Request details could not be loaded.';
+      this.toast.error(this.loadError);
+    } finally {
+      this.loading = false;
+      this.loadingService.hide();
     }
-    this.loading = false;
   }
 
   private async resolveUserName(userId: string): Promise<string> {
@@ -159,6 +174,7 @@ export class RequestDetailComponent implements OnInit {
   async submit(): Promise<void> {
     if (!this.action || !this.request.requestId) return;
     this.submitting = true;
+    this.loadingService.show();
     try {
       const status = this.action as RequestStatus;
       await this.wfSvc.updateStatus(
@@ -173,5 +189,6 @@ export class RequestDetailComponent implements OnInit {
       this.toast.error(err instanceof Error ? err.message : 'Failed to update request');
     }
     this.submitting = false;
+    this.loadingService.hide();
   }
 }

@@ -6,6 +6,7 @@ import { SalesFormComponent } from '../form/sales-form.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { CommonModule } from '@angular/common';
+import { AppCurrencyPipe } from '../../../core/pipes/app-currency.pipe';
 import {
   MxBadgeComponent,
   MxButtonComponent,
@@ -38,6 +39,7 @@ interface SalesListRow {
     MatSortModule,
     MatButtonToggleModule,
     CommonModule,
+    AppCurrencyPipe,
     MxPageHeaderComponent,
     MxButtonComponent,
     MxGridComponent,

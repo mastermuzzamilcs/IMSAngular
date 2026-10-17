@@ -344,3 +344,83 @@
     min-width: 0;
   }
 }
+
+.global-loading-overlay {
+  position: fixed;
+  inset: 64px 0 0 280px;
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mx-overlay-light, rgb(255 255 255 / 55%));
+  pointer-events: all;
+}
+
+.global-loading-overlay.handset {
+  left: 0;
+}
+
+.global-loading-overlay.handset.nav-open {
+  left: 280px;
+}
+
+.global-loading-overlay.signed-out {
+  inset: 0;
+}
+
+.report-export-card {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 10002;
+  width: min(390px, calc(100vw - 32px));
+  padding: 16px;
+  background: var(--mx-card, #fff);
+  color: var(--mx-text, #172033);
+  border: 1px solid #dce3ed;
+  border-radius: 14px;
+  box-shadow: 0 14px 42px #0f172a26;
+}
+.export-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.export-card-heading strong {
+  flex: 1;
+  font-size: 14px;
+}
+.export-card-heading > mat-icon {
+  color: #2563eb;
+}
+.export-card-message {
+  font-size: 13px;
+  color: #64748b;
+  padding: 9px 0 12px;
+}
+.export-progress {
+  height: 4px;
+  border-radius: 5px;
+  background: #e8edf5;
+  overflow: hidden;
+}
+.export-progress span {
+  display: block;
+  width: 38%;
+  height: 100%;
+  background: #2563eb;
+  animation: export-progress 1.2s ease-in-out infinite alternate;
+}
+.export-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+@keyframes export-progress {
+  from {
+    transform: translateX(-5%);
+  }
+  to {
+    transform: translateX(175%);
+  }
+}

@@ -4,6 +4,7 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { ProductsFormComponent } from '../products-form/products-form.component';
 import { CommonModule } from '@angular/common';
+import { AppCurrencyPipe } from '../../../core/pipes/app-currency.pipe';
 import {
   MxBadgeComponent,
   MxButtonComponent,
@@ -26,6 +27,7 @@ import { ToastService } from '../../../core/services/toast.service';
   selector: 'app-products-setup',
   imports: [
     CommonModule,
+    AppCurrencyPipe,
     MatTableModule,
     MatPaginatorModule,
     MatIconModule,
