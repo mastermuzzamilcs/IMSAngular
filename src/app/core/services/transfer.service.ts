@@ -1,12 +1,5 @@
 import { Injectable } from '@angular/core';
-import {
-  collection,
-  getDocs,
-  doc,
-  setDoc,
-  getDoc,
-  runTransaction,
-} from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, getDoc, runTransaction } from 'firebase/firestore';
 import { firestore } from '../../firebase-config';
 import { Transfer } from '../Models/TransferModel';
 @Injectable({
