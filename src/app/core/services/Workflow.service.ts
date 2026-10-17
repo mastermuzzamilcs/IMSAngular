@@ -5,6 +5,8 @@ import {
   doc,
   getDoc,
   getDocs,
+  getCountFromServer,
+  limit,
   query,
   Timestamp,
   updateDoc,
@@ -13,6 +15,8 @@ import {
   DocumentData,
   orderBy,
   runTransaction,
+  startAfter,
+  QueryDocumentSnapshot,
 } from 'firebase/firestore';
 import { firestore } from '../../firebase-config';
 import { RequestStatus, RequestType, WorkflowRequest } from '../Models/WorkflowModel';
@@ -20,6 +24,23 @@ import { SYSTEM_USER_ID } from '../system-user';
 import { WorkflowExecutor } from '../workflow/workflow-executor';
 import { RequestAssigneeService } from './request-assignee.service';
 import { RequestTypeService } from './request-type.service';
+
+export interface WorkflowRequestPageCursor {
+  all?: QueryDocumentSnapshot<DocumentData>;
+  branchFetched?: QueryDocumentSnapshot<DocumentData>;
+  destinationFetched?: QueryDocumentSnapshot<DocumentData>;
+  branchBuffer?: QueryDocumentSnapshot<DocumentData>[];
+  destinationBuffer?: QueryDocumentSnapshot<DocumentData>[];
+  consumedCount?: number;
+  totalCount?: number;
+}
+
+export interface WorkflowRequestPage {
+  requests: WorkflowRequest[];
+  totalCount: number;
+  hasMore: boolean;
+  nextCursor?: WorkflowRequestPageCursor;
+}
 
 @Injectable({ providedIn: 'root' })
 export class WorkflowService {
@@ -46,7 +67,10 @@ export class WorkflowService {
       status: RequestStatus.Pending,
       requestedOn: new Date(),
     };
-    const assignedTo = await this.resolveAssignedTo(draft);
+    const [assignedTo, autoApprove] = await Promise.all([
+      this.resolveAssignedTo(draft),
+      this.requestTypeService.isAutoApprove(partial.requestType),
+    ]);
     const payload: WorkflowRequest = { ...draft, assignedTo };
     const ref = doc(collection(firestore, this.topicName));
     const year = new Date().getFullYear();
@@ -70,7 +94,7 @@ export class WorkflowService {
       await deleteDoc(ref);
       throw error;
     }
-    if (await this.requestTypeService.isAutoApprove(partial.requestType)) {
+    if (autoApprove) {
       await this.updateStatus(
         ref.id,
         RequestStatus.Approved,
@@ -81,33 +105,208 @@ export class WorkflowService {
     return ref.id;
   }
 
-  /* ---------- Fetch all pending requests ---------- */
-  async getPending(): Promise<WorkflowRequest[]> {
-    const q = query(
-      collection(firestore, this.topicName),
-      where('status', '==', RequestStatus.Pending),
-    );
-    const snap = await getDocs(q);
-    return this.mapSnapshot(snap);
-  }
-  async getWKFRequests(): Promise<WorkflowRequest[]> {
-    const q = query(collection(firestore, this.topicName), orderBy('requestedOn', 'desc'));
+  async getForBranchPage(
+    branchId: string,
+    pageSize: number,
+    cursor?: WorkflowRequestPageCursor,
+    sortField: 'requestedOn' | 'requestType' = 'requestedOn',
+    sortDirection: 'asc' | 'desc' = 'desc',
+  ): Promise<WorkflowRequestPage> {
+    if (!branchId) return { requests: [], totalCount: 0, hasMore: false };
+    const requestsRef = collection(firestore, this.topicName);
+    const pageLimit = Math.max(1, Math.min(pageSize, 100));
+    const order = orderBy(sortField, sortDirection);
 
-    const querySnapshot = await getDocs(q);
-
-    return querySnapshot.docs.map((docSnap) => this.mapDoc(docSnap.data(), docSnap.id));
-  }
-
-  async getForBranch(branchId: string): Promise<WorkflowRequest[]> {
-    const requests = await this.getWKFRequests();
-    if (!branchId) {
-      return [];
+    if (branchId === '0') {
+      const pageQuery = query(
+        requestsRef,
+        order,
+        ...(cursor?.all ? [startAfter(cursor.all)] : []),
+        limit(pageLimit + 1),
+      );
+      const [snapshot, count] = await Promise.all([
+        getDocs(pageQuery),
+        cursor?.totalCount !== undefined
+          ? Promise.resolve(null)
+          : getCountFromServer(query(requestsRef)),
+      ]);
+      const pageDocs = snapshot.docs.slice(0, pageLimit);
+      const last = pageDocs[pageDocs.length - 1];
+      const totalCount = cursor?.totalCount ?? count?.data().count ?? 0;
+      const consumedCount = (cursor?.consumedCount || 0) + pageDocs.length;
+      const hasMore = consumedCount < totalCount;
+      return {
+        requests: pageDocs.map((item) => this.mapDoc(item.data(), item.id)),
+        totalCount,
+        hasMore,
+        ...(hasMore && last ? { nextCursor: { all: last, consumedCount, totalCount } } : {}),
+      };
     }
-    const needsLookup = requests.some((request) => !this.hasStoredBranch(request));
-    const index = needsLookup ? await this.branchIndex() : null;
-    return requests
-      .map((request) => this.withResolvedBranches(request, index))
-      .filter((request) => this.belongsToBranch(request, branchId, index));
+
+    const branchQuery = query(requestsRef, where('branchId', '==', branchId));
+    const destinationQuery = query(requestsRef, where('toBranchId', '==', branchId));
+    const branchBuffer = [...(cursor?.branchBuffer || [])];
+    const destinationBuffer = [...(cursor?.destinationBuffer || [])];
+    const branchFetchLimit = Math.max(0, pageLimit - branchBuffer.length);
+    const destinationFetchLimit = Math.max(0, pageLimit - destinationBuffer.length);
+    const branchPageQuery = query(
+      branchQuery,
+      order,
+      ...(cursor?.branchFetched ? [startAfter(cursor.branchFetched)] : []),
+      ...(branchFetchLimit ? [limit(branchFetchLimit)] : []),
+    );
+    const destinationPageQuery = query(
+      destinationQuery,
+      order,
+      ...(cursor?.destinationFetched ? [startAfter(cursor.destinationFetched)] : []),
+      ...(destinationFetchLimit ? [limit(destinationFetchLimit)] : []),
+    );
+    const [branchSnapshot, destinationSnapshot, counts] = await Promise.all([
+      branchFetchLimit ? getDocs(branchPageQuery) : Promise.resolve(null),
+      destinationFetchLimit ? getDocs(destinationPageQuery) : Promise.resolve(null),
+      cursor?.totalCount !== undefined
+        ? Promise.resolve(null)
+        : Promise.all([
+            getCountFromServer(branchQuery),
+            getCountFromServer(destinationQuery),
+            getCountFromServer(
+              query(
+                requestsRef,
+                where('branchId', '==', branchId),
+                where('toBranchId', '==', branchId),
+              ),
+            ),
+          ]),
+    ]);
+
+    const branchDocs = branchSnapshot?.docs || [];
+    const destinationDocs = destinationSnapshot?.docs || [];
+    branchBuffer.push(...branchDocs);
+    destinationBuffer.push(...destinationDocs);
+    const merged = new Map<string, QueryDocumentSnapshot<DocumentData>>();
+    [...branchBuffer, ...destinationBuffer].forEach((item) => merged.set(item.id, item));
+    const orderedDocs = [...merged.values()].sort((left, right) =>
+      this.compareRequestDocs(left, right, sortField, sortDirection),
+    );
+    const pageDocs = orderedDocs.slice(0, pageLimit);
+    const consumedIds = new Set(pageDocs.map((item) => item.id));
+    const remainingBranch = branchBuffer.filter((item) => !consumedIds.has(item.id));
+    const remainingDestination = destinationBuffer.filter((item) => !consumedIds.has(item.id));
+    const totalCount =
+      cursor?.totalCount ??
+      (counts ? counts[0].data().count + counts[1].data().count - counts[2].data().count : 0);
+    const consumedCount = (cursor?.consumedCount || 0) + pageDocs.length;
+    const hasMore = consumedCount < totalCount;
+    const nextCursor: WorkflowRequestPageCursor = {
+      branchFetched: branchDocs[branchDocs.length - 1] || cursor?.branchFetched,
+      destinationFetched: destinationDocs[destinationDocs.length - 1] || cursor?.destinationFetched,
+      branchBuffer: remainingBranch,
+      destinationBuffer: remainingDestination,
+      consumedCount,
+      totalCount,
+    };
+
+    return {
+      requests: pageDocs.map((item) => this.mapDoc(item.data(), item.id)),
+      totalCount,
+      hasMore,
+      ...(hasMore ? { nextCursor } : {}),
+    };
+  }
+
+  async getRecentForBranch(branchId: string, count: number): Promise<WorkflowRequest[]> {
+    if (!branchId) return [];
+    const ref = collection(firestore, this.topicName);
+    const pageSize = Math.max(1, Math.min(count, 50));
+    if (branchId === '0') {
+      const snapshot = await getDocs(query(ref, orderBy('requestedOn', 'desc'), limit(pageSize)));
+      return this.mapSnapshot(snapshot);
+    }
+    const [source, destination] = await Promise.all([
+      getDocs(
+        query(
+          ref,
+          where('branchId', '==', branchId),
+          orderBy('requestedOn', 'desc'),
+          limit(pageSize),
+        ),
+      ),
+      getDocs(
+        query(
+          ref,
+          where('toBranchId', '==', branchId),
+          orderBy('requestedOn', 'desc'),
+          limit(pageSize),
+        ),
+      ),
+    ]);
+    const unique = new Map<string, QueryDocumentSnapshot<DocumentData>>();
+    [...source.docs, ...destination.docs].forEach((item) => unique.set(item.id, item));
+    return [...unique.values()]
+      .sort((left, right) => this.compareRequestDocs(left, right, 'requestedOn', 'desc'))
+      .slice(0, pageSize)
+      .map((item) => this.mapDoc(item.data(), item.id));
+  }
+
+  async getPendingTransferCount(branchId: string): Promise<number> {
+    if (!branchId) return 0;
+    const ref = collection(firestore, this.topicName);
+    const base = [
+      where('requestType', '==', RequestType.Transfer),
+      where('status', '==', RequestStatus.Pending),
+    ];
+    if (branchId === '0') {
+      return (await getCountFromServer(query(ref, ...base))).data().count;
+    }
+    const [sourceCount, destinationCount, overlapCount] = await Promise.all([
+      getCountFromServer(query(ref, where('branchId', '==', branchId), ...base)),
+      getCountFromServer(query(ref, where('toBranchId', '==', branchId), ...base)),
+      getCountFromServer(
+        query(ref, where('branchId', '==', branchId), where('toBranchId', '==', branchId), ...base),
+      ),
+    ]);
+    return sourceCount.data().count + destinationCount.data().count - overlapCount.data().count;
+  }
+
+  async getApprovedSalesSince(branchId: string, fromDate: Date): Promise<WorkflowRequest[]> {
+    const ref = collection(firestore, this.topicName);
+    const constraints = [
+      where('requestType', '==', RequestType.Sales),
+      where('status', '==', RequestStatus.Approved),
+      where('requestedOn', '>=', Timestamp.fromDate(fromDate)),
+      orderBy('requestedOn', 'desc'),
+    ];
+    const snapshot = await getDocs(
+      query(
+        ref,
+        ...(branchId && branchId !== '0' ? [where('branchId', '==', branchId)] : []),
+        ...constraints,
+      ),
+    );
+    return this.mapSnapshot(snapshot);
+  }
+
+  private compareRequestDocs(
+    left: QueryDocumentSnapshot<DocumentData>,
+    right: QueryDocumentSnapshot<DocumentData>,
+    sortField: 'requestedOn' | 'requestType',
+    sortDirection: 'asc' | 'desc',
+  ): number {
+    const leftValue = left.data()[sortField];
+    const rightValue = right.data()[sortField];
+    const leftComparable =
+      sortField === 'requestedOn' ? this.dateSortValue(leftValue) : String(leftValue || '');
+    const rightComparable =
+      sortField === 'requestedOn' ? this.dateSortValue(rightValue) : String(rightValue || '');
+    if (leftComparable < rightComparable) return sortDirection === 'asc' ? -1 : 1;
+    if (leftComparable > rightComparable) return sortDirection === 'asc' ? 1 : -1;
+    return left.id.localeCompare(right.id);
+  }
+
+  private dateSortValue(value: unknown): number {
+    if (value instanceof Timestamp) return value.toMillis();
+    if (value instanceof Date) return value.getTime();
+    return 0;
   }
 
   async findByModule(moduleId: string, requestType: RequestType): Promise<WorkflowRequest | null> {
@@ -153,10 +352,14 @@ export class WorkflowService {
       approvedOn: Timestamp.now(),
       remarks,
     });
-    const request = await this.getById(requestId);
-    if (request) {
-      await this.executor.run(request, status, remarks, approver);
-    }
+    const updatedRequest: WorkflowRequest = {
+      ...current,
+      status,
+      approvedBy: approver,
+      approvedOn: new Date(),
+      remarks,
+    };
+    await this.executor.run(updatedRequest, status, remarks, approver);
   }
 
   /* ---------- Get request by ID ------------------- */
@@ -234,85 +437,5 @@ export class WorkflowService {
       branchId: data['branchId'] || '',
       toBranchId: requestType === RequestType.Transfer ? data['toBranchId'] || '' : '',
     };
-  }
-
-  private hasStoredBranch(request: WorkflowRequest): boolean {
-    if (request.requestType === RequestType.Transfer) {
-      return !!(request.branchId || request.toBranchId);
-    }
-    return !!request.branchId;
-  }
-
-  private withResolvedBranches(
-    request: WorkflowRequest,
-    index: { stocks: Map<string, string>; transfers: Map<string, string[]> } | null,
-  ): WorkflowRequest {
-    if (this.hasStoredBranch(request) || !index) {
-      return request;
-    }
-    if (request.requestType === RequestType.Transfer) {
-      const ids = index.transfers.get(request.moduleId) || [];
-      const from = ids[0] || '';
-      const to = ids.find((id) => id !== from) || ids[1] || '';
-      return {
-        ...request,
-        branchId: from,
-        toBranchId: to,
-      };
-    }
-    return {
-      ...request,
-      branchId: index.stocks.get(request.moduleId) || '',
-    };
-  }
-
-  private async branchIndex(): Promise<{
-    stocks: Map<string, string>;
-    transfers: Map<string, string[]>;
-  }> {
-    const [stockSnap, transferSnap] = await Promise.all([
-      getDocs(collection(firestore, 'inventory_stocks')),
-      getDocs(collection(firestore, 'Transfers')),
-    ]);
-    const stocks = new Map<string, string>();
-    stockSnap.docs.forEach((item) => {
-      const branchId = String(item.data()['branchid'] || '');
-      if (branchId) {
-        stocks.set(item.id, branchId);
-      }
-    });
-    const transfers = new Map<string, string[]>();
-    transferSnap.docs.forEach((item) => {
-      const data = item.data();
-      const ids = [data['fromBranch'], data['branchId'], data['toBranch']]
-        .map((value) => String(value || ''))
-        .filter((value) => value.length > 0);
-      transfers.set(item.id, [...new Set(ids)]);
-    });
-    return { stocks, transfers };
-  }
-
-  private belongsToBranch(
-    request: WorkflowRequest,
-    branchId: string,
-    index: { stocks: Map<string, string>; transfers: Map<string, string[]> } | null,
-  ): boolean {
-    if (request.requestType === RequestType.Transfer) {
-      if (request.branchId || request.toBranchId) {
-        return request.branchId === branchId || request.toBranchId === branchId;
-      }
-      if (!index) {
-        return false;
-      }
-      return (index.transfers.get(request.moduleId) || []).includes(branchId);
-    }
-
-    if (request.branchId) {
-      return request.branchId === branchId;
-    }
-    if (!index) {
-      return false;
-    }
-    return index.stocks.get(request.moduleId) === branchId;
   }
 }

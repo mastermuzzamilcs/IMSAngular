@@ -11,11 +11,19 @@ import { RequestStatus, RequestType } from '../Models/WorkflowModel';
 export class WorkflowTransitionService {
   private readonly topicName = 'workflow_status_transitions';
   private defaultsReady: Promise<void> | null = null;
+  private cachedTransitions: WorkflowStatusTransition[] | null = null;
+  private transitionsCachedAt = 0;
+  private readonly cacheDurationMs = 30_000;
 
   async getTransitions(): Promise<WorkflowStatusTransition[]> {
     await this.ensureDefaults();
+    if (this.cachedTransitions && Date.now() - this.transitionsCachedAt < this.cacheDurationMs) {
+      return this.cachedTransitions;
+    }
     const snap = await getDocs(collection(firestore, this.topicName));
-    return snap.docs.map((item) => this.map(item.id, item.data()));
+    this.cachedTransitions = snap.docs.map((item) => this.map(item.id, item.data()));
+    this.transitionsCachedAt = Date.now();
+    return this.cachedTransitions;
   }
 
   async getNext(
@@ -33,6 +41,7 @@ export class WorkflowTransitionService {
   async addTransition(transition: WorkflowStatusTransition): Promise<void> {
     await this.assertSingle(transition);
     await addDoc(collection(firestore, this.topicName), this.payload(transition));
+    this.invalidateCache();
   }
 
   async updateTransition(transition: WorkflowStatusTransition): Promise<void> {
@@ -41,10 +50,17 @@ export class WorkflowTransitionService {
     }
     await this.assertSingle(transition);
     await setDoc(doc(firestore, this.topicName, transition.id), this.payload(transition));
+    this.invalidateCache();
   }
 
   async deleteTransition(id: string): Promise<void> {
     await deleteDoc(doc(firestore, this.topicName, id));
+    this.invalidateCache();
+  }
+
+  private invalidateCache(): void {
+    this.cachedTransitions = null;
+    this.transitionsCachedAt = 0;
   }
 
   private payload(transition: WorkflowStatusTransition) {

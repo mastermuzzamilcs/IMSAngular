@@ -3,8 +3,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { WorkflowService } from '../../../core/services/Workflow.service';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
 import { Status } from '../../../core/enums/status.enum';
 import { RequestType, WorkflowRequest } from '../../../core/Models/WorkflowModel';
@@ -22,6 +22,7 @@ import { BranchService } from '../../../core/services/branchservice.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { UsersService } from '../../../core/services/users.service';
 import { SYSTEM_USER_ID, SYSTEM_USER_NAME } from '../../../core/system-user';
+import { WorkflowRequestPageCursor } from '../../../core/services/Workflow.service';
 
 interface WorkflowRequestRow extends WorkflowRequest {
   branchName: string;
@@ -65,9 +66,14 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
   private watchedBranch: string | null = null;
   private branchNames = new Map<string, string>();
   private userNames = new Map<string, string>();
+  private pageCursors: Array<WorkflowRequestPageCursor | undefined> = [undefined];
+  pageSize = 25;
+  pageIndex = 0;
+  totalRequests = 0;
+  private sortField: 'requestedOn' | 'requestType' = 'requestedOn';
+  private sortDirection: 'asc' | 'desc' = 'desc';
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
 
   constructor(
     private workflowService: WorkflowService,
@@ -84,29 +90,49 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
         return;
       }
       this.watchedBranch = next;
-      void this.loadRequests();
+      this.resetPagination();
+      void this.loadRequests(0);
     });
   }
 
   ngAfterViewInit() {
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
+    this.paginator.pageSize = this.pageSize;
   }
 
-  async loadRequests() {
+  async loadRequests(pageIndex = this.pageIndex) {
     const branchId = this.auth.currentBranchId();
     if (!branchId) {
       this.dataSource.data = [];
       this.tableLoading = false;
       return;
     }
+    const cursor = this.pageCursors[pageIndex];
+    if (pageIndex > 0 && !cursor) {
+      this.resetPagination();
+      pageIndex = 0;
+    }
     this.tableLoading = true;
     try {
-      const [requests, branches, users] = await Promise.all([
-        this.workflowService.getForBranch(branchId),
+      const [page, branches, users] = await Promise.all([
+        this.workflowService.getForBranchPage(
+          branchId,
+          this.pageSize,
+          this.pageCursors[pageIndex],
+          this.sortField,
+          this.sortDirection,
+        ),
         this.branchService.getBranches(),
         this.usersService.getUsers(),
       ]);
+      if (page.totalCount >= 0) this.totalRequests = page.totalCount;
+      this.pageIndex = pageIndex;
+      if (page.nextCursor) this.pageCursors[pageIndex + 1] = page.nextCursor;
+      else this.pageCursors.length = pageIndex + 1;
+      if (this.paginator) {
+        this.paginator.pageIndex = pageIndex;
+        this.paginator.pageSize = this.pageSize;
+        this.paginator.length = this.totalRequests;
+      }
       this.branchNames = new Map(
         branches.map((branch) => [branch.branchid || '', branch.name || '']),
       );
@@ -116,7 +142,7 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
           .map((user) => [user.userid as string, user.name || user.userid || '']),
       );
       this.userNames.set(SYSTEM_USER_ID, SYSTEM_USER_NAME);
-      this.dataSource.data = requests.map((request) => ({
+      this.dataSource.data = page.requests.map((request) => ({
         ...request,
         branchName: this.branchLabel(request),
         requestedByName: this.userLabel(request.requestedBy),
@@ -124,10 +150,45 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
       }));
     } catch (error) {
       console.error('Error loading workflow requests', error);
-      this.toast.error('Could not load workflow requests', 3000);
+      const details = error instanceof Error ? error.message : '';
+      this.toast.error(
+        /index/i.test(details)
+          ? 'Request pagination indexes are missing. Deploy firestore.indexes.json and try again.'
+          : 'Could not load workflow requests',
+        5000,
+      );
     } finally {
       this.tableLoading = false;
     }
+  }
+
+  onPageChange(event: PageEvent): void {
+    if (event.pageSize !== this.pageSize) {
+      this.pageSize = event.pageSize;
+      this.resetPagination();
+    }
+    void this.loadRequests(event.pageIndex);
+  }
+
+  onSortChange(sort: Sort): void {
+    if (sort.active !== 'requestedOn' && sort.active !== 'type') return;
+    this.sortField = sort.active === 'type' ? 'requestType' : 'requestedOn';
+    this.sortDirection = sort.direction === 'asc' ? 'asc' : 'desc';
+    this.resetPagination();
+    if (this.paginator) this.paginator.pageIndex = 0;
+    void this.loadRequests(0);
+  }
+
+  private resetPagination(): void {
+    this.pageCursors = [undefined];
+    this.pageIndex = 0;
+    this.totalRequests = 0;
+  }
+
+  refreshRequests(): void {
+    this.resetPagination();
+    if (this.paginator) this.paginator.pageIndex = 0;
+    void this.loadRequests(0);
   }
 
   private branchLabel(request: WorkflowRequest): string {
@@ -169,7 +230,7 @@ export class RequestManagementComponent implements OnInit, AfterViewInit {
       })
       .afterClosed()
       .subscribe((res) => {
-        if (res?.updated) this.loadRequests();
+        if (res?.updated) this.refreshRequests();
       });
   }
 }
