@@ -42,6 +42,18 @@ interface AnalyticsFilter {
   source?: string;
   options?: { id: string; label: string }[];
 }
+
+interface ParameterValues extends Record<string, unknown> {
+  branchId?: string;
+  productId?: string;
+  brandId?: string;
+  customerId?: string;
+  vendorId?: string;
+  fromDate?: string | Date | null;
+  toDate?: string | Date | null;
+  movementType?: string;
+  party?: string;
+}
 const analyticsFilters: Record<string, AnalyticsFilter[]> = {
   'inventory-on-hand': [
     { key: 'branchId', label: 'Branch', type: 'select', source: 'branches' },
@@ -258,7 +270,7 @@ abstract class ImsParameterWindowBase
   implements OnChanges
 {
   branches: SessionBranch[];
-  values: Record<string, unknown>;
+  values: ParameterValues;
 
   protected constructor(
     protected auth: AuthService,
@@ -278,15 +290,16 @@ abstract class ImsParameterWindowBase
       fromDate: '',
       toDate: '',
       ...defaults,
-    };
+    } as ParameterValues;
   }
 
   ngOnChanges(): void {
-    this.values = { ...this.values, ...this.initialValues };
+    this.values = { ...this.values, ...this.initialValues } as ParameterValues;
   }
-  dateValue(value: string | Date | null | undefined): Date | null {
+  dateValue(value: unknown): Date | null {
     if (!value) return null;
     if (value instanceof Date) return value;
+    if (typeof value !== 'string') return null;
     const parts = String(value).split('-').map(Number);
     return parts.length === 3 && parts.every(Number.isFinite)
       ? new Date(parts[0], parts[1] - 1, parts[2])
