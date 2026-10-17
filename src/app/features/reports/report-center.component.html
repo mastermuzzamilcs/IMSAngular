@@ -1,0 +1,184 @@
+<main class="report-page">
+  <header class="page-heading">
+    <div>
+      <span class="eyebrow">INSIGHTS</span>
+      <h1>{{ report.title }}</h1>
+      <p>{{ report.description }}</p>
+    </div>
+    <button
+      mat-flat-button
+      color="primary"
+      [matMenuTriggerFor]="exportMenu"
+      [disabled]="exports.busy || !loaded || loading"
+    >
+      <mat-icon>file_download</mat-icon> Export <mat-icon>arrow_drop_down</mat-icon>
+    </button>
+    <mat-menu #exportMenu="matMenu"
+      ><button mat-menu-item (click)="export('xlsx')">
+        <mat-icon>grid_on</mat-icon>Excel workbook (.xlsx)</button
+      ><button mat-menu-item (click)="export('docx')">
+        <mat-icon>description</mat-icon>Word document (.docx)</button
+      ><button mat-menu-item (click)="export('pdf')">
+        <mat-icon>picture_as_pdf</mat-icon>PDF document (.pdf)
+      </button></mat-menu
+    >
+  </header>
+
+  <section class="filter-card">
+    <div class="filter-title">
+      <div>
+        <h2>Report filters</h2>
+        <span>Choose a report and narrow the results before loading.</span>
+      </div>
+    </div>
+    <div class="filters">
+      <mx-report-parameter-window-host
+        [windowId]="parameterWindowId"
+        [initialValues]="parameterValues"
+        (filtersChange)="onParameterFilters($event)"
+      ></mx-report-parameter-window-host
+      ><button mat-flat-button color="primary" (click)="load()" [disabled]="loading">
+        <mat-icon>search</mat-icon> {{ loading ? 'Loading…' : 'Load' }}
+      </button>
+    </div>
+  </section>
+
+  <section class="cash-entry-card" *ngIf="selectedId === 'cash-flow'">
+    <div class="cash-entry-heading">
+      <div>
+        <h2>Record a cash movement</h2>
+        <p>
+          Record actual money received or paid. Sales and purchase approvals are not assumed to be
+          cash transactions.
+        </p>
+      </div>
+      <button mat-stroked-button type="button" (click)="cashEntryOpen = !cashEntryOpen">
+        {{ cashEntryOpen ? 'Hide form' : 'Add transaction' }}
+      </button>
+    </div>
+    <div class="cash-entry-form" *ngIf="cashEntryOpen">
+      <mat-form-field appearance="outline"
+        ><mat-label>Branch</mat-label
+        ><mat-select [(ngModel)]="cashEntry.branchId" name="cashBranch" required
+          ><mat-option *ngFor="let branch of branches" [value]="branch.branchid">{{
+            branch.name
+          }}</mat-option></mat-select
+        ></mat-form-field
+      >
+      <mat-form-field appearance="outline"
+        ><mat-label>Movement</mat-label
+        ><mat-select [(ngModel)]="cashEntry.type" name="cashType"
+          ><mat-option *ngFor="let type of cashTypes" [value]="type">{{
+            type
+          }}</mat-option></mat-select
+        ></mat-form-field
+      >
+      <mat-form-field appearance="outline"
+        ><mat-label>Amount</mat-label
+        ><input
+          matInput
+          type="number"
+          min="0.01"
+          step="0.01"
+          [(ngModel)]="cashEntry.amount"
+          name="cashAmount"
+          required
+      /></mat-form-field>
+      <mat-form-field appearance="outline"
+        ><mat-label>Date</mat-label
+        ><input
+          matInput
+          [matDatepicker]="cashPicker"
+          [ngModel]="cashDate"
+          (dateChange)="setCashDate($event.value)"
+          name="cashDate"
+          required /><mat-datepicker-toggle matSuffix [for]="cashPicker"></mat-datepicker-toggle
+        ><mat-datepicker #cashPicker></mat-datepicker
+      ></mat-form-field>
+      <mat-form-field appearance="outline"
+        ><mat-label>Category</mat-label
+        ><input
+          matInput
+          [(ngModel)]="cashEntry.category"
+          name="cashCategory"
+          placeholder="Supplier payment, rent, sales receipt"
+          required
+      /></mat-form-field>
+      <mat-form-field appearance="outline"
+        ><mat-label>Customer / vendor</mat-label
+        ><input matInput [(ngModel)]="cashEntry.party" name="cashParty"
+      /></mat-form-field>
+      <mat-form-field appearance="outline"
+        ><mat-label>Reference</mat-label
+        ><input matInput [(ngModel)]="cashEntry.reference" name="cashReference"
+      /></mat-form-field>
+      <mat-form-field appearance="outline"
+        ><mat-label>Notes</mat-label><input matInput [(ngModel)]="cashEntry.notes" name="cashNotes"
+      /></mat-form-field>
+      <button
+        mat-flat-button
+        color="primary"
+        (click)="saveCashEntry()"
+        [disabled]="
+          cashSaving || !cashEntry.branchId || !cashEntry.category || cashEntry.amount <= 0
+        "
+      >
+        <mat-icon>save</mat-icon> Save transaction
+      </button>
+    </div>
+  </section>
+
+  <section class="report-card">
+    <div class="report-title">
+      <div>
+        <span class="eyebrow">REPORT HEADER</span>
+        <h2>{{ report.title }}</h2>
+        <p>{{ report.description }}</p>
+        <div class="header-fields" *ngIf="loaded && headerFields.length">
+          <span *ngFor="let field of headerFields"
+            ><b>{{ field.label }}:</b> {{ display(field.value) }}</span
+          >
+        </div>
+      </div>
+      <span class="record-count" *ngIf="loaded">{{ total | number }} records</span>
+    </div>
+    <div class="aggregate-strip" *ngIf="loaded && aggregates.length">
+      <article class="aggregate-card" *ngFor="let aggregate of aggregates">
+        <span>{{ aggregate.label }}</span
+        ><strong>{{ display(aggregate.value, aggregate.format) }}</strong
+        ><small *ngIf="aggregate.detail">{{ aggregate.detail }}</small>
+      </article>
+    </div>
+    <div class="error-banner" *ngIf="error"><mat-icon>error_outline</mat-icon>{{ error }}</div>
+    <div class="table-wrap" *ngIf="!loading || rows.length">
+      <table *ngIf="loaded">
+        <thead>
+          <tr>
+            <th *ngFor="let column of columns">{{ column.label }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of rows">
+            <td *ngFor="let column of columns">{{ display(row[column.key], column.format) }}</td>
+          </tr>
+          <tr *ngIf="!rows.length">
+            <td class="empty" [attr.colspan]="columns.length">No records match these filters.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="empty-state" *ngIf="!loaded && !loading">
+        <mat-icon>query_stats</mat-icon><strong>Choose your filters and load the report</strong
+        ><span>Results appear here and exports include every matching record.</span>
+      </div>
+      <mat-paginator
+        *ngIf="loaded"
+        [length]="total"
+        [pageIndex]="pageIndex"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[25, 50, 100]"
+        (page)="page($event)"
+        aria-label="Report pages"
+      ></mat-paginator>
+    </div>
+  </section>
+</main>

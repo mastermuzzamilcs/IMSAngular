@@ -12,6 +12,7 @@ import {
   privileges as privilegeAccess,
 } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
+import { PrivilegeModule } from '../../../core/enums/privilege.enum';
 import { isStatus, Status } from '../../../core/enums/status.enum';
 import { UserGroup } from '../../../core/Models/UserGroupModel';
 import { AuthService } from '../../../core/services/auth.service';
@@ -113,6 +114,12 @@ export class GroupPrivilegesComponent implements OnInit {
     this.selected.delete(key);
   }
 
+  privilegeLabel(item: CatalogPrivilege): string {
+    if (this.isReportPrivilege(item))
+      return `${item.moduleName.replace(/^Report: /, '')} — ${item.action}`;
+    return `${item.action} (${item.functionId})`;
+  }
+
   async save(): Promise<void> {
     const groupid = this.groupForm.value.groupid || '';
     if (!groupid) {
@@ -142,13 +149,21 @@ export class GroupPrivilegesComponent implements OnInit {
   private buildSections(): PrivilegeSection[] {
     const sections: PrivilegeSection[] = [];
     privilegeCatalog.forEach((item) => {
-      const current = sections.find((section) => section.name === item.moduleName);
+      const sectionName = this.isReportPrivilege(item) ? 'Reports' : item.moduleName;
+      const current = sections.find((section) => section.name === sectionName);
       if (current) {
         current.items.push(item);
         return;
       }
-      sections.push({ name: item.moduleName, items: [item] });
+      sections.push({ name: sectionName, items: [item] });
     });
     return sections;
+  }
+
+  private isReportPrivilege(item: CatalogPrivilege): boolean {
+    return (
+      item.moduleId >= PrivilegeModule.ReportInventoryOnHand &&
+      item.moduleId <= PrivilegeModule.ReportApproverThroughput
+    );
   }
 }

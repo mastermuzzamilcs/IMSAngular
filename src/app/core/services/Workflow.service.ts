@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import {
-  addDoc,
   collection,
   deleteDoc,
   doc,
@@ -13,6 +12,7 @@ import {
   QuerySnapshot,
   DocumentData,
   orderBy,
+  runTransaction,
 } from 'firebase/firestore';
 import { firestore } from '../../firebase-config';
 import { RequestStatus, RequestType, WorkflowRequest } from '../Models/WorkflowModel';
@@ -48,7 +48,17 @@ export class WorkflowService {
     };
     const assignedTo = await this.resolveAssignedTo(draft);
     const payload: WorkflowRequest = { ...draft, assignedTo };
-    const ref = await addDoc(collection(firestore, this.topicName), payload);
+    const ref = doc(collection(firestore, this.topicName));
+    const year = new Date().getFullYear();
+    const counterRef = doc(firestore, 'SystemCounters', `request-${year}`);
+    await runTransaction(firestore, async (transaction) => {
+      const counter = await transaction.get(counterRef);
+      const nextNumber = Number(counter.data()?.['nextNumber'] || 0) + 1;
+      const requestNumber = `REQ-${year}-${String(nextNumber).padStart(6, '0')}`;
+      transaction.set(counterRef, { nextNumber }, { merge: true });
+      transaction.set(ref, { ...payload, requestNumber });
+      payload.requestNumber = requestNumber;
+    });
     try {
       await this.executor.run(
         { ...payload, requestId: ref.id },
@@ -211,6 +221,7 @@ export class WorkflowService {
     const requestType = (data['requestType'] || '') as RequestType;
     return {
       requestId: id,
+      requestNumber: data['requestNumber'] || '',
       moduleId: data['moduleId'],
       requestType,
       status: data['status'],

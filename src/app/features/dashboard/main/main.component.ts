@@ -1,6 +1,7 @@
 import { AfterViewInit, Component, DestroyRef, OnDestroy, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
+import { AppCurrencyPipe } from '../../../core/pipes/app-currency.pipe';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
@@ -28,6 +29,7 @@ interface ActivityItem {
   standalone: true,
   imports: [
     CommonModule,
+    AppCurrencyPipe,
     MatIconModule,
     MatListModule,
     MatDividerModule,

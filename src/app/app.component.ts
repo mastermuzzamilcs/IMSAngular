@@ -13,11 +13,7 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { MxThemeService } from '@mesix/theme';
-import {
-  MxSpinnerComponent,
-  MxToastHostComponent,
-  MxDialogHostComponent,
-} from '@mesix/custom-control';
+import { MxToastHostComponent, MxDialogHostComponent } from '@mesix/custom-control';
 import { applyImsTheme, readStoredThemeId } from './core/theme/theme-preference';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -30,6 +26,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { LoadingService } from './core/services/Loading.service';
 import { NotificationInboxService } from './core/notifications/notification-inbox.service';
 import { NotificationSoundService } from './core/notifications/notification-sound.service';
@@ -38,6 +35,7 @@ import { PrivilegeRef, privileges as privilegeAccess } from './core/auth/privile
 import { PrivilegeDirective } from './core/auth/privilege.directive';
 import { AuthService } from './core/services/auth.service';
 import { AppSettingsService } from './core/services/app-settings.service';
+import { ReportExportActivityService } from '@mesix/reporting';
 
 @Component({
   selector: 'app-root',
@@ -58,7 +56,7 @@ import { AppSettingsService } from './core/services/app-settings.service';
     MatBadgeModule,
     MatExpansionModule,
     MatTooltipModule,
-    MxSpinnerComponent,
+    MatProgressSpinnerModule,
     MxToastHostComponent,
     MxDialogHostComponent,
     PrivilegeDirective,
@@ -72,6 +70,8 @@ export class AppComponent {
   title = 'IMSAngular';
   isHandset$: Observable<boolean>;
   session$;
+  readonly loading$: Observable<boolean>;
+  sidenavOpen = false;
   notifications$;
   unreadCount$;
   appTitle$;
@@ -87,7 +87,9 @@ export class AppComponent {
     private inbox: NotificationInboxService,
     private sound: NotificationSoundService,
     private appSettings: AppSettingsService,
+    readonly reportExports: ReportExportActivityService,
   ) {
+    this.loading$ = this.loadingService.loading$;
     this.darkMode = readStoredThemeId() === 'dark';
     this.session$ = this.auth.session$;
     this.notifications$ = this.inbox.items$;
@@ -136,6 +138,7 @@ export class AppComponent {
   }
 
   logout(): void {
+    this.reportExports.cancelAndDismiss();
     this.auth.logout();
     void this.router.navigate(['/auth/login']);
   }
