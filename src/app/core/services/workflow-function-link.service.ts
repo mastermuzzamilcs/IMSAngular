@@ -8,11 +8,17 @@ import { businessLinks, retiredLinks } from '../workflow/business-workflow';
 @Injectable({ providedIn: 'root' })
 export class WorkflowFunctionLinkService {
   private readonly topicName = 'workflow_function_links';
+  private cachedLinks: WorkflowFunctionLink[] | null = null;
+  private linksCachedAt = 0;
+  private readonly cacheDurationMs = 30_000;
 
   async getLinks(): Promise<WorkflowFunctionLink[]> {
     await this.ensureDefaults();
+    if (this.cachedLinks && Date.now() - this.linksCachedAt < this.cacheDurationMs) {
+      return this.cachedLinks;
+    }
     const snap = await getDocs(collection(firestore, this.topicName));
-    return snap.docs.map((item) => {
+    this.cachedLinks = snap.docs.map((item) => {
       const data = item.data();
       return {
         id: item.id,
@@ -22,6 +28,8 @@ export class WorkflowFunctionLinkService {
         priority: Number(data['priority']) || 1,
       };
     });
+    this.linksCachedAt = Date.now();
+    return this.cachedLinks;
   }
 
   async getForEvent(
@@ -37,6 +45,7 @@ export class WorkflowFunctionLinkService {
   async addLink(link: WorkflowFunctionLink): Promise<void> {
     await this.assertSingle(link);
     await addDoc(collection(firestore, this.topicName), this.payload(link));
+    this.invalidateCache();
   }
 
   async updateLink(link: WorkflowFunctionLink): Promise<void> {
@@ -45,10 +54,17 @@ export class WorkflowFunctionLinkService {
     }
     await this.assertSingle(link);
     await setDoc(doc(firestore, this.topicName, link.id), this.payload(link));
+    this.invalidateCache();
   }
 
   async deleteLink(id: string): Promise<void> {
     await deleteDoc(doc(firestore, this.topicName, id));
+    this.invalidateCache();
+  }
+
+  private invalidateCache(): void {
+    this.cachedLinks = null;
+    this.linksCachedAt = 0;
   }
 
   private async assertSingle(link: WorkflowFunctionLink): Promise<void> {

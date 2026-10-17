@@ -125,18 +125,31 @@ export class RequestDetailComponent implements OnInit {
       this.request = request;
       this.isTransfer = this.request.requestType === RequestType.Transfer;
       if (this.isTransfer) {
-        this.transfer = await this.transferSvc.getTransferById(this.request.moduleId);
+        const [transfer, assignedToName, canAct] = await Promise.all([
+          this.transferSvc.getTransferById(this.request.moduleId),
+          this.resolveUserName(this.request.assignedTo || ''),
+          this.wfSvc.canCurrentUserAct(this.request, this.auth.currentUserId()),
+        ]);
+        this.transfer = transfer;
         this.transferRows = this.transfer?.items || [];
+        this.assignedToName = assignedToName;
+        this.canAct = canAct;
+        const status = this.transfer?.status || this.request.status;
+        this.actions = await this.transitionService.getNext(this.request.requestType, status);
       } else {
-        this.stockHdr = await this.stockSvc.getStockById(this.request.moduleId);
-        this.stockRows = await this.stockSvc.getStockDetails(this.request.moduleId);
+        const [stockHdr, stockRows, actions, assignedToName, canAct] = await Promise.all([
+          this.stockSvc.getStockById(this.request.moduleId),
+          this.stockSvc.getStockDetails(this.request.moduleId),
+          this.transitionService.getNext(this.request.requestType, this.request.status),
+          this.resolveUserName(this.request.assignedTo || ''),
+          this.wfSvc.canCurrentUserAct(this.request, this.auth.currentUserId()),
+        ]);
+        this.stockHdr = stockHdr;
+        this.stockRows = stockRows;
+        this.actions = actions;
+        this.assignedToName = assignedToName;
+        this.canAct = canAct;
       }
-      const status = this.isTransfer
-        ? this.transfer?.status || this.request.status
-        : this.request.status;
-      this.actions = await this.transitionService.getNext(this.request.requestType, status);
-      this.assignedToName = await this.resolveUserName(this.request.assignedTo || '');
-      this.canAct = await this.wfSvc.canCurrentUserAct(this.request, this.auth.currentUserId());
       if (!this.canAct && this.actions.length > 0) {
         if (!this.request.assignedTo) {
           this.actionBlockedReason =
@@ -166,8 +179,8 @@ export class RequestDetailComponent implements OnInit {
     if (userId === SYSTEM_USER_ID) {
       return 'system';
     }
-    const users = await this.usersService.getUsers();
-    return users.find((user) => user.userid === userId)?.name || userId;
+    const user = await this.usersService.getUserById(userId);
+    return user?.name || userId;
   }
 
   /** Submit approve / reject */
