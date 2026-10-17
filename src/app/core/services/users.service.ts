@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { firestore } from '../../firebase-config';
 import { hashPassword } from '../auth/password-hash';
+import { isValidUsername, normalizeUsername } from '../auth/username';
 import { asStatus, isStatus, Status } from '../enums/status.enum';
 import { User } from '../Models/UsersModel';
 import { SYSTEM_USER_ID, SYSTEM_USER_NAME } from '../system-user';
@@ -31,6 +32,7 @@ export class UsersService {
     }
     await setDoc(ref, {
       name: SYSTEM_USER_NAME,
+      username: 'system',
       email: 'system@ims.local',
       role: '',
       manager: '',
@@ -47,6 +49,7 @@ export class UsersService {
       return {
         userid: doc.id,
         name: data['name'] || '',
+        username: data['username'] || '',
         email: data['email'] || '',
         roleid: data['role'] || '',
         role: '',
@@ -58,15 +61,46 @@ export class UsersService {
     });
   }
 
-  async searchUsers(name?: string, email?: string): Promise<User[]> {
+  async searchUsers(name?: string, email?: string, username?: string): Promise<User[]> {
     const users = await this.getUsers();
     const nameFilter = name?.trim().toLowerCase() || '';
     const emailFilter = email?.trim().toLowerCase() || '';
+    const usernameFilter = username?.trim().toLowerCase() || '';
     return users.filter((user) => {
       const matchesName = !nameFilter || user.name.toLowerCase().includes(nameFilter);
       const matchesEmail = !emailFilter || user.email.toLowerCase().includes(emailFilter);
-      return matchesName && matchesEmail;
+      const matchesUsername =
+        !usernameFilter || (user.username || '').toLowerCase().includes(usernameFilter);
+      return matchesName && matchesEmail && matchesUsername;
     });
+  }
+
+  /** True when another user (not excludeUserId) already has this username. Case-insensitive. */
+  async isUsernameTaken(username: string, excludeUserId?: string): Promise<boolean> {
+    const wanted = normalizeUsername(username);
+    if (!wanted) {
+      return false;
+    }
+    const snapshot = await getDocs(collection(firestore, this.topicName));
+    return snapshot.docs.some(
+      (item) =>
+        item.id !== excludeUserId &&
+        normalizeUsername(String(item.data()['username'] || '')) === wanted,
+    );
+  }
+
+  private async assertUsernameUsable(username: string, excludeUserId?: string): Promise<void> {
+    if (!username?.trim()) {
+      throw new Error('Username is required.');
+    }
+    if (!isValidUsername(username)) {
+      throw new Error(
+        'Username must be 3-30 characters: letters, numbers, dot, underscore or hyphen.',
+      );
+    }
+    if (await this.isUsernameTaken(username, excludeUserId)) {
+      throw new Error('This username is already taken.');
+    }
   }
 
   async addUser(_user: User): Promise<void> {
@@ -74,6 +108,7 @@ export class UsersService {
     if (!password) {
       throw new Error('A password is required for a new user.');
     }
+    await this.assertUsernameUsable(_user.username);
     await addDoc(collection(firestore, this.topicName), {
       ...this.storedFields(_user),
       passwordHash: await hashPassword(password),
@@ -85,6 +120,7 @@ export class UsersService {
       console.error('User ID is required for updating the user.');
       return;
     }
+    await this.assertUsernameUsable(_user.username, _user.userid);
     const userRef = doc(firestore, this.topicName, _user.userid);
     const existing = await getDoc(userRef);
     const password = _user.password?.trim() || '';
@@ -97,17 +133,19 @@ export class UsersService {
     });
   }
 
-  async authenticate(email: string, password: string): Promise<User | null> {
-    const normalizedEmail = email.trim().toLowerCase();
-    if (!normalizedEmail || !password) {
+  /** Sign in with an email or a username. An identifier containing '@' is treated as an email. */
+  async authenticate(identifier: string, password: string): Promise<User | null> {
+    const normalized = identifier.trim().toLowerCase();
+    if (!normalized || !password) {
       return null;
     }
+    const field = normalized.includes('@') ? 'email' : 'username';
     const snapshot = await getDocs(collection(firestore, this.topicName));
     const match = snapshot.docs.find(
       (item) =>
-        String(item.data()['email'] || '')
+        String(item.data()[field] || '')
           .trim()
-          .toLowerCase() === normalizedEmail,
+          .toLowerCase() === normalized,
     );
     if (!match) {
       return null;
@@ -142,6 +180,7 @@ export class UsersService {
     const source = user as User & { role?: string; branch?: string };
     return {
       name: source.name?.trim() || '',
+      username: normalizeUsername(source.username),
       email: source.email?.trim() || '',
       role: source.role || source.roleid || '',
       branch: source.branch || source.branchid || '',
@@ -153,6 +192,7 @@ export class UsersService {
     return {
       userid: id,
       name: String(data['name'] || ''),
+      username: String(data['username'] || ''),
       email: String(data['email'] || ''),
       roleid: String(data['role'] || data['roleid'] || ''),
       role: '',

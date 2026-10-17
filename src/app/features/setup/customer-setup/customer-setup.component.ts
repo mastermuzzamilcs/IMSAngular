@@ -78,8 +78,9 @@ export class CustomerSetupComponent implements OnInit, AfterViewInit {
     } catch (err) {
       console.error('Error loading customers', err);
       this.toast.error('Error loading customers');
+    } finally {
+      this.tableLoading = false;
     }
-    this.tableLoading = false;
   }
 
   openAddDialog(): void {
@@ -91,9 +92,15 @@ export class CustomerSetupComponent implements OnInit, AfterViewInit {
         return;
       }
       this.loadingService.show();
-      await this.customerService.addCustomer(result);
-      this.loadingService.hide();
-      this.loadCustomers();
+      try {
+        await this.customerService.addCustomer(result);
+        await this.loadCustomers();
+      } catch (error) {
+        console.error('Error adding customer', error);
+        this.toast.error(error instanceof Error ? error.message : 'Could not add the customer');
+      } finally {
+        this.loadingService.hide();
+      }
     });
   }
 
@@ -106,9 +113,15 @@ export class CustomerSetupComponent implements OnInit, AfterViewInit {
         return;
       }
       this.loadingService.show();
-      await this.customerService.updateCustomer({ ...result, id: customer.id });
-      this.loadingService.hide();
-      this.loadCustomers();
+      try {
+        await this.customerService.updateCustomer({ ...result, id: customer.id });
+        await this.loadCustomers();
+      } catch (error) {
+        console.error('Error updating customer', error);
+        this.toast.error(error instanceof Error ? error.message : 'Could not update the customer');
+      } finally {
+        this.loadingService.hide();
+      }
     });
   }
 
@@ -118,9 +131,15 @@ export class CustomerSetupComponent implements OnInit, AfterViewInit {
       .subscribe(async (result) => {
         if (result && customer.id) {
           this.loadingService.show();
-          await this.customerService.deleteCustomer(customer.id);
-          this.loadingService.hide();
-          this.loadCustomers();
+          try {
+            await this.customerService.deleteCustomer(customer.id);
+            await this.loadCustomers();
+          } catch (error) {
+            console.error('Error deleting customer', error);
+            this.toast.error(error instanceof Error ? error.message : 'Could not delete the customer');
+          } finally {
+            this.loadingService.hide();
+          }
         }
       });
   }

@@ -78,8 +78,9 @@ export class GroupPrivilegesComponent implements OnInit {
     } catch (error) {
       console.error('Error loading group privileges', error);
       this.toast.error('Error loading group privileges');
+    } finally {
+      this.loadingService.hide();
     }
-    this.loadingService.hide();
   }
 
   async onGroupChange(): Promise<void> {
@@ -94,8 +95,9 @@ export class GroupPrivilegesComponent implements OnInit {
     } catch (error) {
       console.error('Error loading privileges for group', error);
       this.toast.error('Error loading privileges for this group');
+    } finally {
+      this.loadingService.hide();
     }
-    this.loadingService.hide();
   }
 
   isChecked(item: CatalogPrivilege): boolean {
@@ -125,8 +127,9 @@ export class GroupPrivilegesComponent implements OnInit {
     } catch (error) {
       console.error('Error saving group privileges', error);
       this.toast.error('Could not save group privileges');
+    } finally {
+      this.loadingService.hide();
     }
-    this.loadingService.hide();
   }
 
   private async loadGroup(groupid: string): Promise<void> {

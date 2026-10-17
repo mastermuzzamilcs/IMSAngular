@@ -105,9 +105,15 @@ export class ProductsSetupComponent implements OnInit, AfterViewInit {
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
         this._loadingService.show();
-        await this._productService.addProduct(result);
-        this._loadingService.hide();
-        this.loadProducts();
+        try {
+          await this._productService.addProduct(result);
+          await this.loadProducts();
+        } catch (error) {
+          console.error('Error adding product', error);
+          this.toast.error(error instanceof Error ? error.message : 'Could not add the product');
+        } finally {
+          this._loadingService.hide();
+        }
       }
     });
   }
@@ -120,9 +126,15 @@ export class ProductsSetupComponent implements OnInit, AfterViewInit {
       if (result) {
         this._loadingService.show();
         result.id = _product.id;
-        await this._productService.updateProduct(result);
-        this._loadingService.hide();
-        this.loadProducts();
+        try {
+          await this._productService.updateProduct(result);
+          await this.loadProducts();
+        } catch (error) {
+          console.error('Error updating product', error);
+          this.toast.error(error instanceof Error ? error.message : 'Could not update the product');
+        } finally {
+          this._loadingService.hide();
+        }
       }
     });
   }
@@ -136,9 +148,15 @@ export class ProductsSetupComponent implements OnInit, AfterViewInit {
         if (result) {
           if (_product.id) {
             this._loadingService.show();
-            await this._productService.deleteProduct(_product.id);
-            this._loadingService.hide();
-            this.loadProducts();
+            try {
+              await this._productService.deleteProduct(_product.id);
+              await this.loadProducts();
+            } catch (error) {
+              console.error('Error deleting product', error);
+              this.toast.error(error instanceof Error ? error.message : 'Could not delete the product');
+            } finally {
+              this._loadingService.hide();
+            }
           }
         }
       });

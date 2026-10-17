@@ -71,7 +71,7 @@ export class SettingsComponent implements OnInit {
       return;
     }
     if (!file.type.startsWith('image/')) {
-      this.toast.error('Choose an image file', 3000);
+      this.toast.warning('Choose an image file', 3000);
       return;
     }
     const reader = new FileReader();

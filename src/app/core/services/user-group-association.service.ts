@@ -36,7 +36,7 @@ export class UserGroupAssociationService {
   async associate(userid: string, groupid: string): Promise<void> {
     const existing = await this.getByUser(userid);
     if (existing.some((item) => item.groupid === groupid)) {
-      return;
+      throw new Error('This user is already associated with this group');
     }
     await addDoc(collection(firestore, this.topicName), { userid, groupid });
   }

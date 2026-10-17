@@ -72,6 +72,7 @@ export class NotificationAudienceResolver {
         if (
           userid === part ||
           user.email.trim().toLowerCase() === lower ||
+          (user.username || '').trim().toLowerCase() === lower ||
           user.name.trim().toLowerCase() === lower
         ) {
           ids.add(userid);

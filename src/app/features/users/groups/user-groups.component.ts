@@ -80,8 +80,9 @@ export class UserGroupsComponent implements OnInit, AfterViewInit {
     } catch (error) {
       console.error('Error loading user groups', error);
       this.toast.error('Error loading user groups');
+    } finally {
+      this.tableLoading = false;
     }
-    this.tableLoading = false;
   }
 
   openAddDialog(): void {
@@ -93,9 +94,15 @@ export class UserGroupsComponent implements OnInit, AfterViewInit {
         return;
       }
       this.loadingService.show();
-      await this.groupService.addGroup(result);
-      this.loadingService.hide();
-      this.loadGroups();
+      try {
+        await this.groupService.addGroup(result);
+        await this.loadGroups();
+      } catch (error) {
+        console.error('Error adding user group', error);
+        this.toast.error(error instanceof Error ? error.message : 'Could not add the user group');
+      } finally {
+        this.loadingService.hide();
+      }
     });
   }
 
@@ -108,9 +115,15 @@ export class UserGroupsComponent implements OnInit, AfterViewInit {
         return;
       }
       this.loadingService.show();
-      await this.groupService.updateGroup({ ...result, id: group.id });
-      this.loadingService.hide();
-      this.loadGroups();
+      try {
+        await this.groupService.updateGroup({ ...result, id: group.id });
+        await this.loadGroups();
+      } catch (error) {
+        console.error('Error updating user group', error);
+        this.toast.error(error instanceof Error ? error.message : 'Could not update the user group');
+      } finally {
+        this.loadingService.hide();
+      }
     });
   }
 
@@ -122,15 +135,21 @@ export class UserGroupsComponent implements OnInit, AfterViewInit {
           return;
         }
         this.loadingService.show();
-        const associations = await this.associationService.getAssociations();
-        await Promise.all(
-          associations
-            .filter((item) => item.groupid === group.id && item.id)
-            .map((item) => this.associationService.disassociate(item.id as string)),
-        );
-        await this.groupService.deleteGroup(group.id);
-        this.loadingService.hide();
-        this.loadGroups();
+        try {
+          const associations = await this.associationService.getAssociations();
+          await Promise.all(
+            associations
+              .filter((item) => item.groupid === group.id && item.id)
+              .map((item) => this.associationService.disassociate(item.id as string)),
+          );
+          await this.groupService.deleteGroup(group.id);
+          await this.loadGroups();
+        } catch (error) {
+          console.error('Error deleting user group', error);
+          this.toast.error(error instanceof Error ? error.message : 'Could not delete the user group');
+        } finally {
+          this.loadingService.hide();
+        }
       });
   }
 }

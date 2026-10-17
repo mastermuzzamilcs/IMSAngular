@@ -161,8 +161,12 @@ export class StockInComponent implements OnInit {
       this.toast.warning('Choose a branch from the top bar before continuing.');
       return;
     }
+    if (this.stockInForm.invalid || this.dataSource.data.length === 0) {
+      this.stockInForm.markAllAsTouched();
+      this.toast.warning('Enter valid stock details and add at least one item.');
+      return;
+    }
     this._loadingService.show();
-    if (this.stockInForm.invalid || this.dataSource.data.length === 0) return;
     const payload = {
       ...this.stockInForm.value,
       branch,
@@ -195,8 +199,9 @@ export class StockInComponent implements OnInit {
       this.netTotal = 0;
     } catch (err) {
       console.error('Error submitting stock in:', err);
-      this.toast.error('Failed to submit stock-in');
+      this.toast.error(err instanceof Error ? err.message : 'Failed to submit stock-in');
+    } finally {
+      this._loadingService.hide();
     }
-    this._loadingService.hide();
   }
 }

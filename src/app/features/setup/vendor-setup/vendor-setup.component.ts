@@ -94,9 +94,15 @@ export class VendorSetupComponent implements OnInit, AfterViewInit {
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
         this._loadingService.show();
-        await this._vendorService.addVendor(result);
-        this._loadingService.hide();
-        this.loadVendors();
+        try {
+          await this._vendorService.addVendor(result);
+          await this.loadVendors();
+        } catch (error) {
+          console.error('Error adding vendor', error);
+          this.toast.error(error instanceof Error ? error.message : 'Could not add the vendor');
+        } finally {
+          this._loadingService.hide();
+        }
       }
     });
   }
@@ -109,9 +115,15 @@ export class VendorSetupComponent implements OnInit, AfterViewInit {
       if (result) {
         this._loadingService.show();
         result.id = _vendor.id;
-        await this._vendorService.updateVendor(result);
-        this._loadingService.hide();
-        this.loadVendors();
+        try {
+          await this._vendorService.updateVendor(result);
+          await this.loadVendors();
+        } catch (error) {
+          console.error('Error updating vendor', error);
+          this.toast.error(error instanceof Error ? error.message : 'Could not update the vendor');
+        } finally {
+          this._loadingService.hide();
+        }
       }
     });
   }
@@ -122,9 +134,15 @@ export class VendorSetupComponent implements OnInit, AfterViewInit {
         if (result) {
           if (_vendor.id) {
             this._loadingService.show();
-            await this._vendorService.deleteVendor(_vendor.id);
-            this._loadingService.hide();
-            this.loadVendors();
+            try {
+              await this._vendorService.deleteVendor(_vendor.id);
+              await this.loadVendors();
+            } catch (error) {
+              console.error('Error deleting vendor', error);
+              this.toast.error(error instanceof Error ? error.message : 'Could not delete the vendor');
+            } finally {
+              this._loadingService.hide();
+            }
           }
         }
       });

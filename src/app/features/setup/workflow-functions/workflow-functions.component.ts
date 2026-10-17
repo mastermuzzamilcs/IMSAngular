@@ -133,9 +133,14 @@ export class WorkflowFunctionsComponent implements OnInit, AfterViewInit {
       .subscribe(async (result) => {
         if (result && record.id) {
           this.loadingService.show();
-          await this.definitionService.deleteFunction(record.id);
-          this.loadingService.hide();
-          this.load();
+          try {
+            await this.definitionService.deleteFunction(record.id);
+            await this.load();
+          } catch (error) {
+            this.toastFailure(error, 'Could not delete the workflow function');
+          } finally {
+            this.loadingService.hide();
+          }
         }
       });
   }
@@ -146,9 +151,14 @@ export class WorkflowFunctionsComponent implements OnInit, AfterViewInit {
       .subscribe(async (result) => {
         if (result && link.id) {
           this.loadingService.show();
-          await this.linkService.deleteLink(link.id);
-          this.loadingService.hide();
-          this.load();
+          try {
+            await this.linkService.deleteLink(link.id);
+            await this.load();
+          } catch (error) {
+            this.toastFailure(error, 'Could not delete the association');
+          } finally {
+            this.loadingService.hide();
+          }
         }
       });
   }
@@ -170,9 +180,10 @@ export class WorkflowFunctionsComponent implements OnInit, AfterViewInit {
         }
         await this.load();
       } catch (err) {
-        this.toast.error(err instanceof Error ? err.message : 'Failed to save workflow function');
+        this.toastFailure(err, 'Failed to save workflow function');
+      } finally {
+        this.loadingService.hide();
       }
-      this.loadingService.hide();
     });
   }
 
@@ -193,9 +204,19 @@ export class WorkflowFunctionsComponent implements OnInit, AfterViewInit {
         }
         await this.load();
       } catch (err) {
-        this.toast.error(err instanceof Error ? err.message : 'Failed to save association');
+        this.toastFailure(err, 'Failed to save association');
+      } finally {
+        this.loadingService.hide();
       }
-      this.loadingService.hide();
     });
+  }
+
+  private toastFailure(error: unknown, fallback: string): void {
+    const message = error instanceof Error ? error.message : fallback;
+    if (message.toLowerCase().includes('already')) {
+      this.toast.warning(message);
+    } else {
+      this.toast.error(message);
+    }
   }
 }

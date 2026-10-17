@@ -2,18 +2,15 @@
   <mat-card class="login-card">
     <mat-card-header>
       <mat-card-title>Sign in</mat-card-title>
-      <mat-card-subtitle>Use the email and password from User Management</mat-card-subtitle>
+      <mat-card-subtitle>Use your email or username, and your password</mat-card-subtitle>
     </mat-card-header>
     <mat-card-content>
       <form *ngIf="!choosingBranch" [formGroup]="loginForm" (ngSubmit)="submit()">
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Email</mat-label>
-          <input matInput type="email" formControlName="email" autocomplete="username" />
-          <mat-error *ngIf="loginForm.get('email')?.hasError('required')"
-            >Email is required</mat-error
-          >
-          <mat-error *ngIf="loginForm.get('email')?.hasError('email')"
-            >Enter a valid email</mat-error
+          <mat-label>Email or Username</mat-label>
+          <input matInput type="text" formControlName="identifier" autocomplete="username" />
+          <mat-error *ngIf="loginForm.get('identifier')?.hasError('required')"
+            >Email or username is required</mat-error
           >
         </mat-form-field>
         <mat-form-field appearance="outline" class="full-width">

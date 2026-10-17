@@ -79,10 +79,14 @@ export class BranchListComponent implements OnInit, AfterViewInit {
     );
     if (managerRole?.id) {
       this.loadingService.show();
-      await this._userService.getUsersByRole(managerRole.id).then((tempUsers) => {
-        this.managerUsersLookup = tempUsers;
-      });
-      this.loadingService.hide();
+      try {
+        this.managerUsersLookup = await this._userService.getUsersByRole(managerRole.id);
+      } catch (error) {
+        console.error('Error loading branch managers', error);
+        this.toast.error('Could not load branch managers');
+      } finally {
+        this.loadingService.hide();
+      }
     }
     this.loadBranches();
   }
@@ -109,9 +113,15 @@ export class BranchListComponent implements OnInit, AfterViewInit {
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
         this.loadingService.show();
-        await this.branchService.addBranch(result); // Add branch to Firestore
-        this.loadingService.hide();
-        this.loadBranches(); // Reload branches
+        try {
+          await this.branchService.addBranch(result);
+          await this.loadBranches();
+        } catch (error) {
+          console.error('Error adding branch', error);
+          this.toast.error(error instanceof Error ? error.message : 'Could not add the branch');
+        } finally {
+          this.loadingService.hide();
+        }
       }
     });
   }
@@ -124,9 +134,15 @@ export class BranchListComponent implements OnInit, AfterViewInit {
       if (result) {
         this.loadingService.show();
         result.branchid = branch.branchid;
-        await this.branchService.updateBranch(result);
-        this.loadingService.hide();
-        this.loadBranches();
+        try {
+          await this.branchService.updateBranch(result);
+          await this.loadBranches();
+        } catch (error) {
+          console.error('Error updating branch', error);
+          this.toast.error(error instanceof Error ? error.message : 'Could not update the branch');
+        } finally {
+          this.loadingService.hide();
+        }
       }
     });
   }
@@ -146,8 +162,9 @@ export class BranchListComponent implements OnInit, AfterViewInit {
     } catch (err) {
       console.error('Error loading branches', err);
       this.toast.error('Error loading branches');
+    } finally {
+      this.tableLoading = false;
     }
-    this.tableLoading = false;
   }
   openDeleteDialog(branch: Branch) {
     this.confirm
@@ -156,9 +173,15 @@ export class BranchListComponent implements OnInit, AfterViewInit {
         if (result) {
           if (branch.branchid) {
             this.loadingService.show();
-            await this.branchService.deleteBranch(branch.branchid);
-            this.loadingService.hide();
-            this.loadBranches();
+            try {
+              await this.branchService.deleteBranch(branch.branchid);
+              await this.loadBranches();
+            } catch (error) {
+              console.error('Error deleting branch', error);
+              this.toast.error(error instanceof Error ? error.message : 'Could not delete the branch');
+            } finally {
+              this.loadingService.hide();
+            }
           }
         }
       });

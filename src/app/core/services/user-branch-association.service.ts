@@ -31,7 +31,7 @@ export class UserBranchAssociationService {
   async associate(userid: string, branchid: string): Promise<void> {
     const existing = await this.getByUser(userid);
     if (existing.some((item) => item.branchid === branchid)) {
-      return;
+      throw new Error('This user is already assigned to this branch');
     }
     if (branchid === ALL_BRANCHES_ID) {
       await Promise.all(existing.map((item) => this.disassociate(item.id || '')));
