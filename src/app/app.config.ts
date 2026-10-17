@@ -12,6 +12,7 @@ import { RoleService } from './core/services/role.service';
 import { UsersService } from './core/services/users.service';
 import { WorkflowActionBootstrap } from './workflow-functions/workflow-actions';
 import { initializeMesixTheme } from './core/theme/mesix-theme.initializer';
+import { NotificationSoundService } from './core/notifications/notification-sound.service';
 
 export function registerWorkflowActions(
   bootstrap: WorkflowActionBootstrap,
@@ -41,8 +42,13 @@ export function seedSystemRecords(
   };
 }
 
-export function loadSharedAppSettings(settings: AppSettingsService): () => Promise<void> {
-  return () => settings.loadSharedCurrency();
+export function loadSharedAppSettings(
+  settings: AppSettingsService,
+  notificationSound: NotificationSoundService,
+): () => void {
+  return () => {
+    void Promise.all([settings.loadSharedCurrency(), notificationSound.loadSharedSettings()]);
+  };
 }
 
 export const appConfig: ApplicationConfig = {
@@ -81,7 +87,7 @@ export const appConfig: ApplicationConfig = {
     {
       provide: APP_INITIALIZER,
       useFactory: loadSharedAppSettings,
-      deps: [AppSettingsService],
+      deps: [AppSettingsService, NotificationSoundService],
       multi: true,
     },
   ],

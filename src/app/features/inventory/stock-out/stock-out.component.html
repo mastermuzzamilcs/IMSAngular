@@ -172,7 +172,7 @@
         tone="primary"
         *appPrivilege="privileges.stockOut.create"
         (pressed)="submitStockOut()"
-        [disabled]="dataSource.data.length <= 0 || stockOutForm.invalid || netTotal <= 0"
+          [disabled]="submitting || dataSource.data.length <= 0 || stockOutForm.invalid || netTotal <= 0"
       >
         Generate Request
       </mx-button>

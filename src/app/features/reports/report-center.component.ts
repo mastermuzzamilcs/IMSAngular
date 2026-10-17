@@ -32,7 +32,6 @@ import {
   CashTransactionType,
 } from '../../core/reporting/cash-transaction.service';
 import { ToastService } from '../../core/services/toast.service';
-import { LoadingService } from '../../core/services/Loading.service';
 import { AppSettingsService } from '../../core/services/app-settings.service';
 import { ActivatedRoute } from '@angular/router';
 import {
@@ -155,7 +154,6 @@ export class ReportCenterComponent implements OnInit {
     readonly exports: ReportExportActivityService,
     private cashTransactions: CashTransactionService,
     private toast: ToastService,
-    private loadingService: LoadingService,
     private route: ActivatedRoute,
     private registry: MesixReportRegistry,
     readonly settings: AppSettingsService,
@@ -242,7 +240,6 @@ export class ReportCenterComponent implements OnInit {
     this.loading = true;
     this.error = '';
     this.pageIndex = pageIndex;
-    this.loadingService.show();
     this.rows = [];
     this.total = 0;
     this.aggregates = [];
@@ -264,7 +261,6 @@ export class ReportCenterComponent implements OnInit {
       this.aggregates = [];
     } finally {
       this.loading = false;
-      this.loadingService.hide();
     }
   }
   async page(event: PageEvent): Promise<void> {

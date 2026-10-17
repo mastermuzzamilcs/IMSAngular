@@ -32,7 +32,6 @@ import {
 import { WorkflowService } from '../../../core/services/Workflow.service';
 import { Status } from '../../../core/enums/status.enum';
 import { RequestType } from '../../../core/Models/WorkflowModel';
-import { LoadingService } from '../../../core/services/Loading.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
@@ -86,13 +85,13 @@ export class StockInComponent implements OnInit {
   discountType: 'amount' | 'percentage' = 'amount';
   discountValue = 0;
   netTotal = 0;
+  submitting = false;
 
   constructor(
     private fb: FormBuilder,
     private stockService: StockService,
     private vendorService: VendorService,
     private _workflowService: WorkflowService,
-    private _loadingService: LoadingService,
     private auth: AuthService,
   ) {}
 
@@ -168,7 +167,8 @@ export class StockInComponent implements OnInit {
       this.toast.warning('Enter valid stock details and add at least one item.');
       return;
     }
-    this._loadingService.show();
+    if (this.submitting) return;
+    this.submitting = true;
     const payload = {
       ...this.stockInForm.value,
       branch,
@@ -203,7 +203,7 @@ export class StockInComponent implements OnInit {
       console.error('Error submitting stock in:', err);
       this.toast.error(err instanceof Error ? err.message : 'Failed to submit stock-in');
     } finally {
-      this._loadingService.hide();
+      this.submitting = false;
     }
   }
 }

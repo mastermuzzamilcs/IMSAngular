@@ -29,6 +29,155 @@ body {
   padding: 12px 16px;
 }
 
+/* Notification menu is rendered in the CDK overlay, outside the app component tree. */
+.cdk-overlay-pane:has(.notification-menu) {
+  position: fixed !important;
+  top: 64px !important;
+  right: 0 !important;
+  bottom: auto !important;
+  left: auto !important;
+  width: 20vw !important;
+  height: min(80vh, calc(100vh - 64px)) !important;
+  max-width: none !important;
+  max-height: calc(100vh - 64px) !important;
+  transform: none !important;
+}
+
+.notification-menu.mat-mdc-menu-panel {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  overflow: hidden;
+  border: 1px solid var(--mx-border, #e4e7ec);
+  border-right: 0;
+  border-radius: 18px 0 0 18px;
+  background: var(--mx-surface, #fff);
+  box-shadow: -14px 0 42px rgba(16, 24, 40, 0.16);
+}
+
+.notification-menu .mat-mdc-menu-content {
+  display: flex;
+  height: 100%;
+  max-height: none;
+  flex-direction: column;
+  padding: 0;
+  overflow-y: auto;
+  background: var(--mx-surface, #fff);
+}
+
+.notification-menu-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--mx-border, #e4e7ec);
+  background: color-mix(in srgb, var(--mx-primary, #1687d4) 5%, var(--mx-surface, #fff));
+  box-sizing: border-box;
+}
+
+.notification-heading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.notification-heading-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--mx-primary, #1687d4) 12%, var(--mx-surface, #fff));
+  color: var(--mx-primary, #1687d4);
+}
+
+.notification-heading-copy,
+.notification-copy {
+  display: flex;
+  flex-direction: column;
+  white-space: normal;
+}
+
+.notification-heading-copy { gap: 3px; line-height: 1.25; }
+.notification-heading-copy strong { color: var(--mx-text, #202124); font-size: 0.95rem; }
+.notification-heading-copy small,
+.notification-copy small { color: var(--mx-text-muted, #667085); font-size: 0.78rem; }
+
+.notification-menu .mark-all-read {
+  min-width: 0;
+  padding-inline: 10px;
+  border-radius: 18px;
+  color: var(--mx-primary, #1687d4) !important;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.notification-menu .notification-item.mat-mdc-menu-item {
+  position: relative;
+  height: auto;
+  min-height: 82px;
+  margin: 8px 10px 0;
+  padding: 8px 14px;
+  border: 1px solid var(--mx-border, #e4e7ec);
+  border-radius: 12px;
+  background: var(--mx-surface, #fff);
+  color: var(--mx-text, #202124);
+  box-sizing: border-box;
+}
+
+.notification-menu .notification-item.mat-mdc-menu-item:hover {
+  background: color-mix(in srgb, var(--mx-primary, #1687d4) 5%, var(--mx-surface, #fff));
+}
+
+.notification-menu .notification-item.mat-mdc-menu-item.unread {
+  border-color: color-mix(in srgb, var(--mx-primary, #1687d4) 32%, var(--mx-border, #e4e7ec));
+  background: color-mix(in srgb, var(--mx-primary, #1687d4) 7%, var(--mx-surface, #fff));
+}
+
+.notification-menu .notification-item.unread::before {
+  position: absolute;
+  top: 18px;
+  left: 7px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mx-primary, #1687d4);
+  content: '';
+}
+
+.notification-menu .notification-copy {
+  overflow: hidden;
+  padding: 0.3rem 0;
+  line-height: 1.4;
+}
+
+.notification-menu .notification-copy strong {
+  overflow: hidden;
+  color: var(--mx-text, #202124);
+  font-size: 0.85rem;
+  font-weight: 550;
+  text-overflow: ellipsis;
+}
+
+.notification-menu .notification-copy.unread strong { font-weight: 700; }
+.notification-menu .mat-mdc-menu-item-text { width: 100%; white-space: normal; }
+.notification-menu .mat-mdc-menu-item[disabled] { min-height: 150px; justify-content: center; }
+
+@media (max-width: 700px) {
+  .cdk-overlay-pane:has(.notification-menu) { width: 84vw !important; }
+}
+
 /* Shared transaction / form screens (Stock In/Out, Sales, Transfer, …) */
 .container {
   display: flex;

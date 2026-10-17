@@ -128,7 +128,7 @@ export class TransferFormComponent implements OnInit {
 
     this.filteredLaptops = this.availableLaptops.filter(
       (item) =>
-        item.productName.toLowerCase().includes(value) || item.brand?.toLowerCase().includes(value),
+        item.productName?.toLowerCase().includes(value) || item.brand?.toLowerCase().includes(value),
     );
   }
 

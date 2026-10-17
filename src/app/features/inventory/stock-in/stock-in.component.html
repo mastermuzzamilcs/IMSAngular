@@ -151,7 +151,7 @@
         tone="primary"
         *appPrivilege="privileges.stockIn.create"
         (pressed)="submitStockIn()"
-        [disabled]="dataSource.data.length <= 0 || stockInForm.invalid || netTotal <= 0"
+          [disabled]="submitting || dataSource.data.length <= 0 || stockInForm.invalid || netTotal <= 0"
       >
         Generate Request
       </mx-button>

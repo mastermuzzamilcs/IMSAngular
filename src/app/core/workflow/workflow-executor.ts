@@ -19,17 +19,19 @@ export class WorkflowExecutor {
     approver: string,
   ): Promise<void> {
     const links = await this.linkService.getForEvent(request.requestType, status);
-    for (const link of links) {
+    const actions = await Promise.all(
+      links.map(async (link) => {
       const definition = link.functionKey
         ? await this.definitionService.getByCode(link.functionKey)
         : null;
       const action = definition?.className
         ? this.registry.resolve(definition.className)
         : undefined;
-      if (!action) {
-        continue;
-      }
-      await action.Execute({ request, status, remarks, approver });
+        return action;
+      }),
+    );
+    for (const action of actions) {
+      if (action) await action.Execute({ request, status, remarks, approver });
     }
   }
 }

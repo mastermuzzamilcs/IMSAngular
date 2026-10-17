@@ -90,6 +90,7 @@ export const privilegeCatalog: CatalogPrivilege[] = [
     remove,
   ]),
   ...defs(PrivilegeModule.ItemSources, 'Item Sources', [page, create, edit, remove]),
+  ...defs(PrivilegeModule.Settings, 'Settings', [page, edit]),
 ];
 
 export const privileges = {
@@ -232,6 +233,10 @@ export const privileges = {
     create: ref(PrivilegeModule.ItemSources, create),
     edit: ref(PrivilegeModule.ItemSources, edit),
     delete: ref(PrivilegeModule.ItemSources, remove),
+  },
+  settings: {
+    page: ref(PrivilegeModule.Settings, page),
+    edit: ref(PrivilegeModule.Settings, edit),
   },
 };
 

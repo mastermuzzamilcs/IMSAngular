@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, setDoc, Unsubscribe } from 'firebase/firestore';
 import { firestore } from '../../firebase-config';
 
 const TITLE_KEY = 'ims.appTitle';
@@ -8,6 +8,7 @@ const LOGO_KEY = 'ims.appLogo';
 const PAGE_SIZE_KEY = 'ims.pageSize';
 const CURRENCY_NAME_KEY = 'ims.currencyName';
 const CURRENCY_CODE_KEY = 'ims.currencyCode';
+const SHARED_SETTINGS_PATH = ['SystemSettings', 'application'] as const;
 
 export const PAGE_SIZE_OPTIONS = [5, 10, 25, 50, 100] as const;
 export const DEFAULT_PAGE_SIZE = 5;
@@ -29,6 +30,7 @@ export class AppSettingsService {
   readonly pageSize$ = this.pageSizeSubject.asObservable();
   readonly currencyName$ = this.currencyNameSubject.asObservable();
   readonly currencyCode$ = this.currencyCodeSubject.asObservable();
+  private sharedSettingsSubscription?: Unsubscribe;
 
   get title(): string {
     return this.titleSubject.value;
@@ -51,26 +53,102 @@ export class AppSettingsService {
 
   async loadSharedCurrency(): Promise<void> {
     try {
-      const snapshot = await getDoc(doc(firestore, 'SystemSettings', 'currency'));
-      if (!snapshot.exists()) return;
-      const value = snapshot.data();
-      const name = typeof value['name'] === 'string' ? value['name'].trim() : '';
-      const code = typeof value['code'] === 'string' ? value['code'].trim().toUpperCase() : '';
-      if (name && /^[A-Z]{3}$/.test(code)) this.applyCurrency(name, code);
+      const reference = doc(firestore, ...SHARED_SETTINGS_PATH);
+      const snapshot = await getDoc(reference);
+      if (snapshot.exists()) {
+        this.applySharedSettings(snapshot.data());
+      } else {
+        // Retain existing deployments' shared currency while the complete settings document is
+        // first created by an authorized settings editor.
+        const legacyCurrency = await getDoc(doc(firestore, 'SystemSettings', 'currency'));
+        let currencyName = DEFAULT_CURRENCY_NAME;
+        let currencyCode = DEFAULT_CURRENCY_CODE;
+        if (legacyCurrency.exists()) {
+          const value = legacyCurrency.data();
+          const name = typeof value['name'] === 'string' ? value['name'].trim() : '';
+          const code = typeof value['code'] === 'string' ? value['code'].trim().toUpperCase() : '';
+          if (name && /^[A-Z]{3}$/.test(code)) {
+            currencyName = name;
+            currencyCode = code;
+          }
+        }
+        this.applySharedSettings({
+          title: DEFAULT_APP_TITLE,
+          logo: DEFAULT_APP_LOGO,
+          pageSize: DEFAULT_PAGE_SIZE,
+          currencyName,
+          currencyCode,
+          soundEnabled: true,
+          soundId: 'bell',
+        });
+      }
+      this.sharedSettingsSubscription?.();
+      this.sharedSettingsSubscription = onSnapshot(
+        reference,
+        (current) => {
+          if (current.exists()) this.applySharedSettings(current.data());
+        },
+        (error) => console.error('Shared application settings could not be watched.', error),
+      );
     } catch {
-      /* Continue with the saved local/default currency if shared settings are unavailable. */
+      /* Continue with saved local/default settings if shared settings are unavailable. */
     }
   }
 
-  async setCurrency(name: string, code: string): Promise<void> {
-    const nextName = name.trim();
-    const nextCode = code.trim().toUpperCase();
-    await setDoc(
-      doc(firestore, 'SystemSettings', 'currency'),
-      { name: nextName, code: nextCode, updatedAt: new Date() },
-      { merge: true },
-    );
-    this.applyCurrency(nextName, nextCode);
+  async saveSharedSettings(settings: {
+    title: string;
+    logo: string;
+    pageSize: number;
+    currencyName: string;
+    currencyCode: string;
+    soundEnabled: boolean;
+    soundId: string;
+  }): Promise<void> {
+    const normalized = {
+      title: settings.title.trim() || DEFAULT_APP_TITLE,
+      logo: settings.logo || DEFAULT_APP_LOGO,
+      pageSize: PAGE_SIZE_OPTIONS.includes(settings.pageSize as (typeof PAGE_SIZE_OPTIONS)[number])
+        ? settings.pageSize
+        : DEFAULT_PAGE_SIZE,
+      currencyName: settings.currencyName.trim() || DEFAULT_CURRENCY_NAME,
+      currencyCode: settings.currencyCode.trim().toUpperCase(),
+      soundEnabled: settings.soundEnabled,
+      soundId: settings.soundId,
+      updatedAt: new Date(),
+    };
+    if (!/^[A-Z]{3}$/.test(normalized.currencyCode)) {
+      throw new Error('Currency code must contain three letters.');
+    }
+    if (normalized.logo.length > 1_000_000) {
+      throw new Error('The selected logo is too large to share. Choose an image under 700 KB.');
+    }
+    await setDoc(doc(firestore, ...SHARED_SETTINGS_PATH), normalized);
+    this.applySharedSettings(normalized);
+  }
+
+  private applySharedSettings(data: Record<string, unknown>): void {
+    const title = typeof data['title'] === 'string' ? data['title'].trim() : '';
+    const logo = typeof data['logo'] === 'string' ? data['logo'].trim() : '';
+    const pageSize = Number(data['pageSize']);
+    const currencyName = typeof data['currencyName'] === 'string' ? data['currencyName'].trim() : '';
+    const currencyCode =
+      typeof data['currencyCode'] === 'string' ? data['currencyCode'].trim().toUpperCase() : '';
+    if (title) {
+      localStorage.setItem(TITLE_KEY, title);
+      this.titleSubject.next(title);
+    }
+    if (logo && logo.length <= 1_000_000) {
+      if (logo === DEFAULT_APP_LOGO) localStorage.removeItem(LOGO_KEY);
+      else localStorage.setItem(LOGO_KEY, logo);
+      this.logoSubject.next(logo);
+    }
+    if (PAGE_SIZE_OPTIONS.includes(pageSize as (typeof PAGE_SIZE_OPTIONS)[number])) {
+      localStorage.setItem(PAGE_SIZE_KEY, String(pageSize));
+      this.pageSizeSubject.next(pageSize);
+    }
+    if (currencyName && /^[A-Z]{3}$/.test(currencyCode)) {
+      this.applyCurrency(currencyName, currencyCode);
+    }
   }
 
   private applyCurrency(nextName: string, nextCode: string): void {
@@ -89,36 +167,6 @@ export class AppSettingsService {
     } catch {
       return `${this.currencyCode} ${value.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
-  }
-
-  setTitle(title: string): void {
-    const next = title.trim() || DEFAULT_APP_TITLE;
-    localStorage.setItem(TITLE_KEY, next);
-    this.titleSubject.next(next);
-  }
-
-  /** Stores the uploaded image as a data URL (bitmap bytes encoded for the browser). */
-  setLogoDataUrl(dataUrl: string): void {
-    const next = (dataUrl || '').trim() || DEFAULT_APP_LOGO;
-    if (next === DEFAULT_APP_LOGO) {
-      localStorage.removeItem(LOGO_KEY);
-    } else {
-      localStorage.setItem(LOGO_KEY, next);
-    }
-    this.logoSubject.next(next);
-  }
-
-  clearLogo(): void {
-    localStorage.removeItem(LOGO_KEY);
-    this.logoSubject.next(DEFAULT_APP_LOGO);
-  }
-
-  setPageSize(size: number): void {
-    const next = PAGE_SIZE_OPTIONS.includes(size as (typeof PAGE_SIZE_OPTIONS)[number])
-      ? size
-      : DEFAULT_PAGE_SIZE;
-    localStorage.setItem(PAGE_SIZE_KEY, String(next));
-    this.pageSizeSubject.next(next);
   }
 
   private readTitle(): string {

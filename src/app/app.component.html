@@ -597,7 +597,12 @@
           >notifications</mat-icon
         >
       </button>
-      <mat-menu #notificationMenu="matMenu" class="notification-menu" xPosition="before">
+      <mat-menu
+        #notificationMenu="matMenu"
+        class="notification-menu"
+        panelClass="notification-menu"
+        xPosition="before"
+      >
         <div class="notification-menu-head" (click)="$event.stopPropagation()">
           <span class="notification-heading">
             <span class="notification-heading-icon"><mat-icon>notifications</mat-icon></span>
@@ -657,6 +662,7 @@
         mat-icon-button
         type="button"
         routerLink="/settings"
+        *appPrivilege="privileges.settings.page"
         aria-label="Settings"
         matTooltip="Settings"
       >

@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { doc, getDoc, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { firestore } from '../../firebase-config';
 
 const SOUND_KEY = 'ims.notificationSound';
 const SOUND_ID_KEY = 'ims.notificationSoundId';
@@ -44,6 +46,7 @@ export class NotificationSoundService {
   readonly enabled$ = this.enabledSubject.asObservable();
   readonly soundId$ = this.soundSubject.asObservable();
   private context?: AudioContext;
+  private sharedSettingsSubscription?: Unsubscribe;
 
   get enabled(): boolean {
     return this.enabledSubject.value;
@@ -63,6 +66,38 @@ export class NotificationSoundService {
     this.soundSubject.next(id);
     if (preview) {
       this.play(true);
+    }
+  }
+
+  async loadSharedSettings(): Promise<void> {
+    const reference = doc(firestore, 'SystemSettings', 'application');
+    try {
+      const initial = await getDoc(reference);
+      this.applySharedSettings(
+        initial.exists() ? initial.data() : { soundEnabled: true, soundId: 'bell' },
+      );
+      this.sharedSettingsSubscription?.();
+      this.sharedSettingsSubscription = onSnapshot(
+        reference,
+        (snapshot) => {
+          if (snapshot.exists()) this.applySharedSettings(snapshot.data());
+        },
+        (error) => console.error('Shared notification settings could not be watched.', error),
+      );
+    } catch (error) {
+      console.error('Shared notification settings could not be loaded.', error);
+    }
+  }
+
+  private applySharedSettings(settings: Record<string, unknown>): void {
+    if (typeof settings['soundEnabled'] === 'boolean') {
+      this.enabledSubject.next(settings['soundEnabled']);
+      localStorage.setItem(SOUND_KEY, settings['soundEnabled'] ? '1' : '0');
+    }
+    const soundId = settings['soundId'];
+    if (typeof soundId === 'string' && notificationSounds.some((item) => item.id === soundId)) {
+      this.soundSubject.next(soundId as NotificationSoundId);
+      localStorage.setItem(SOUND_ID_KEY, soundId);
     }
   }
 

@@ -138,7 +138,7 @@ export class TransferListComponent implements OnInit, AfterViewInit {
       await this.transferService.updateTransfer({
         ...transfer,
 
-        status: newStatus,
+        status: newStatus as Transfer['status'],
       });
 
       await this.loadTransfers();

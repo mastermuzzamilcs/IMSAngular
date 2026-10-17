@@ -195,7 +195,7 @@
         tone="primary"
         *appPrivilege="privileges.salesReturn.create"
         (pressed)="submitSalesReturn()"
-        [disabled]="dataSource.data.length <= 0 || salesReturnForm.invalid || netTotal <= 0"
+          [disabled]="submitting || dataSource.data.length <= 0 || salesReturnForm.invalid || netTotal <= 0"
       >
         Generate Request
       </mx-button>

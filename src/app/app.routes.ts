@@ -30,6 +30,8 @@ export const routes: Routes = [
       },
       {
         path: 'settings',
+        canActivate: [privilegeGuard],
+        data: { privilege: privileges.settings.page },
         loadComponent: () =>
           import('./features/settings/settings.component').then((m) => m.SettingsComponent),
       },

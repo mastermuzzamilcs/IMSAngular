@@ -1,5 +1,9 @@
 <h2 class="mx-dialog-title">Request #{{ displayedRequestId }}</h2>
 
+<div class="request-loading" *ngIf="loading" role="status" aria-live="polite">
+  <span class="loading-indicator" aria-hidden="true"></span>
+  Loading request details…
+</div>
 <div class="request-load-error" *ngIf="loadError">{{ loadError }}</div>
 <div class="mx-dialog-body content" *ngIf="!loading && !loadError">
   <mat-tab-group>

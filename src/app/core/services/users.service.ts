@@ -61,6 +61,12 @@ export class UsersService {
     });
   }
 
+  async getUserById(userId: string): Promise<User | null> {
+    if (!userId) return null;
+    const snapshot = await getDoc(doc(firestore, this.topicName, userId));
+    return snapshot.exists() ? this.mapUser(snapshot.id, snapshot.data()) : null;
+  }
+
   async searchUsers(name?: string, email?: string, username?: string): Promise<User[]> {
     const users = await this.getUsers();
     const nameFilter = name?.trim().toLowerCase() || '';

@@ -1,8 +1,8 @@
-import { Component, AfterViewInit, ViewChild, inject } from '@angular/core';
+import { Component, AfterViewInit, ViewChild } from '@angular/core';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
-import { SalesFormComponent } from '../form/sales-form.component';
+import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { CommonModule } from '@angular/common';
@@ -13,7 +13,6 @@ import {
   MxEmptyStateComponent,
   MxGridComponent,
   MxPageHeaderComponent,
-  MxNoticeService,
 } from '@mesix/custom-control';
 import { Status } from '../../../core/enums/status.enum';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
@@ -51,8 +50,6 @@ interface SalesListRow {
   styleUrls: ['./sales-list.component.scss'],
 })
 export class SalesListComponent implements AfterViewInit {
-  private readonly notice = inject(MxNoticeService);
-
   readonly Status = Status;
   readonly privileges = privilegeAccess;
   displayedColumns: string[] = [
@@ -71,7 +68,7 @@ export class SalesListComponent implements AfterViewInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor() {}
+  constructor(private readonly router: Router) {}
 
   ngAfterViewInit() {
     this.dataSource.paginator = this.paginator;
@@ -86,16 +83,8 @@ export class SalesListComponent implements AfterViewInit {
     this.dataSource.filter = value.trim().toLowerCase();
   }
 
-  openNewSaleDialog() {
-    const dialogRef = this.notice.open(SalesFormComponent, {
-      data: { mode: 'new' },
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        // Handle new sale
-      }
-    });
+  openNewSale(): void {
+    void this.router.navigateByUrl('/sales/sales');
   }
 
   onDateRangeChange(range: 'day' | 'week' | 'month') {
@@ -103,7 +92,4 @@ export class SalesListComponent implements AfterViewInit {
     // Filter data based on date range
   }
 
-  exportSales() {
-    // Export sales data to CSV/Excel
-  }
 }

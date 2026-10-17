@@ -323,239 +323,6 @@ abstract class ImsParameterWindowBase
 }
 
 @Component({
-  selector: 'app-inventory-report-parameters',
-  standalone: true,
-  imports,
-  template: ` <div class="report-parameters">
-    <mat-form-field appearance="outline"
-      ><mat-label>Branch</mat-label
-      ><mat-select [(ngModel)]="values.branchId" (selectionChange)="apply()"
-        ><mat-option value="">All accessible branches</mat-option
-        ><mat-option *ngFor="let branch of branches" [value]="branch.branchid">{{
-          branch.name
-        }}</mat-option></mat-select
-      ></mat-form-field
-    >
-    <mat-form-field appearance="outline"
-      ><mat-label>Product</mat-label
-      ><mat-select [(ngModel)]="values.productId" (selectionChange)="apply()"
-        ><mat-option value="">All products</mat-option
-        ><mat-option *ngFor="let product of products" [value]="product.id"
-          >{{ product.name
-          }}<ng-container *ngIf="brandName(product.brandId)">
-            · {{ brandName(product.brandId) }}</ng-container
-          ></mat-option
-        ></mat-select
-      ></mat-form-field
-    >
-    <mat-form-field appearance="outline"
-      ><mat-label>Brand</mat-label
-      ><mat-select [(ngModel)]="values.brandId" (selectionChange)="apply()"
-        ><mat-option value="">All brands</mat-option
-        ><mat-option *ngFor="let brand of brands" [value]="brand.id">{{
-          brand.name
-        }}</mat-option></mat-select
-      ></mat-form-field
-    >
-    <button mat-stroked-button type="button" (click)="apply()">
-      <mat-icon>filter_alt</mat-icon> Apply filters
-    </button>
-  </div>`,
-  styles: [windowStyles],
-})
-export class InventoryReportParametersComponent extends ImsParameterWindowBase implements OnInit {
-  products: Product[] = [];
-  brands: Brand[] = [];
-  private brandNames = new Map<string, string>();
-  constructor(
-    auth: AuthService,
-    branchService: BranchService,
-    private productService: ProductService,
-    private brandService: BrandService,
-    private toast: ToastService,
-  ) {
-    super(auth, branchService, { productId: '', brandId: '' });
-  }
-  async ngOnInit(): Promise<void> {
-    try {
-      [this.products, this.brands] = await Promise.all([
-        this.productService.getProducts(),
-        this.brandService.getBrands(),
-      ]);
-      this.brandNames = new Map(this.brands.map((brand) => [brand.id || '', brand.name]));
-    } catch {
-      this.toast.error('Product and brand filters could not be loaded.');
-    }
-    this.apply();
-  }
-  brandName(id: string): string {
-    return this.brandNames.get(id) || '';
-  }
-  apply(): void {
-    const product = this.products.find((item) => item.id === this.values.productId);
-    const brand = this.brands.find((item) => item.id === this.values.brandId);
-    this.publish({ productLabel: product?.name || '', brandLabel: brand?.name || '' });
-  }
-}
-
-@Component({
-  selector: 'app-sales-report-parameters',
-  standalone: true,
-  imports,
-  template: ` <div class="report-parameters">
-    <mat-form-field appearance="outline"
-      ><mat-label>Branch</mat-label
-      ><mat-select [(ngModel)]="values.branchId" (selectionChange)="apply()"
-        ><mat-option value="">All accessible branches</mat-option
-        ><mat-option *ngFor="let branch of branches" [value]="branch.branchid">{{
-          branch.name
-        }}</mat-option></mat-select
-      ></mat-form-field
-    >
-    <mat-form-field appearance="outline"
-      ><mat-label>From date</mat-label
-      ><input
-        matInput
-        [matDatepicker]="fromPicker"
-        [ngModel]="dateValue(values.fromDate)"
-        (dateChange)="dateChanged('fromDate', $event.value)" /><mat-datepicker-toggle
-        matSuffix
-        [for]="fromPicker"
-      ></mat-datepicker-toggle
-      ><mat-datepicker #fromPicker></mat-datepicker
-    ></mat-form-field>
-    <mat-form-field appearance="outline"
-      ><mat-label>To date</mat-label
-      ><input
-        matInput
-        [matDatepicker]="toPicker"
-        [ngModel]="dateValue(values.toDate)"
-        (dateChange)="dateChanged('toDate', $event.value)" /><mat-datepicker-toggle
-        matSuffix
-        [for]="toPicker"
-      ></mat-datepicker-toggle
-      ><mat-datepicker #toPicker></mat-datepicker
-    ></mat-form-field>
-    <mat-form-field appearance="outline"
-      ><mat-label>Customer</mat-label
-      ><mat-select [(ngModel)]="values.customerId" (selectionChange)="apply()"
-        ><mat-option value="">All customers</mat-option
-        ><mat-option *ngFor="let customer of customers" [value]="customer.id"
-          >{{ customer.name
-          }}<ng-container *ngIf="customer.phone"> · {{ customer.phone }}</ng-container></mat-option
-        ></mat-select
-      ></mat-form-field
-    >
-    <button mat-stroked-button type="button" (click)="apply()">
-      <mat-icon>filter_alt</mat-icon> Apply filters
-    </button>
-  </div>`,
-  styles: [windowStyles],
-})
-export class SalesReportParametersComponent extends ImsParameterWindowBase implements OnInit {
-  customers: Customer[] = [];
-  constructor(
-    auth: AuthService,
-    branchService: BranchService,
-    private customerService: CustomerService,
-    private toast: ToastService,
-  ) {
-    super(auth, branchService, { customerId: '' });
-  }
-  async ngOnInit(): Promise<void> {
-    try {
-      this.customers = await this.customerService.getCustomers();
-    } catch {
-      this.toast.error('Customer filter could not be loaded.');
-    }
-    this.apply();
-  }
-  apply(): void {
-    this.publish({
-      customerName: this.customers.find((item) => item.id === this.values.customerId)?.name || '',
-    });
-  }
-}
-
-@Component({
-  selector: 'app-purchase-report-parameters',
-  standalone: true,
-  imports,
-  template: ` <div class="report-parameters">
-    <mat-form-field appearance="outline"
-      ><mat-label>Branch</mat-label
-      ><mat-select [(ngModel)]="values.branchId" (selectionChange)="apply()"
-        ><mat-option value="">All accessible branches</mat-option
-        ><mat-option *ngFor="let branch of branches" [value]="branch.branchid">{{
-          branch.name
-        }}</mat-option></mat-select
-      ></mat-form-field
-    >
-    <mat-form-field appearance="outline"
-      ><mat-label>From date</mat-label
-      ><input
-        matInput
-        [matDatepicker]="fromPicker"
-        [ngModel]="dateValue(values.fromDate)"
-        (dateChange)="dateChanged('fromDate', $event.value)" /><mat-datepicker-toggle
-        matSuffix
-        [for]="fromPicker"
-      ></mat-datepicker-toggle
-      ><mat-datepicker #fromPicker></mat-datepicker
-    ></mat-form-field>
-    <mat-form-field appearance="outline"
-      ><mat-label>To date</mat-label
-      ><input
-        matInput
-        [matDatepicker]="toPicker"
-        [ngModel]="dateValue(values.toDate)"
-        (dateChange)="dateChanged('toDate', $event.value)" /><mat-datepicker-toggle
-        matSuffix
-        [for]="toPicker"
-      ></mat-datepicker-toggle
-      ><mat-datepicker #toPicker></mat-datepicker
-    ></mat-form-field>
-    <mat-form-field appearance="outline"
-      ><mat-label>Vendor</mat-label
-      ><mat-select [(ngModel)]="values.vendorId" (selectionChange)="apply()"
-        ><mat-option value="">All vendors</mat-option
-        ><mat-option *ngFor="let vendor of vendors" [value]="vendor.id">{{
-          vendor.name
-        }}</mat-option></mat-select
-      ></mat-form-field
-    >
-    <button mat-stroked-button type="button" (click)="apply()">
-      <mat-icon>filter_alt</mat-icon> Apply filters
-    </button>
-  </div>`,
-  styles: [windowStyles],
-})
-export class PurchaseReportParametersComponent extends ImsParameterWindowBase implements OnInit {
-  vendors: Vendor[] = [];
-  constructor(
-    auth: AuthService,
-    branchService: BranchService,
-    private vendorService: VendorService,
-    private toast: ToastService,
-  ) {
-    super(auth, branchService, { vendorId: '' });
-  }
-  async ngOnInit(): Promise<void> {
-    try {
-      this.vendors = await this.vendorService.getVendors();
-    } catch {
-      this.toast.error('Vendor filter could not be loaded.');
-    }
-    this.apply();
-  }
-  apply(): void {
-    this.publish({
-      vendorName: this.vendors.find((item) => item.id === this.values.vendorId)?.name || '',
-    });
-  }
-}
-
-@Component({
   selector: 'app-cashflow-report-parameters',
   standalone: true,
   imports,
@@ -737,10 +504,13 @@ export class AnalyticsReportParametersComponent
   }
 
   ngOnInit(): void {
+    this.configure();
     void this.loadChoices();
   }
   ngOnChanges(): void {
+    const previousReport = this.configuredReport;
     this.configure();
+    if (previousReport && previousReport !== this.configuredReport) void this.loadChoices();
   }
 
   private configure(): void {
@@ -793,16 +563,18 @@ export class AnalyticsReportParametersComponent
 
   private async loadChoices(): Promise<void> {
     const accessible = this.auth.currentSession()?.branches || [];
+    const sources = new Set(this.fields.map((field) => field.source).filter(Boolean));
+    const needs = (source: string) => sources.has(source);
     try {
       const settled = await Promise.allSettled([
-        accessible.some((branch) => branch.branchid === '0')
+        needs('branches') && accessible.some((branch) => branch.branchid === '0')
           ? this.branchService.getBranches()
           : Promise.resolve([]),
-        this.productService.getProducts(),
-        this.brandService.getBrands(),
-        this.customerService.getCustomers(),
-        this.vendorService.getVendors(),
-        this.userService.getUsers(),
+        needs('products') ? this.productService.getProducts() : Promise.resolve([]),
+        needs('brands') ? this.brandService.getBrands() : Promise.resolve([]),
+        needs('customers') ? this.customerService.getCustomers() : Promise.resolve([]),
+        needs('vendors') ? this.vendorService.getVendors() : Promise.resolve([]),
+        needs('users') ? this.userService.getUsers() : Promise.resolve([]),
       ]);
       if (settled.some((item) => item.status === 'rejected'))
         this.toast.error('Some report filter options could not be loaded.');

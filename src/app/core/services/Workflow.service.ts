@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   collection,
   deleteDoc,
@@ -20,9 +20,11 @@ import { SYSTEM_USER_ID } from '../system-user';
 import { WorkflowExecutor } from '../workflow/workflow-executor';
 import { RequestAssigneeService } from './request-assignee.service';
 import { RequestTypeService } from './request-type.service';
+import { ToastService } from './toast.service';
 
 @Injectable({ providedIn: 'root' })
 export class WorkflowService {
+  private readonly toast = inject(ToastService);
   private readonly topicName = 'workflow_requests';
 
   constructor(
@@ -51,6 +53,7 @@ export class WorkflowService {
     const ref = doc(collection(firestore, this.topicName));
     const year = new Date().getFullYear();
     const counterRef = doc(firestore, 'SystemCounters', `request-${year}`);
+    const autoApprovePromise = this.requestTypeService.isAutoApprove(partial.requestType);
     await runTransaction(firestore, async (transaction) => {
       const counter = await transaction.get(counterRef);
       const nextNumber = Number(counter.data()?.['nextNumber'] || 0) + 1;
@@ -59,26 +62,49 @@ export class WorkflowService {
       transaction.set(ref, { ...payload, requestNumber });
       payload.requestNumber = requestNumber;
     });
+    const request = { ...payload, requestId: ref.id };
+    this.runFollowUpInBackground(
+      this.processCreatedRequest(ref.id, request, autoApprovePromise, partial.remarks || 'Auto approved'),
+      'Request was created, but one or more follow-up actions failed.',
+    );
+    return ref.id;
+  }
+
+  private async processCreatedRequest(
+    requestId: string,
+    request: WorkflowRequest,
+    autoApprovePromise: Promise<boolean>,
+    autoApproveRemarks: string,
+  ): Promise<void> {
     try {
+      if (await autoApprovePromise) {
+        await this.completeAutoApproval(requestId, request, autoApproveRemarks);
+        return;
+      }
       await this.executor.run(
-        { ...payload, requestId: ref.id },
+        request,
         RequestStatus.Pending,
-        payload.remarks || '',
-        payload.requestedBy,
+        request.remarks || '',
+        request.requestedBy,
       );
     } catch (error) {
-      await deleteDoc(ref);
+      await deleteDoc(doc(firestore, this.topicName, requestId));
       throw error;
     }
-    if (await this.requestTypeService.isAutoApprove(partial.requestType)) {
-      await this.updateStatus(
-        ref.id,
-        RequestStatus.Approved,
-        SYSTEM_USER_ID,
-        partial.remarks || 'Auto approved',
-      );
-    }
-    return ref.id;
+  }
+
+  private async completeAutoApproval(
+    requestId: string,
+    request: WorkflowRequest,
+    remarks: string,
+  ): Promise<void> {
+    await this.executor.run(
+      request,
+      RequestStatus.Pending,
+      request.remarks || '',
+      request.requestedBy,
+    );
+    await this.updateStatus(requestId, RequestStatus.Approved, SYSTEM_USER_ID, remarks);
   }
 
   /* ---------- Fetch all pending requests ---------- */
@@ -140,6 +166,7 @@ export class WorkflowService {
     status: RequestStatus,
     approver: string,
     remarks: string = '',
+    waitForFollowUpActions = true,
   ): Promise<void> {
     const current = await this.getById(requestId);
     if (!current) {
@@ -153,10 +180,29 @@ export class WorkflowService {
       approvedOn: Timestamp.now(),
       remarks,
     });
-    const request = await this.getById(requestId);
-    if (request) {
-      await this.executor.run(request, status, remarks, approver);
+    const followUp = this.executor.run(
+      { ...current, status, approvedBy: approver, approvedOn: new Date(), remarks },
+      status,
+      remarks,
+      approver,
+    );
+    if (waitForFollowUpActions) {
+      await followUp;
+    } else {
+      this.runFollowUpInBackground(
+        followUp,
+        'Status was updated, but one or more follow-up actions failed.',
+      );
     }
+  }
+
+  private runFollowUpInBackground(task: Promise<void>, failureMessage: string): void {
+    void task.catch((error: unknown) => {
+      console.error(failureMessage, error);
+      this.toast.error(
+        error instanceof Error ? `${failureMessage} ${error.message}` : failureMessage,
+      );
+    });
   }
 
   /* ---------- Get request by ID ------------------- */
