@@ -8,6 +8,8 @@ import { Role } from '../../../core/Models/RoleModel';
 import { User } from '../../../core/Models/UsersModel';
 import { Branch } from '../../../core/Models/BranchModel';
 import { asStatus, Status } from '../../../core/enums/status.enum';
+import { USERNAME_PATTERN } from '../../../core/auth/username';
+import { UsersService } from '../../../core/services/users.service';
 @Component({
   selector: 'app-user-form',
   standalone: true,
@@ -26,9 +28,11 @@ export class UserFormComponent implements OnInit {
   userForm!: FormGroup;
   dialogTitle: string = 'Add User';
   _roles: Role[] | null = null;
+  showPassword = false;
 
   constructor(
     private fb: FormBuilder,
+    private usersService: UsersService,
     public dialogRef: MxDialogRef<unknown>,
     @Inject(MX_DIALOG_DATA)
     public data: {
@@ -51,6 +55,7 @@ export class UserFormComponent implements OnInit {
   InitForm(): void {
     this.userForm = this.fb.group({
       name: ['', [Validators.required]],
+      username: ['', [Validators.required, Validators.pattern(USERNAME_PATTERN)]],
       email: ['', [Validators.required, Validators.email]],
       password: [
         '',
@@ -66,17 +71,28 @@ export class UserFormComponent implements OnInit {
     const user = this.data.user!;
     this.userForm.patchValue({
       name: user.name,
+      username: user.username,
       email: user.email,
       role: user.roleid || user.role,
       status: asStatus(user.status),
     });
   }
-  onSubmit(): void {
-    if (this.userForm.valid) {
-      this.dialogRef.close(this.userForm.value);
-    } else {
+  async onSubmit(): Promise<void> {
+    if (!this.userForm.valid) {
       this.markFormGroupTouched(this.userForm);
+      return;
     }
+    const usernameControl = this.userForm.get('username')!;
+    const taken = await this.usersService.isUsernameTaken(
+      usernameControl.value,
+      this.data.user?.userid,
+    );
+    if (taken) {
+      usernameControl.setErrors({ taken: true });
+      usernameControl.markAsTouched();
+      return;
+    }
+    this.dialogRef.close(this.userForm.value);
   }
   markFormGroupTouched(formGroup: FormGroup) {
     Object.values(formGroup.controls).forEach((control) => {

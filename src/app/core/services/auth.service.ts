@@ -77,8 +77,9 @@ export class AuthService {
     return names.some((name) => owned.includes(name.toLowerCase()));
   }
 
-  async login(email: string, password: string): Promise<LoginResult> {
-    const user = await this.usersService.authenticate(email, password);
+  /** identifier is an email or a username */
+  async login(identifier: string, password: string): Promise<LoginResult> {
+    const user = await this.usersService.authenticate(identifier, password);
     if (!user?.userid) {
       return { ok: false, chooseBranch: false, branches: [] };
     }
@@ -99,6 +100,7 @@ export class AuthService {
     const session: AuthSession = {
       userid: user.userid,
       name: user.name,
+      username: user.username,
       email: user.email,
       roleid: user.roleid,
       roleName,

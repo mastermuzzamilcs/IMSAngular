@@ -7,6 +7,9 @@ import { RequestType, RequestTypeSetting } from '../Models/WorkflowModel';
 export class RequestTypeService {
   private readonly topicName = 'RequestTypes';
   private defaultsReady: Promise<void> | null = null;
+  private readonly settingsCache = new Map<RequestType, RequestTypeSetting>();
+  private readonly settingsCachedAt = new Map<RequestType, number>();
+  private readonly cacheDurationMs = 30_000;
 
   async getSettings(): Promise<RequestTypeSetting[]> {
     await this.ensureDefaults();
@@ -29,6 +32,8 @@ export class RequestTypeService {
   async setAutoApprove(requestType: RequestType, IS_Auto_Approve: boolean): Promise<void> {
     await this.ensureDefaults();
     await updateDoc(doc(firestore, this.topicName, requestType), { IS_Auto_Approve });
+    const cached = this.settingsCache.get(requestType);
+    if (cached) this.settingsCache.set(requestType, { ...cached, IS_Auto_Approve });
   }
 
   async setAssignedToSource(requestType: RequestType, assignedToSource: string): Promise<void> {
@@ -36,6 +41,9 @@ export class RequestTypeService {
     await updateDoc(doc(firestore, this.topicName, requestType), {
       assignedToSource: (assignedToSource || '').trim(),
     });
+    const cached = this.settingsCache.get(requestType);
+    if (cached)
+      this.settingsCache.set(requestType, { ...cached, assignedToSource: assignedToSource.trim() });
   }
 
   ensureDefaults(): Promise<void> {
@@ -49,26 +57,40 @@ export class RequestTypeService {
   }
 
   private async readSetting(requestType: RequestType): Promise<RequestTypeSetting> {
+    const cached = this.settingsCache.get(requestType);
+    if (
+      cached &&
+      Date.now() - (this.settingsCachedAt.get(requestType) || 0) < this.cacheDurationMs
+    ) {
+      return cached;
+    }
     const snap = await getDoc(doc(firestore, this.topicName, requestType));
     const data = snap.data() || {};
-    return {
+    const setting = {
       requestType,
       IS_Auto_Approve: data['IS_Auto_Approve'] === true,
       assignedToSource: String(data['assignedToSource'] || ''),
     };
+    this.settingsCache.set(requestType, setting);
+    this.settingsCachedAt.set(requestType, Date.now());
+    return setting;
   }
 
   private async writeDefaults(): Promise<void> {
-    for (const requestType of Object.values(RequestType)) {
-      const ref = doc(firestore, this.topicName, requestType);
-      const snap = await getDoc(ref);
-      if (!snap.exists()) {
+    const requestTypes = Object.values(RequestType);
+    const snapshots = await Promise.all(
+      requestTypes.map((requestType) => getDoc(doc(firestore, this.topicName, requestType))),
+    );
+    await Promise.all(
+      requestTypes.map(async (requestType, index) => {
+        if (snapshots[index].exists()) return;
+        const ref = doc(firestore, this.topicName, requestType);
         await setDoc(ref, {
           requestType,
           IS_Auto_Approve: false,
           assignedToSource: '',
         });
-      }
-    }
+      }),
+    );
   }
 }

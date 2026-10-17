@@ -86,8 +86,9 @@ export class TeamHierarchyComponent implements OnInit {
     } catch (error) {
       console.error('Error loading team hierarchy', error);
       this.toast.error('Error loading team hierarchy');
+    } finally {
+      this.loadingService.hide();
     }
-    this.loadingService.hide();
   }
 
   async save(): Promise<void> {
@@ -105,10 +106,14 @@ export class TeamHierarchyComponent implements OnInit {
     try {
       await this.hierarchyService.save(userid, reportingTo);
       this.form.patchValue({ reportingTo: '' });
+      this.toast.success('Reporting relationship saved');
       await this.load();
     } catch (error) {
       console.error('Error saving team hierarchy', error);
-      this.toast.error('Could not save the reporting relationship');
+      this.toast.error(
+        error instanceof Error ? error.message : 'Could not save the reporting relationship',
+      );
+    } finally {
       this.loadingService.hide();
     }
   }
@@ -120,10 +125,12 @@ export class TeamHierarchyComponent implements OnInit {
     this.loadingService.show();
     try {
       await this.hierarchyService.remove(row.id);
+      this.toast.success('Reporting relationship removed');
       await this.load();
     } catch (error) {
       console.error('Error removing team hierarchy', error);
       this.toast.error('Could not remove the reporting relationship');
+    } finally {
       this.loadingService.hide();
     }
   }

@@ -95,8 +95,9 @@ export class GroupAssociationsComponent implements OnInit {
     } catch (error) {
       console.error('Error loading group associations', error);
       this.toast.error('Error loading group associations');
+    } finally {
+      this.loadingService.hide();
     }
-    this.loadingService.hide();
   }
 
   async associate(): Promise<void> {
@@ -106,14 +107,27 @@ export class GroupAssociationsComponent implements OnInit {
     }
     const userid = this.associationForm.value.userid || '';
     const groupid = this.associationForm.value.groupid || '';
+    if (this.associations.some((item) => item.userid === userid && item.groupid === groupid)) {
+      const userName = this.users.find((user) => user.userid === userid)?.name || 'This user';
+      const groupName = this.groups.find((group) => group.id === groupid)?.name || 'this group';
+      this.toast.warning(`${userName} is already associated with ${groupName}`);
+      return;
+    }
     this.loadingService.show();
     try {
       await this.associationService.associate(userid, groupid);
       await this.auth.refreshAccess();
+      this.toast.success('User associated with group');
       await this.load();
     } catch (error) {
       console.error('Error associating user', error);
-      this.toast.error('Could not associate the user');
+      const message = error instanceof Error ? error.message : 'Could not associate the user';
+      if (message.toLowerCase().includes('already associated')) {
+        this.toast.warning(message);
+      } else {
+        this.toast.error(message);
+      }
+    } finally {
       this.loadingService.hide();
     }
   }
@@ -126,10 +140,12 @@ export class GroupAssociationsComponent implements OnInit {
     try {
       await this.associationService.disassociate(association.id);
       await this.auth.refreshAccess();
+      this.toast.success('User disassociated from group');
       await this.load();
     } catch (error) {
       console.error('Error removing association', error);
       this.toast.error('Could not remove the association');
+    } finally {
       this.loadingService.hide();
     }
   }

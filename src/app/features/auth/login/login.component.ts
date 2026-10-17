@@ -7,6 +7,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatIconModule } from '@angular/material/icon';
 import { SessionBranch } from '../../../core/Models/AuthSession';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -20,6 +21,7 @@ import { AuthService } from '../../../core/services/auth.service';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatIconModule,
     MatButtonModule,
   ],
   templateUrl: './login.component.html',
@@ -28,6 +30,7 @@ import { AuthService } from '../../../core/services/auth.service';
 export class LoginComponent {
   errorMessage = '';
   submitting = false;
+  showPassword = false;
   choosingBranch = false;
   branches: SessionBranch[] = [];
   loginForm;
@@ -40,7 +43,7 @@ export class LoginComponent {
     private route: ActivatedRoute,
   ) {
     this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
+      identifier: ['', [Validators.required]],
       password: ['', Validators.required],
     });
     this.branchForm = this.fb.group({
@@ -59,11 +62,11 @@ export class LoginComponent {
     this.submitting = true;
     this.errorMessage = '';
     try {
-      const email = this.loginForm.value.email || '';
+      const identifier = this.loginForm.value.identifier || '';
       const password = this.loginForm.value.password || '';
-      const result = await this.auth.login(email, password);
+      const result = await this.auth.login(identifier, password);
       if (!result.ok) {
-        this.errorMessage = 'Email or password is incorrect, or the user is inactive.';
+        this.errorMessage = 'Email/username or password is incorrect, or the user is inactive.';
         return;
       }
       if (result.chooseBranch) {

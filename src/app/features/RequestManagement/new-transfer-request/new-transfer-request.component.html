@@ -103,7 +103,7 @@
         tone="primary"
         *appPrivilege="privileges.newTransfer.create"
         (pressed)="submitTransfer()"
-        [disabled]="dataSource.data.length <= 0 || transferForm.invalid"
+        [disabled]="submitting || dataSource.data.length <= 0 || transferForm.invalid"
       >
         Generate Request
       </mx-button>

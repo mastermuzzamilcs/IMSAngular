@@ -149,24 +149,24 @@ export class ProductService {
     });
   }
   async getProductsByIds(ids: string[]): Promise<Product[]> {
-    const uncachedIds = ids.filter((id) => !this.productCache.has(id));
-    const result: Product[] = [];
-
+    const uniqueIds = [...new Set(ids.filter(Boolean))];
+    const uncachedIds = uniqueIds.filter((id) => !this.productCache.has(id));
+    const batches: string[][] = [];
     for (let i = 0; i < uncachedIds.length; i += 10) {
-      const batch = uncachedIds.slice(i, i + 10);
-      const q = query(collection(firestore, this.topicName), where(documentId(), 'in', batch));
-      const snap = await getDocs(q);
-      snap.forEach((doc) => {
-        const product = { id: doc.id, ...doc.data() } as Product;
-        this.setProductInCache(product);
-      });
+      batches.push(uncachedIds.slice(i, i + 10));
     }
-
-    ids.forEach((id) => {
-      const cached = this.productCache.get(id);
-      if (cached) result.push(cached);
-    });
-
-    return result;
+    await Promise.all(
+      batches.map(async (batch) => {
+        const q = query(collection(firestore, this.topicName), where(documentId(), 'in', batch));
+        const snap = await getDocs(q);
+        snap.forEach((doc) => {
+          const product = { id: doc.id, ...doc.data() } as Product;
+          this.setProductInCache(product);
+        });
+      }),
+    );
+    return uniqueIds
+      .map((id) => this.productCache.get(id))
+      .filter((product): product is Product => !!product);
   }
 }

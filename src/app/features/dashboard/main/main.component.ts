@@ -1,6 +1,7 @@
 import { AfterViewInit, Component, DestroyRef, OnDestroy, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
+import { AppCurrencyPipe } from '../../../core/pipes/app-currency.pipe';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
@@ -28,6 +29,7 @@ interface ActivityItem {
   standalone: true,
   imports: [
     CommonModule,
+    AppCurrencyPipe,
     MatIconModule,
     MatListModule,
     MatDividerModule,
@@ -92,9 +94,22 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     try {
-      const [overview, branchRequests, branches, users, allBranchTotals] = await Promise.all([
+      const salesSince = new Date();
+      salesSince.setMonth(salesSince.getMonth() - 5, 1);
+      salesSince.setHours(0, 0, 0, 0);
+      const [
+        overview,
+        recentRequests,
+        pendingTransferCount,
+        approvedSales,
+        branches,
+        users,
+        allBranchTotals,
+      ] = await Promise.all([
         this.stockService.getStockOverviewByBranch(branchId),
-        this.workflowService.getForBranch(branchId),
+        this.workflowService.getRecentForBranch(branchId, 8),
+        this.workflowService.getPendingTransferCount(branchId),
+        this.workflowService.getApprovedSalesSince(branchId, salesSince),
         this.branchService.getBranches(),
         this.usersService.getUsers(),
         this.loadInventoryByBranch(),
@@ -114,19 +129,11 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
         return onHand < 5;
       }).length;
 
-      this.pendingTransfers = branchRequests.filter(
-        (request) =>
-          request.requestType === RequestType.Transfer && request.status === RequestStatus.Pending,
-      ).length;
+      this.pendingTransfers = pendingTransferCount;
 
       const saleModuleIds = new Set(
-        branchRequests
-          .filter(
-            (request) =>
-              request.requestType === RequestType.Sales &&
-              request.status === RequestStatus.Approved &&
-              this.isSameDay(request.requestedOn, new Date()),
-          )
+        approvedSales
+          .filter((request) => this.isSameDay(request.requestedOn, new Date()))
           .map((request) => request.moduleId),
       );
       const stocks = await this.stockService.getStockByBranch(branchId);
@@ -134,8 +141,8 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
         .filter((stock) => stock.stockid && saleModuleIds.has(stock.stockid))
         .reduce((sum, stock) => sum + (Number(stock.NetTotal) || 0), 0);
 
-      this.recentActivity = this.buildRecentActivity(branchRequests);
-      this.renderCharts(this.buildSalesTrend(branchRequests, stocks), allBranchTotals);
+      this.recentActivity = this.buildRecentActivity(recentRequests);
+      this.renderCharts(this.buildSalesTrend(approvedSales, stocks), allBranchTotals);
     } catch (error) {
       console.error('Error loading dashboard', error);
       this.resetKpis();

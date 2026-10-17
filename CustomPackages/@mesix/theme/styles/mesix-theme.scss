@@ -333,6 +333,10 @@ table input.mat-mdc-input-element:focus,
  * Material dialogs: grow with content (no horizontal scroll).
  * Vertical scroll only when taller than the viewport.
  */
+.cdk-overlay-container {
+  z-index: var(--mx-z-cdk-overlay, 10001);
+}
+
 .cdk-overlay-pane.mat-mdc-dialog-panel {
   max-width: min(96vw, 1200px) !important;
   width: fit-content !important;

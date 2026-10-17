@@ -1,0 +1,31 @@
+{
+  "name": "@mesix/reporting",
+  "version": "0.1.0",
+  "description": "Reusable Angular reporting and export framework for Mesix applications",
+  "peerDependencies": {
+    "@angular/common": "^19.2.0",
+    "@angular/core": "^19.2.0",
+    "@angular/forms": "^19.2.0",
+    "@angular/material": "^19.2.0",
+    "docx": "^9.12.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.9",
+    "rxjs": "^7.8.0",
+    "xlsx": "^0.18.5"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "sideEffects": false,
+  "module": "fesm2022/mesix-reporting.mjs",
+  "typings": "index.d.ts",
+  "exports": {
+    "./package.json": {
+      "default": "./package.json"
+    },
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./fesm2022/mesix-reporting.mjs"
+    }
+  }
+}

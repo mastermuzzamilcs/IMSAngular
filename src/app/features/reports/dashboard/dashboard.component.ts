@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AppCurrencyPipe } from '../../../core/pipes/app-currency.pipe';
 import { MatIconModule } from '@angular/material/icon';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MxCardComponent, MxPageHeaderComponent } from '@mesix/custom-control';
@@ -10,6 +11,7 @@ import { Chart } from 'chart.js';
   standalone: true,
   imports: [
     CommonModule,
+    AppCurrencyPipe,
     MatIconModule,
     MatExpansionModule,
     MxCardComponent,

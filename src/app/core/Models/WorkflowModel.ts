@@ -32,6 +32,7 @@ export interface RequestTypeSetting {
 
 export interface WorkflowRequest {
   requestId?: string;
+  requestNumber?: string;
   moduleId: string;
   requestType: RequestType;
   status: RequestStatus;

@@ -149,14 +149,19 @@ export class ItemSourceEvaluator {
     }
     const joinRows = await this.load(query.join.entity);
     const combined: Combined[] = [];
+    const joinIndex = new Map<string, Row[]>();
+    joinRows.forEach((right) => {
+      const key = this.read({ [query.join!.entity]: right }, query.join!.right);
+      if (!key) return;
+      const matches = joinIndex.get(key) || [];
+      matches.push(right);
+      joinIndex.set(key, matches);
+    });
     fromRows.forEach((left) => {
-      joinRows.forEach((right) => {
+      const leftValue = this.read({ [query.from]: left }, query.join!.left);
+      (joinIndex.get(leftValue) || []).forEach((right) => {
         const row: Combined = { [query.from]: left, [query.join!.entity]: right };
-        const leftValue = this.read(row, query.join!.left);
-        const rightValue = this.read(row, query.join!.right);
-        if (leftValue !== '' && leftValue === rightValue) {
-          combined.push(row);
-        }
+        combined.push(row);
       });
     });
     return combined;
@@ -255,6 +260,10 @@ export class ItemSourceEvaluator {
     if (typeof value === 'object') {
       return '';
     }
-    return String(value);
+    const text = String(value);
+    if (text.startsWith('data:') || text.length > 500) {
+      return '';
+    }
+    return text;
   }
 }

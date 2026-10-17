@@ -13,6 +13,7 @@ import { StockService } from '../../../core/services/stock.service';
 import { ItemSearchModalComponent } from '../item-search-modal/item-search-modal.component';
 import { CustomerSearchModalComponent } from '../../../shared/components/customer-search-modal/customer-search-modal.component';
 import { CommonModule } from '@angular/common';
+import { AppCurrencyPipe } from '../../../core/pipes/app-currency.pipe';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -31,17 +32,18 @@ import {
 import { WorkflowService } from '../../../core/services/Workflow.service';
 import { Status } from '../../../core/enums/status.enum';
 import { RequestType } from '../../../core/Models/WorkflowModel';
-import { LoadingService } from '../../../core/services/Loading.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
 import { ToastService } from '../../../core/services/toast.service';
+import { userFacingWriteError } from '../../../core/firebase/firestore-write';
 
 @Component({
   selector: 'app-sales',
   standalone: true,
   imports: [
     CommonModule,
+    AppCurrencyPipe,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
@@ -84,12 +86,12 @@ export class SalesComponent implements OnInit {
   discountType: 'amount' | 'percentage' = 'amount';
   discountValue = 0;
   netTotal = 0;
+  submitting = false;
 
   constructor(
     private fb: FormBuilder,
     private stockService: StockService,
     private _workflowService: WorkflowService,
-    private _loadingService: LoadingService,
     private auth: AuthService,
   ) {}
 
@@ -191,13 +193,20 @@ export class SalesComponent implements OnInit {
       return;
     }
 
-    this._loadingService.show();
+    if (this.submitting) return;
+    this.submitting = true;
 
     const payload = {
       ...this.salesForm.value,
       branch,
       customerId: this.selectedCustomerId(),
-      stockItems: this.dataSource.data,
+      stockItems: this.dataSource.data.map((item) => ({
+        id: item.id,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        discount: item.discount,
+        total: item.total,
+      })),
       TotalItems: this.dataSource.data.length,
       SubTotal: this.subTotal,
       DiscountType: this.discountType,
@@ -237,10 +246,10 @@ export class SalesComponent implements OnInit {
       this.netTotal = 0;
     } catch (err) {
       console.error('Error submitting sale:', err);
-      this.toast.error('Failed to submit sale');
+      this.toast.error(userFacingWriteError(err, 'Failed to submit sale'));
+    } finally {
+      this.submitting = false;
     }
-
-    this._loadingService.hide();
   }
 
   private selectedCustomerId(): string {

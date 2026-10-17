@@ -82,8 +82,9 @@ export class WorkflowTransitionsComponent implements OnInit, AfterViewInit {
     } catch (err) {
       console.error('Error loading status transitions', err);
       this.toast.error('Error loading status transitions');
+    } finally {
+      this.tableLoading = false;
     }
-    this.tableLoading = false;
   }
 
   openAddDialog(): void {
@@ -99,9 +100,10 @@ export class WorkflowTransitionsComponent implements OnInit, AfterViewInit {
         await this.transitionService.addTransition(result);
         await this.loadTransitions();
       } catch (err) {
-        this.toast.error(err instanceof Error ? err.message : 'Failed to add status transition');
+        this.toastFailure(err, 'Failed to add status transition');
+      } finally {
+        this.loadingService.hide();
       }
-      this.loadingService.hide();
     });
   }
 
@@ -118,9 +120,10 @@ export class WorkflowTransitionsComponent implements OnInit, AfterViewInit {
         await this.transitionService.updateTransition({ ...result, id: transition.id });
         await this.loadTransitions();
       } catch (err) {
-        this.toast.error(err instanceof Error ? err.message : 'Failed to update status transition');
+        this.toastFailure(err, 'Failed to update status transition');
+      } finally {
+        this.loadingService.hide();
       }
-      this.loadingService.hide();
     });
   }
 
@@ -133,10 +136,24 @@ export class WorkflowTransitionsComponent implements OnInit, AfterViewInit {
       .subscribe(async (result) => {
         if (result && transition.id) {
           this.loadingService.show();
-          await this.transitionService.deleteTransition(transition.id);
-          this.loadingService.hide();
-          this.loadTransitions();
+          try {
+            await this.transitionService.deleteTransition(transition.id);
+            await this.loadTransitions();
+          } catch (err) {
+            this.toastFailure(err, 'Failed to delete status transition');
+          } finally {
+            this.loadingService.hide();
+          }
         }
       });
+  }
+
+  private toastFailure(error: unknown, fallback: string): void {
+    const message = error instanceof Error ? error.message : fallback;
+    if (message.toLowerCase().includes('already')) {
+      this.toast.warning(message);
+    } else {
+      this.toast.error(message);
+    }
   }
 }

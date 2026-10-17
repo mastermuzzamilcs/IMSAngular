@@ -6,6 +6,8 @@ export interface SessionBranch {
 export interface AuthSession {
   userid: string;
   name: string;
+  /** Optional: sessions saved before usernames existed do not have it. */
+  username?: string;
   email: string;
   roleid: string;
   roleName: string;

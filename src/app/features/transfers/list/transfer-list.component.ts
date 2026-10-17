@@ -22,6 +22,7 @@ import { TransferDetailComponent } from '../detail/transfer-detail.component';
 import { TransferService } from '../../../core/services/transfer.service';
 import { Status } from '../../../core/enums/status.enum';
 import { Transfer } from '../../../core/Models/TransferModel';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-transfer-list',
@@ -46,6 +47,7 @@ import { Transfer } from '../../../core/Models/TransferModel';
 })
 export class TransferListComponent implements OnInit, AfterViewInit {
   private readonly notice = inject(MxNoticeService);
+  private readonly toast = inject(ToastService);
 
   readonly Status = Status;
   displayedColumns: string[] = [
@@ -82,6 +84,7 @@ export class TransferListComponent implements OnInit, AfterViewInit {
       this.dataSource.data = transfers;
     } catch (error) {
       console.error('Error loading transfers', error);
+      this.toast.error('Could not load transfers');
     } finally {
       this.tableLoading = false;
     }
@@ -116,6 +119,7 @@ export class TransferListComponent implements OnInit, AfterViewInit {
           await this.loadTransfers();
         } catch (error) {
           console.error('Error saving transfer', error);
+          this.toast.error(error instanceof Error ? error.message : 'Could not save the transfer');
         }
       }
     });
@@ -134,14 +138,14 @@ export class TransferListComponent implements OnInit, AfterViewInit {
       await this.transferService.updateTransfer({
         ...transfer,
 
-        status: newStatus,
+        status: newStatus as Transfer['status'],
       });
 
       await this.loadTransfers();
-
-      console.log('Status Updated', newStatus);
+      this.toast.success(`Transfer status updated to ${newStatus}`);
     } catch (error) {
       console.error('Status update failed', error);
+      this.toast.error(error instanceof Error ? error.message : 'Could not update transfer status');
     }
   }
 

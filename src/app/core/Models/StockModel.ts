@@ -13,6 +13,7 @@ export interface StockLineItem extends Product {
 
 export interface Stock {
   stockid?: string;
+  referenceNumber?: string;
   branchid: string;
   branchName?: string;
   vendorid: string;

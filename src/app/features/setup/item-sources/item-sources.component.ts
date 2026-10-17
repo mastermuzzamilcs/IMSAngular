@@ -77,8 +77,9 @@ export class ItemSourcesComponent implements OnInit, AfterViewInit {
     } catch (error) {
       console.error('Error loading item sources', error);
       this.toast.error('Error loading item sources');
+    } finally {
+      this.tableLoading = false;
     }
-    this.tableLoading = false;
   }
 
   openAddDialog(): void {
@@ -95,9 +96,8 @@ export class ItemSourcesComponent implements OnInit, AfterViewInit {
           await this.loadSources();
         } catch (error) {
           console.error('Error adding item source', error);
-          this.toast.error(
-            error instanceof Error ? error.message : 'Could not save the item source',
-          );
+          this.toastFailure(error, 'Could not save the item source');
+        } finally {
           this.loadingService.hide();
         }
       });
@@ -117,9 +117,8 @@ export class ItemSourcesComponent implements OnInit, AfterViewInit {
           await this.loadSources();
         } catch (error) {
           console.error('Error updating item source', error);
-          this.toast.error(
-            error instanceof Error ? error.message : 'Could not save the item source',
-          );
+          this.toastFailure(error, 'Could not save the item source');
+        } finally {
           this.loadingService.hide();
         }
       });
@@ -139,8 +138,18 @@ export class ItemSourcesComponent implements OnInit, AfterViewInit {
         } catch (error) {
           console.error('Error deleting item source', error);
           this.toast.error('Could not delete the item source');
+        } finally {
           this.loadingService.hide();
         }
       });
+  }
+
+  private toastFailure(error: unknown, fallback: string): void {
+    const message = error instanceof Error ? error.message : fallback;
+    if (message.toLowerCase().includes('already exists')) {
+      this.toast.warning(message);
+    } else {
+      this.toast.error(message);
+    }
   }
 }

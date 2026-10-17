@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { doc, getDoc, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { firestore } from '../../firebase-config';
 
 const SOUND_KEY = 'ims.notificationSound';
 const SOUND_ID_KEY = 'ims.notificationSoundId';
@@ -15,7 +17,10 @@ export type NotificationSoundId =
   | 'ping'
   | 'sosumi'
   | 'bloom'
-  | 'chord';
+  | 'chord'
+  | 'message'
+  | 'message-soft'
+  | 'message-double';
 
 export const notificationSounds: { id: NotificationSoundId; label: string }[] = [
   { id: 'bell', label: 'Bell' },
@@ -29,6 +34,9 @@ export const notificationSounds: { id: NotificationSoundId; label: string }[] = 
   { id: 'sosumi', label: 'Sosumi (Mac)' },
   { id: 'bloom', label: 'Bloom (iPhone)' },
   { id: 'chord', label: 'Chord (iPhone)' },
+  { id: 'message', label: 'Message (WhatsApp-style)' },
+  { id: 'message-soft', label: 'Soft message (WhatsApp-style)' },
+  { id: 'message-double', label: 'Double message (WhatsApp-style)' },
 ];
 
 @Injectable({ providedIn: 'root' })
@@ -38,6 +46,7 @@ export class NotificationSoundService {
   readonly enabled$ = this.enabledSubject.asObservable();
   readonly soundId$ = this.soundSubject.asObservable();
   private context?: AudioContext;
+  private sharedSettingsSubscription?: Unsubscribe;
 
   get enabled(): boolean {
     return this.enabledSubject.value;
@@ -48,15 +57,63 @@ export class NotificationSoundService {
   }
 
   setEnabled(enabled: boolean): void {
-    localStorage.setItem(SOUND_KEY, enabled ? '1' : '0');
+    try {
+      localStorage.setItem(SOUND_KEY, enabled ? '1' : '0');
+    } catch {
+      /* Ignore browser storage quota; keep the in-memory preference. */
+    }
     this.enabledSubject.next(enabled);
   }
 
   setSound(id: NotificationSoundId, preview = false): void {
-    localStorage.setItem(SOUND_ID_KEY, id);
+    try {
+      localStorage.setItem(SOUND_ID_KEY, id);
+    } catch {
+      /* Ignore browser storage quota; keep the in-memory preference. */
+    }
     this.soundSubject.next(id);
     if (preview) {
       this.play(true);
+    }
+  }
+
+  async loadSharedSettings(): Promise<void> {
+    const reference = doc(firestore, 'SystemSettings', 'application');
+    try {
+      const initial = await getDoc(reference);
+      this.applySharedSettings(
+        initial.exists() ? initial.data() : { soundEnabled: true, soundId: 'bell' },
+      );
+      this.sharedSettingsSubscription?.();
+      this.sharedSettingsSubscription = onSnapshot(
+        reference,
+        (snapshot) => {
+          if (snapshot.exists()) this.applySharedSettings(snapshot.data());
+        },
+        (error) => console.error('Shared notification settings could not be watched.', error),
+      );
+    } catch (error) {
+      console.error('Shared notification settings could not be loaded.', error);
+    }
+  }
+
+  private applySharedSettings(settings: Record<string, unknown>): void {
+    if (typeof settings['soundEnabled'] === 'boolean') {
+      this.enabledSubject.next(settings['soundEnabled']);
+      try {
+        localStorage.setItem(SOUND_KEY, settings['soundEnabled'] ? '1' : '0');
+      } catch {
+        /* Ignore browser storage quota; keep the in-memory preference. */
+      }
+    }
+    const soundId = settings['soundId'];
+    if (typeof soundId === 'string' && notificationSounds.some((item) => item.id === soundId)) {
+      this.soundSubject.next(soundId as NotificationSoundId);
+      try {
+        localStorage.setItem(SOUND_ID_KEY, soundId);
+      } catch {
+        /* Ignore browser storage quota; keep the in-memory preference. */
+      }
     }
   }
 
@@ -112,6 +169,15 @@ export class NotificationSoundService {
         return;
       case 'chord':
         this.playChord(context);
+        return;
+      case 'message':
+        this.playMessage(context, false, false);
+        return;
+      case 'message-soft':
+        this.playMessage(context, true, false);
+        return;
+      case 'message-double':
+        this.playMessage(context, false, true);
         return;
       default:
         this.playBell(context);
@@ -288,6 +354,33 @@ export class NotificationSoundService {
       tone.connect(master);
       tone.start(now);
       tone.stop(now + 0.7);
+    });
+  }
+
+  /** Original, synthesized short chat-message tones with a bright two-note cadence. */
+  private playMessage(context: AudioContext, soft: boolean, double: boolean): void {
+    const now = context.currentTime;
+    const hits = double ? [0, 0.24] : [0];
+    hits.forEach((offset, hitIndex) => {
+      const start = now + offset;
+      const duration = soft ? 0.23 : 0.18;
+      const gain = soft ? 0.11 : 0.16;
+      const master = this.envelope(context, start, gain, duration);
+      const base = soft ? [659.25, 880] : [783.99, 1046.5];
+      const frequencies = base.map((frequency) =>
+        double && hitIndex === 1 ? frequency * 0.9 : frequency,
+      );
+      frequencies.forEach((frequency, index) => {
+        const tone = context.createOscillator();
+        tone.type = soft ? 'sine' : 'triangle';
+        tone.frequency.setValueAtTime(frequency, start + index * (soft ? 0.055 : 0.045));
+        const level = context.createGain();
+        level.gain.value = index === 0 ? 0.8 : 0.55;
+        tone.connect(level);
+        level.connect(master);
+        tone.start(start + index * (soft ? 0.055 : 0.045));
+        tone.stop(start + duration);
+      });
     });
   }
 

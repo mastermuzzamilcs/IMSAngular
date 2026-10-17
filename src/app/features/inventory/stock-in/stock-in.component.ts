@@ -13,6 +13,7 @@ import { Vendor } from '../../../core/Models/VendorModel';
 import { VendorService } from '../../../core/services/vendor.service';
 import { ItemSearchModalComponent } from '../item-search-modal/item-search-modal.component';
 import { CommonModule } from '@angular/common';
+import { AppCurrencyPipe } from '../../../core/pipes/app-currency.pipe';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -31,7 +32,6 @@ import {
 import { WorkflowService } from '../../../core/services/Workflow.service';
 import { Status } from '../../../core/enums/status.enum';
 import { RequestType } from '../../../core/Models/WorkflowModel';
-import { LoadingService } from '../../../core/services/Loading.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { privileges as privilegeAccess } from '../../../core/auth/privilege-catalog';
 import { PrivilegeDirective } from '../../../core/auth/privilege.directive';
@@ -42,6 +42,7 @@ import { ToastService } from '../../../core/services/toast.service';
   standalone: true,
   imports: [
     CommonModule,
+    AppCurrencyPipe,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
@@ -84,13 +85,13 @@ export class StockInComponent implements OnInit {
   discountType: 'amount' | 'percentage' = 'amount';
   discountValue = 0;
   netTotal = 0;
+  submitting = false;
 
   constructor(
     private fb: FormBuilder,
     private stockService: StockService,
     private vendorService: VendorService,
     private _workflowService: WorkflowService,
-    private _loadingService: LoadingService,
     private auth: AuthService,
   ) {}
 
@@ -161,8 +162,13 @@ export class StockInComponent implements OnInit {
       this.toast.warning('Choose a branch from the top bar before continuing.');
       return;
     }
-    this._loadingService.show();
-    if (this.stockInForm.invalid || this.dataSource.data.length === 0) return;
+    if (this.stockInForm.invalid || this.dataSource.data.length === 0) {
+      this.stockInForm.markAllAsTouched();
+      this.toast.warning('Enter valid stock details and add at least one item.');
+      return;
+    }
+    if (this.submitting) return;
+    this.submitting = true;
     const payload = {
       ...this.stockInForm.value,
       branch,
@@ -195,8 +201,9 @@ export class StockInComponent implements OnInit {
       this.netTotal = 0;
     } catch (err) {
       console.error('Error submitting stock in:', err);
-      this.toast.error('Failed to submit stock-in');
+      this.toast.error(err instanceof Error ? err.message : 'Failed to submit stock-in');
+    } finally {
+      this.submitting = false;
     }
-    this._loadingService.hide();
   }
 }

@@ -8,11 +8,19 @@ import { businessFunctions, retiredFunctionCodes } from '../workflow/business-wo
 export class WorkflowFunctionDefinitionService {
   private readonly topicName = 'workflow_function_definitions';
   private defaultsReady: Promise<void> | null = null;
+  private cachedFunctions: WorkflowFunctionRecord[] | null = null;
+  private functionsCachedAt = 0;
+  private readonly cacheDurationMs = 30_000;
 
   async getFunctions(): Promise<WorkflowFunctionRecord[]> {
     await this.ensureDefaults();
+    if (this.cachedFunctions && Date.now() - this.functionsCachedAt < this.cacheDurationMs) {
+      return this.cachedFunctions;
+    }
     const snap = await getDocs(collection(firestore, this.topicName));
-    return snap.docs.map((item) => this.map(item.id, item.data()));
+    this.cachedFunctions = snap.docs.map((item) => this.map(item.id, item.data()));
+    this.functionsCachedAt = Date.now();
+    return this.cachedFunctions;
   }
 
   async getByCode(code: string): Promise<WorkflowFunctionRecord | null> {
@@ -23,6 +31,7 @@ export class WorkflowFunctionDefinitionService {
   async addFunction(record: WorkflowFunctionRecord): Promise<void> {
     await this.assertCode(record);
     await addDoc(collection(firestore, this.topicName), this.payload(record));
+    this.invalidateCache();
   }
 
   async updateFunction(record: WorkflowFunctionRecord): Promise<void> {
@@ -31,10 +40,17 @@ export class WorkflowFunctionDefinitionService {
     }
     await this.assertCode(record);
     await setDoc(doc(firestore, this.topicName, record.id), this.payload(record));
+    this.invalidateCache();
   }
 
   async deleteFunction(id: string): Promise<void> {
     await deleteDoc(doc(firestore, this.topicName, id));
+    this.invalidateCache();
+  }
+
+  private invalidateCache(): void {
+    this.cachedFunctions = null;
+    this.functionsCachedAt = 0;
   }
 
   private payload(record: WorkflowFunctionRecord) {

@@ -89,8 +89,9 @@ export class BranchAssociationsComponent implements OnInit {
     } catch (error) {
       console.error('Error loading branch associations', error);
       this.toast.error('Error loading branch associations');
+    } finally {
+      this.loadingService.hide();
     }
-    this.loadingService.hide();
   }
 
   async associate(): Promise<void> {
@@ -100,14 +101,26 @@ export class BranchAssociationsComponent implements OnInit {
     }
     const userid = this.associationForm.value.userid || '';
     const branchid = this.associationForm.value.branchid || '';
+    if (this.associations.some((item) => item.userid === userid && item.branchid === branchid)) {
+      const userName = this.users.find((user) => user.userid === userid)?.name || 'This user';
+      this.toast.warning(`${userName} is already assigned to the selected branch`);
+      return;
+    }
     this.loadingService.show();
     try {
       await this.associationService.associate(userid, branchid);
       this.associationForm.patchValue({ branchid: '' });
+      this.toast.success('Branch assigned to user');
       await this.load();
     } catch (error) {
       console.error('Error assigning branch', error);
-      this.toast.error('Could not assign the branch');
+      const message = error instanceof Error ? error.message : 'Could not assign the branch';
+      if (message.toLowerCase().includes('already assigned')) {
+        this.toast.warning(message);
+      } else {
+        this.toast.error(message);
+      }
+    } finally {
       this.loadingService.hide();
     }
   }
@@ -119,10 +132,12 @@ export class BranchAssociationsComponent implements OnInit {
     this.loadingService.show();
     try {
       await this.associationService.disassociate(association.id);
+      this.toast.success('Branch assignment removed');
       await this.load();
     } catch (error) {
       console.error('Error removing branch assignment', error);
       this.toast.error('Could not remove the branch assignment');
+    } finally {
       this.loadingService.hide();
     }
   }

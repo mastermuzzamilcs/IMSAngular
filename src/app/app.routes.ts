@@ -30,6 +30,8 @@ export const routes: Routes = [
       },
       {
         path: 'settings',
+        canActivate: [privilegeGuard],
+        data: { privilege: privileges.settings.page },
         loadComponent: () =>
           import('./features/settings/settings.component').then((m) => m.SettingsComponent),
       },
@@ -79,8 +81,6 @@ export const routes: Routes = [
       },
       {
         path: 'reports',
-        canActivate: [privilegeGuard],
-        data: { privilege: privileges.reports.page },
         loadChildren: () =>
           import('./features/reports/reports.module').then((m) => m.ReportsModule),
       },
