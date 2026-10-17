@@ -101,7 +101,7 @@
         <ng-container matColumnDef="total">
           <th mat-header-cell *matHeaderCellDef>Total</th>
           <td mat-cell *matCellDef="let row">
-            {{ row.total | appCurrency:'1.2-2' }}
+            {{ row.total | appCurrency: '1.2-2' }}
           </td>
         </ng-container>
 
@@ -142,7 +142,7 @@
         </mat-form-field>
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Sub Total</mat-label>
-          <input matInput [value]="subTotal | appCurrency:'1.2-2'" readonly />
+          <input matInput [value]="subTotal | appCurrency: '1.2-2'" readonly />
         </mat-form-field>
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Discount Type</mat-label>
@@ -162,7 +162,7 @@
         </mat-form-field>
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Net Total</mat-label>
-          <input matInput [value]="netTotal | appCurrency:'1.2-2'" readonly />
+          <input matInput [value]="netTotal | appCurrency: '1.2-2'" readonly />
         </mat-form-field>
       </div>
     </div>

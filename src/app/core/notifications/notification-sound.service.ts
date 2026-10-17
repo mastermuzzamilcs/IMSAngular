@@ -316,7 +316,9 @@ export class NotificationSoundService {
       const gain = soft ? 0.11 : 0.16;
       const master = this.envelope(context, start, gain, duration);
       const base = soft ? [659.25, 880] : [783.99, 1046.5];
-      const frequencies = base.map((frequency) => double && hitIndex === 1 ? frequency * 0.9 : frequency);
+      const frequencies = base.map((frequency) =>
+        double && hitIndex === 1 ? frequency * 0.9 : frequency,
+      );
       frequencies.forEach((frequency, index) => {
         const tone = context.createOscillator();
         tone.type = soft ? 'sine' : 'triangle';

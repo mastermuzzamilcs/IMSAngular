@@ -9,6 +9,11 @@ export class AppCurrencyPipe implements PipeTransform {
 
   transform(value: number | string | null | undefined, digitsInfo = '1.2-2'): string | null {
     if (value === null || value === undefined || value === '') return null;
-    return this.currencyPipe.transform(Number(value), this.settings.currencyCode, 'symbol', digitsInfo);
+    return this.currencyPipe.transform(
+      Number(value),
+      this.settings.currencyCode,
+      'symbol',
+      digitsInfo,
+    );
   }
 }

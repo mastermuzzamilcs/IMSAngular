@@ -62,7 +62,10 @@ export class SettingsComponent implements OnInit {
       soundEnabled: [this.sound.enabled],
       soundId: [this.sound.soundId],
       currencyName: [this.settings.currencyName, [Validators.required, Validators.maxLength(60)]],
-      currencyCode: [this.settings.currencyCode, [Validators.required, Validators.pattern(/^[A-Za-z]{3}$/)]],
+      currencyCode: [
+        this.settings.currencyCode,
+        [Validators.required, Validators.pattern(/^[A-Za-z]{3}$/)],
+      ],
     });
   }
 
@@ -119,7 +122,11 @@ export class SettingsComponent implements OnInit {
       this.sound.setSound(value.soundId as NotificationSoundId, false);
       this.toast.success('Settings saved', 2500);
     } catch (error) {
-      this.toast.error(error instanceof Error ? `Settings could not be saved: ${error.message}` : 'Settings could not be saved.');
+      this.toast.error(
+        error instanceof Error
+          ? `Settings could not be saved: ${error.message}`
+          : 'Settings could not be saved.',
+      );
     } finally {
       this.saving = false;
     }

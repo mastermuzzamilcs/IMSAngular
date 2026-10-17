@@ -42,8 +42,12 @@ export class AppSettingsService {
     return this.pageSizeSubject.value;
   }
 
-  get currencyName(): string { return this.currencyNameSubject.value; }
-  get currencyCode(): string { return this.currencyCodeSubject.value; }
+  get currencyName(): string {
+    return this.currencyNameSubject.value;
+  }
+  get currencyCode(): string {
+    return this.currencyCodeSubject.value;
+  }
 
   async loadSharedCurrency(): Promise<void> {
     try {
@@ -53,13 +57,19 @@ export class AppSettingsService {
       const name = typeof value['name'] === 'string' ? value['name'].trim() : '';
       const code = typeof value['code'] === 'string' ? value['code'].trim().toUpperCase() : '';
       if (name && /^[A-Z]{3}$/.test(code)) this.applyCurrency(name, code);
-    } catch { /* Continue with the saved local/default currency if shared settings are unavailable. */ }
+    } catch {
+      /* Continue with the saved local/default currency if shared settings are unavailable. */
+    }
   }
 
   async setCurrency(name: string, code: string): Promise<void> {
     const nextName = name.trim();
     const nextCode = code.trim().toUpperCase();
-    await setDoc(doc(firestore, 'SystemSettings', 'currency'), { name: nextName, code: nextCode, updatedAt: new Date() }, { merge: true });
+    await setDoc(
+      doc(firestore, 'SystemSettings', 'currency'),
+      { name: nextName, code: nextCode, updatedAt: new Date() },
+      { merge: true },
+    );
     this.applyCurrency(nextName, nextCode);
   }
 
@@ -71,8 +81,14 @@ export class AppSettingsService {
   }
 
   formatCurrency(value: number, locale?: string): string {
-    try { return new Intl.NumberFormat(locale, { style: 'currency', currency: this.currencyCode }).format(value); }
-    catch { return `${this.currencyCode} ${value.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`; }
+    try {
+      return new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: this.currencyCode,
+      }).format(value);
+    } catch {
+      return `${this.currencyCode} ${value.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
   }
 
   setTitle(title: string): void {
@@ -122,7 +138,9 @@ export class AppSettingsService {
       : DEFAULT_PAGE_SIZE;
   }
 
-  private readCurrencyName(): string { return localStorage.getItem(CURRENCY_NAME_KEY)?.trim() || DEFAULT_CURRENCY_NAME; }
+  private readCurrencyName(): string {
+    return localStorage.getItem(CURRENCY_NAME_KEY)?.trim() || DEFAULT_CURRENCY_NAME;
+  }
   private readCurrencyCode(): string {
     const code = localStorage.getItem(CURRENCY_CODE_KEY)?.trim().toUpperCase();
     return code && /^[A-Z]{3}$/.test(code) ? code : DEFAULT_CURRENCY_CODE;

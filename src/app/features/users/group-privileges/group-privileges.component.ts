@@ -115,7 +115,8 @@ export class GroupPrivilegesComponent implements OnInit {
   }
 
   privilegeLabel(item: CatalogPrivilege): string {
-    if (this.isReportPrivilege(item)) return `${item.moduleName.replace(/^Report: /, '')} — ${item.action}`;
+    if (this.isReportPrivilege(item))
+      return `${item.moduleName.replace(/^Report: /, '')} — ${item.action}`;
     return `${item.action} (${item.functionId})`;
   }
 
@@ -160,6 +161,9 @@ export class GroupPrivilegesComponent implements OnInit {
   }
 
   private isReportPrivilege(item: CatalogPrivilege): boolean {
-    return item.moduleId >= PrivilegeModule.ReportInventoryOnHand && item.moduleId <= PrivilegeModule.ReportApproverThroughput;
+    return (
+      item.moduleId >= PrivilegeModule.ReportInventoryOnHand &&
+      item.moduleId <= PrivilegeModule.ReportApproverThroughput
+    );
   }
 }

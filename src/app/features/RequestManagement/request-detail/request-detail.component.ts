@@ -139,7 +139,8 @@ export class RequestDetailComponent implements OnInit {
       this.canAct = await this.wfSvc.canCurrentUserAct(this.request, this.auth.currentUserId());
       if (!this.canAct && this.actions.length > 0) {
         if (!this.request.assignedTo) {
-          this.actionBlockedReason = 'This request has no assigned user, so no action can be taken.';
+          this.actionBlockedReason =
+            'This request has no assigned user, so no action can be taken.';
         } else if (this.request.assignedTo !== this.auth.currentUserId()) {
           this.actionBlockedReason = `Only the assigned user (${this.assignedToName || this.request.assignedTo}) can act on this request.`;
         } else if (!this.auth.canApproveRequests()) {
@@ -149,7 +150,8 @@ export class RequestDetailComponent implements OnInit {
         }
       }
     } catch (error) {
-      this.loadError = error instanceof Error ? error.message : 'Request details could not be loaded.';
+      this.loadError =
+        error instanceof Error ? error.message : 'Request details could not be loaded.';
       this.toast.error(this.loadError);
     } finally {
       this.loading = false;

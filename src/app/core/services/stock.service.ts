@@ -111,7 +111,8 @@ export class StockService {
     await runTransaction(firestore, async (transaction) => {
       const counter = await transaction.get(counterRef);
       const nextNumber = Number(counter.data()?.['nextNumber'] || 0) + 1;
-      const referenceNumber = _stock.referenceNumber || `IMS-${year}-${String(nextNumber).padStart(6, '0')}`;
+      const referenceNumber =
+        _stock.referenceNumber || `IMS-${year}-${String(nextNumber).padStart(6, '0')}`;
       transaction.set(counterRef, { nextNumber }, { merge: true });
       transaction.set(resDocRef, { ..._stock, referenceNumber });
     });
